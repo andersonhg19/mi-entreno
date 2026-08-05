@@ -701,13 +701,27 @@
     });
 
     /* Cuando el service worker nuevo toma el control, la página que estás
-       viendo sigue siendo la vieja. Se recarga una sola vez para que la
-       actualización se vea sin tener que borrar nada a mano. */
+       viendo sigue siendo la vieja. Se recarga para que la actualización se
+       vea sin tener que borrar nada a mano.
+
+       Pero SOLO si estás en el selector de persona. Si estás a mitad de un
+       ejercicio, recargar te sacaría de ahí sin avisar; en ese caso se deja
+       marcado y la recarga se hace en cuanto vuelvas al inicio. */
     var yaRecargado = false;
-    navigator.serviceWorker.addEventListener("controllerchange", function () {
-      if (yaRecargado) return;
+    var actualizacionLista = false;
+
+    function recargarSiProcede() {
+      if (yaRecargado || !actualizacionLista) return;
+      var enInicio = !location.hash || location.hash === "#/" || location.hash === "#";
+      if (!enInicio) return;
       yaRecargado = true;
       location.reload();
+    }
+
+    navigator.serviceWorker.addEventListener("controllerchange", function () {
+      actualizacionLista = true;
+      recargarSiProcede();
     });
+    window.addEventListener("hashchange", recargarSiProcede);
   }
 })();
