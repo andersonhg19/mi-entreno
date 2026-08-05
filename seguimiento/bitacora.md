@@ -312,3 +312,111 @@ OK - PWA, accesibilidad, contraste, offline y datos: todo correcto.
 ```
 
 Los tres temas superan el nivel **AAA** de WCAG (7:1), no solo el AA (4.5:1).
+
+---
+
+### 2026-08-05 - v3: fichas reales del gimnasio, carrusel y rediseno
+
+**Actividad:** Tercera iteracion, disparada por dos avisos del usuario:
+las imagenes no correspondian con el ejercicio, y el diseno se veia soso.
+
+#### El problema de fondo: fotos que no eran el ejercicio
+
+Su ejemplo: «TRX sentadilla profunda» mostraba una sentadilla normal, sin TRX.
+Tenia razon, y era peor de lo que parecia.
+
+Su propuesta era la correcta: usar la ficha del propio tablero, que es exacta
+por definicion porque es lo que entrego el entrenador.
+
+#### Extraer las 55 fichas del tablero
+
+No es un recorte trivial: las fotos estan en angulo. El proceso fue:
+
+1. **Correccion de perspectiva** (homografia con Pillow) a partir de las
+   4 esquinas del panel, detectadas por componentes conexas sobre el brillo.
+   Resultado: los tableros quedan como rectangulos perfectos.
+2. **Geometria medida, no adivinada.** El tablero de gimnasio tiene rejilla
+   uniforme: se ajusto `x = 14 + 457,6 · columna` sobre las franjas de musculo
+   detectadas en varias filas. El de funcionales tiene anchos irregulares: se
+   midieron los bordes fila por fila.
+3. **Recorte desde el final de la franja** para que el titulo salga entero, y
+   borrado de la columna de casillas (que llevaba las marcas de color de una
+   sola de las dos personas) rellenando con el color del papel.
+
+Dos fichas de Anderson quedaron ilegibles por el reflejo del flash
+(*Sentadilla mancuerna* y *Pantorrilla sentado*): se sacaron del tablero de
+Sharid, donde el reflejo cae en otro sitio.
+
+#### Verificacion con 4 agentes en paralelo
+
+Se lanzaron 4 revisiones en paralelo, cada una con ~14 ejercicios, mirando las
+3 imagenes de cada uno y respondiendo: que dice el titulo de la ficha, si
+coincide con el nombre esperado, y si las fotos son el MISMO movimiento y el
+MISMO equipo.
+
+**Resultado: 20 de 55 ejercicios tenian fotos que no correspondian.** Casos
+tipicos: la ficha es de TRX y la foto de peso libre; la ficha tumbado y la foto
+sentado (`leg-curl`); la ficha en el piso y la foto sobre banco
+(`levantamiento-pierna-piso`); la ficha con BOSU y la foto sin el.
+
+Ademas encontraron **imagenes duplicadas byte a byte** entre ejercicios
+distintos: `trx-abductor` tenia las fotos de la maquina `abductor`, y
+`trx-sentadilla-profunda` las de `sentadilla-iso`. La busqueda en la base
+externa habia caido en el mismo resultado generico.
+
+**Decision:** esas 40 fotos se borraron. Una imagen que no corresponde es peor
+que ninguna imagen. Esos 20 ejercicios muestran solo la ficha, que es correcta.
+El campo `exacta` se renombro a `fotosOk` para que signifique exactamente eso.
+
+#### Carrusel de imagenes
+
+Investigado aparte: **scroll-snap de CSS con una capa fina de JS**, nunca JS
+manual, porque capturar el tactil rompe el pellizco para ampliar — y eso es
+justo lo que usa alguien con baja vision. Con rotulo escrito bajo cada lamina,
+contador «Imagen 2 de 3», puntos numerados, teclado, y sin controles cuando
+solo hay una imagen.
+
+#### Rediseno visual
+
+Sistema de tokens nuevo: 3 niveles de superficie, escala tipografica y de
+espaciado, color por grupo muscular (11 musculos) que **siempre** va con el
+nombre escrito y una inicial, prescripcion destacada (series/repes/descanso),
+anillo de progreso en el temporizador, y estado de dia completo.
+
+#### Otros arreglos pedidos por el usuario
+
+- **Al recargar se iba al perfil.** Ahora la app SIEMPRE abre en el selector de
+  persona: al cargar el documento, cualquier ruta en el `#` se sustituye por
+  `#/`. Tambien se quitaron los accesos directos a perfiles del manifest.
+  Son dos personas en dos telefonos: abrir en la rutina de uno es la forma mas
+  facil de que el otro entrene lo que no es.
+
+#### Fallos encontrados por las pruebas nuevas
+
+1. Con la letra al 180 %, los botones del carrusel **se salian de la pantalla**.
+   La barra ahora envuelve y los botones son flexibles.
+2. Los chips de filtro median 40 px, por debajo del minimo de 44.
+3. **Chrome pintaba su propio gris sobre los botones**, sobre todo los
+   deshabilitados: el contraste medido caia de 9:1 a 5,7:1 sin que se viera en
+   el CSS. Se arreglo con `appearance: none` y declarando el estado
+   deshabilitado entero (fondo incluido) mas borde punteado como senal no
+   cromatica.
+4. Cuatro pasos eran demasiado escuetos («Baja despacio.»).
+5. Mi propia prueba de contraste medía a mitad de la transicion de color y daba
+   valores falsos: ahora espera a que termine.
+
+#### Pruebas nuevas
+
+- `prueba-completitud.js`: compara la rutina **ejercicio a ejercicio y en
+  orden** contra una segunda copia escrita a mano desde las planillas; valida
+  avisos manuscritos, longitud de pasos, tamano y **unicidad (MD5)** de cada
+  imagen, y que la app arranque en el selector.
+- `prueba-visual.js` ampliada: arranque desde 5 direcciones, carrusel completo
+  (flechas, puntos, teclado), temporizador (cuenta, anillo, +30 s, cerrar,
+  y que no quede abierto al cambiar de pantalla), filtros de los 5 dias, dia
+  completo, y revision de todos los enlaces.
+- `prueba-pwa.js` ampliada: 20 pares de contraste por tema, y en cada uno de
+  los 114 ejercicios comprueba que **la imagen es la suya** por nombre de archivo.
+- `generar-sw.js`: regenera la lista del service worker desde el disco.
+
+**Resultado:** `npm run qa` en verde. Contraste peor caso 7,68:1 (AAA es 7:1).

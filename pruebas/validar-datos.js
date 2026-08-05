@@ -37,14 +37,39 @@ for (const f of ["datos-catalogo.js", "datos-planes.js"]) {
 const CAT = ctx.CATALOGO, PLANES = ctx.PLANES, COLORES = ctx.COLORES_DIA;
 
 /* --- 3. Integridad del catálogo --- */
-const campos = ["nombre", "grupo", "equipo", "exacta", "donde", "pasos", "buscar"];
+const DIR_IMG = path.join(ROOT, "assets/img/ejercicios");
+const campos = ["nombre", "grupo", "equipo", "fotosOk", "donde", "pasos", "buscar"];
+const GRUPOS = ["Pierna", "Pantorrilla", "Espalda", "Lumbar", "Pecho", "Tríceps",
+                "Hombros", "Bíceps", "Antebrazos", "Abdomen", "Glúteos"];
+const esperadas = new Set();
+
 for (const [k, e] of Object.entries(CAT)) {
   for (const c of campos) if (e[c] === undefined) errores.push(`CATALOGO ${k}: falta el campo "${c}"`);
   if (!Array.isArray(e.pasos) || e.pasos.length < 3) errores.push(`CATALOGO ${k}: necesita al menos 3 pasos`);
+  if (!GRUPOS.includes(e.grupo)) errores.push(`CATALOGO ${k}: grupo desconocido "${e.grupo}" (rompe el color por músculo)`);
+
+  /* La ficha del gimnasio es obligatoria: es la única imagen que
+     con seguridad corresponde al ejercicio. */
+  const ficha = `${k}-ficha.jpg`;
+  esperadas.add(ficha);
+  if (!fs.existsSync(path.join(DIR_IMG, ficha))) errores.push(`FALTA la ficha: ${ficha}`);
+
+  /* Las fotos reales solo deben existir si se verificó que corresponden */
   for (const n of [0, 1]) {
-    const img = path.join(ROOT, "assets/img/ejercicios", `${k}-${n}.jpg`);
-    if (!fs.existsSync(img)) errores.push(`IMAGEN que falta: ${k}-${n}.jpg`);
+    const foto = `${k}-${n}.jpg`;
+    const hay = fs.existsSync(path.join(DIR_IMG, foto));
+    if (e.fotosOk) {
+      esperadas.add(foto);
+      if (!hay) errores.push(`FALTA la foto real: ${foto} (fotosOk es true)`);
+    } else if (hay) {
+      errores.push(`SOBRA la foto ${foto}: fotosOk es false, no debería estar en disco`);
+    }
   }
+}
+
+/* Ninguna imagen huérfana en la carpeta */
+for (const f of fs.readdirSync(DIR_IMG)) {
+  if (f.endsWith(".jpg") && !esperadas.has(f)) errores.push(`IMAGEN huérfana (no la usa nadie): ${f}`);
 }
 
 /* --- 4. Los planes solo pueden referenciar claves existentes --- */
@@ -65,11 +90,21 @@ for (const k of Object.keys(CAT)) if (!usados.has(k)) avisos.push(`CATALOGO ${k}
 
 /* --- 5. El service worker debe precargar todo lo que la app usa --- */
 const sw = fs.readFileSync(path.join(ROOT, "sw.js"), "utf8");
-for (const k of usados) for (const n of [0, 1]) {
-  if (!sw.includes(`assets/img/ejercicios/${k}-${n}.jpg`)) errores.push(`SW no precarga ${k}-${n}.jpg`);
+for (const img of esperadas) {
+  if (!sw.includes(`assets/img/ejercicios/${img}`)) errores.push(`SW no precarga ${img}`);
 }
-for (const f of ["assets/css/estilos.css", "assets/js/app.js", "index.html", "manifest.webmanifest"]) {
+for (const f of ["assets/css/estilos.css", "assets/js/app.js", "assets/js/carrusel.js",
+                 "assets/js/cronometro.js", "assets/js/voz.js", "assets/js/almacenamiento.js",
+                 "index.html", "manifest.webmanifest"]) {
   if (!sw.includes(f)) errores.push(`SW no precarga ${f}`);
+}
+/* …y no debe precargar nada que ya no exista (daría 404 en cada instalación) */
+for (const m of sw.matchAll(/"(assets\/[^"]+)"/g)) {
+  if (!fs.existsSync(path.join(ROOT, m[1]))) errores.push(`SW precarga un archivo inexistente: ${m[1]}`);
+}
+/* Todos los scripts del HTML deben estar en el service worker */
+for (const m of fs.readFileSync(path.join(ROOT, "index.html"), "utf8").matchAll(/<script src="([^"]+)"/g)) {
+  if (!sw.includes(m[1])) errores.push(`SW no precarga el script ${m[1]}`);
 }
 
 /* --- 5b. Guardia del atributo `hidden` ---
@@ -108,7 +143,8 @@ for (const m of cron.matchAll(/getElementById\("([^"]+)"\)/g)) {
 /* --- 8. Resumen --- */
 console.log(`Ejercicios en catalogo : ${Object.keys(CAT).length}`);
 console.log(`Ejercicios usados      : ${usados.size}`);
-console.log(`Con foto aproximada    : ${Object.values(CAT).filter(e => !e.exacta).length} (avisan en pantalla)`);
+console.log(`Con fotos reales       : ${Object.values(CAT).filter(e => e.fotosOk).length}`);
+console.log(`Solo ficha del gimnasio: ${Object.values(CAT).filter(e => !e.fotosOk).length}`);
 for (const [, p] of Object.entries(PLANES)) {
   const tot = p.dias.reduce((a, d) => a + d.ejercicios.length, 0);
   console.log(`  ${p.nombre.padEnd(10)} ${tot} ejercicios/semana  ->  ` +

@@ -116,7 +116,9 @@ function aRgb(css) {
   info.push(`Manifest e iconos: ${manifest.icons.length} iconos correctos`);
 
   /* ========== 2. SERVICE WORKER Y MODO SIN CONEXIÓN ========== */
-  await page.goto(base + "#/p/anderson/d/2", { waitUntil: "networkidle" });
+  await page.goto(base, { waitUntil: "networkidle" });
+  await page.evaluate(() => { window.location.hash = "#/p/anderson/d/2"; });
+  await page.waitForTimeout(300);
   const registrado = await page.evaluate(async () => {
     const r = await navigator.serviceWorker.getRegistration();
     return !!r;
@@ -133,14 +135,18 @@ function aRgb(css) {
     const c = await caches.open(claves[0]);
     return (await c.keys()).length;
   });
-  const esperadoEnCache = (fs.readFileSync(path.join(RAIZ, "sw.js"), "utf8").match(/"[^"]+"/g) || []).length;
-  if (enCache < 120) fallo(`el service worker solo cacheo ${enCache} archivos (se esperaban ~124)`);
-  info.push(`Service worker: ${enCache} archivos en cache`);
+  const declarados = (fs.readFileSync(path.join(RAIZ, "sw.js"), "utf8")
+    .match(/var ARCHIVOS = \[([\s\S]*?)\n\];/)[1].match(/"/g) || []).length / 2;
+  if (enCache < declarados - 2)
+    fallo(`el service worker cacheo ${enCache} archivos y declara ${declarados}`);
+  info.push(`Service worker: ${enCache} de ${declarados} archivos en cache`);
 
   /* AHORA SIN INTERNET */
   await ctx.setOffline(true);
-  await page.goto(base + "#/p/anderson/d/2", { waitUntil: "domcontentloaded" });
-  await page.waitForTimeout(800);
+  await page.goto(base, { waitUntil: "domcontentloaded" });
+  await page.waitForTimeout(500);
+  await page.evaluate(() => { window.location.hash = "#/p/anderson/d/2"; });
+  await page.waitForTimeout(600);
   const offline = await page.evaluate(() => {
     const c = document.getElementById("contenido");
     const imgs = [...document.images];
@@ -155,23 +161,35 @@ function aRgb(css) {
   if (!offline.fotosOk) fallo("SIN INTERNET: las fotos no cargan desde el cache");
 
   await page.evaluate(() => { window.location.hash = "#/p/anderson/d/2/e/0"; });
-  await page.waitForTimeout(600);
+  await page.waitForTimeout(800);
   const detalleOffline = await page.evaluate(() => ({
     nombre: (document.querySelector(".detalle-nombre") || {}).textContent || "",
-    fotos: [...document.querySelectorAll(".fotos img")].filter(i => i.naturalWidth > 0).length
+    laminas: [...document.querySelectorAll(".carrusel-lamina img")].filter(i => i.naturalWidth > 0).length
   }));
-  if (detalleOffline.fotos !== 2) fallo(`SIN INTERNET: el detalle deberia mostrar 2 fotos, muestra ${detalleOffline.fotos}`);
-  info.push(`Sin internet: la app abre, lista los ejercicios y muestra las fotos ("${detalleOffline.nombre}")`);
+  if (detalleOffline.laminas !== 3)
+    fallo(`SIN INTERNET: el detalle deberia mostrar 3 laminas, muestra ${detalleOffline.laminas}`);
+
+  /* Un ejercicio de solo ficha tambien tiene que verse sin conexion */
+  await page.evaluate(() => { window.location.hash = "#/p/anderson/d/1/e/0"; });
+  await page.waitForTimeout(800);
+  const soloFicha = await page.evaluate(() =>
+    [...document.querySelectorAll(".carrusel-lamina img")].filter(i => i.naturalWidth > 0).length);
+  if (soloFicha !== 1) fallo(`SIN INTERNET: el ejercicio de solo ficha muestra ${soloFicha} laminas`);
+
+  info.push(`Sin internet: la app abre, lista los ejercicios y muestra las imagenes ("${detalleOffline.nombre}")`);
   await ctx.setOffline(false);
 
   /* ========== 3. CONTRASTE REAL EN LOS TRES TEMAS ========== */
-  await page.goto(base + "#/p/anderson/d/2/e/0", { waitUntil: "networkidle" });
-  await page.waitForTimeout(400);
+  await page.goto(base, { waitUntil: "networkidle" });
+  await page.evaluate(() => { window.location.hash = "#/p/anderson/d/2/e/0"; });
+  await page.waitForTimeout(500);
   for (const tema of ["oscuro", "claro", "maximo"]) {
     await page.evaluate(t => {
       document.documentElement.setAttribute("data-tema", t);
     }, tema);
-    await page.waitForTimeout(100);
+    /* Los botones tienen transición de color: si se mide antes de que
+       termine, se lee un color intermedio y el contraste sale falseado. */
+    await page.waitForTimeout(600);
     const pares = await page.evaluate(() => {
       const fondoDe = el => {
         let n = el;
@@ -189,20 +207,40 @@ function aRgb(css) {
       };
       return [
         medir(".detalle-nombre", "titulo del ejercicio"),
-        medir(".detalle-meta", "texto secundario"),
+        medir(".detalle-equipo", "texto secundario"),
+        medir(".pildora-grupo", "pildora de grupo muscular"),
         medir(".pasos li span", "texto de los pasos"),
         medir("#btnSerieHecha", "boton principal"),
-        medir(".foto-pie", "pie de foto"),
+        medir("#btnLeer", "boton secundario"),
+        medir(".foto-pie", "rotulo de la imagen"),
         medir(".aviso", "aviso de seguridad"),
+        medir(".tarjeta h3", "titulo de tarjeta"),
+        medir(".receta-valor", "cifra de la prescripcion"),
+        medir(".receta-etiqueta", "etiqueta de la prescripcion"),
+        medir(".carrusel-posicion", "contador del carrusel"),
+        medir(".carrusel-flecha", "flecha del carrusel (deshabilitada)"),
+        medir(".carrusel-punto", "punto del carrusel"),
+        medir('.carrusel-punto[aria-current="true"]', "punto activo del carrusel"),
+        medir("#btnAnterior", "boton deshabilitado"),
+        medir("#campoPeso", "campo de peso"),
+        medir(".series-numero", "cifra de series"),
+        medir(".series-etiqueta", "etiqueta de series"),
         medir(".titulo-barra", "titulo de la barra")
       ].filter(Boolean);
     });
-    for (const p of pares) {
-      const r = contraste(aRgb(p.color), aRgb(p.fondo));
-      if (r < 4.5) fallo(`contraste tema ${tema}: "${p.etiqueta}" = ${r.toFixed(1)}:1 (minimo 4.5)`);
+    /* El listón de este proyecto es AAA (7:1), no el AA de 4.5:1.
+       El usuario principal tiene baja visión: aquí no se negocia. */
+    const MINIMO = 7;
+    const medidos = pares.map(p => ({ ...p, r: contraste(aRgb(p.color), aRgb(p.fondo)) }))
+                         .sort((a, b) => a.r - b.r);
+    for (const p of medidos) {
+      if (p.r < MINIMO) {
+        fallo(`contraste tema ${tema}: "${p.etiqueta}" = ${p.r.toFixed(2)}:1 ` +
+              `(minimo ${MINIMO}) · texto ${p.color} sobre ${p.fondo}`);
+      }
     }
-    const peor = Math.min(...pares.map(p => contraste(aRgb(p.color), aRgb(p.fondo))));
-    info.push(`Contraste tema ${tema}: el peor par mide ${peor.toFixed(1)}:1`);
+    info.push(`Contraste tema ${tema}: ${medidos.length} pares medidos, ` +
+              `el peor "${medidos[0].etiqueta}" = ${medidos[0].r.toFixed(2)}:1`);
   }
   await page.evaluate(() => document.documentElement.setAttribute("data-tema", "oscuro"));
 
@@ -237,8 +275,9 @@ function aRgb(css) {
   if (!a11y.length) info.push("Accesibilidad: idioma, alt, nombres de botones, aria-live y zoom correctos");
 
   /* ========== 5. EL AVANCE SE GUARDA AL RECARGAR ========== */
-  await page.goto(base + "#/p/sharid/d/4/e/0", { waitUntil: "networkidle" });
-  await page.waitForTimeout(300);
+  await page.goto(base, { waitUntil: "networkidle" });
+  await page.evaluate(() => { window.location.hash = "#/p/sharid/d/4/e/0"; });
+  await page.waitForTimeout(500);
   await page.fill("#campoPeso", "17,5 kg");
   await page.dispatchEvent("#campoPeso", "change");
   await page.click("#btnMasSerie");
@@ -258,8 +297,9 @@ function aRgb(css) {
   info.push("Persistencia: series, peso y ejercicios hechos sobreviven a recargar");
 
   /* ========== 6. EL DÍA "HOY" ES EL CORRECTO ========== */
-  await page.goto(base + "#/p/anderson", { waitUntil: "networkidle" });
-  await page.waitForTimeout(300);
+  await page.goto(base, { waitUntil: "networkidle" });
+  await page.evaluate(() => { window.location.hash = "#/p/anderson"; });
+  await page.waitForTimeout(400);
   const hoyApp = await page.evaluate(() =>
     (document.querySelector('.dia[data-hoy="si"] .dia-nombre') || {}).textContent || "");
   const nombres = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
@@ -277,20 +317,38 @@ function aRgb(css) {
         await page.waitForTimeout(35);
         const r = await page.evaluate(() => {
           const n = document.querySelector(".detalle-nombre");
-          const fotos = [...document.querySelectorAll(".fotos img")];
+          const imgs = [...document.querySelectorAll(".carrusel-lamina img")];
           return {
             nombre: n ? n.textContent : null,
             pasos: document.querySelectorAll(".pasos li").length,
-            rotas: fotos.filter(f => f.complete && f.naturalWidth === 0).length,
-            donde: !!document.querySelector(".tarjeta h3"),
+            srcs: imgs.map(f => f.getAttribute("src")),
+            rotas: imgs.filter(f => f.complete && f.naturalWidth === 0).length,
+            tamanos: imgs.map(f => f.naturalWidth),
+            grupo: (document.querySelector(".pildora-grupo") || {}).textContent || "",
             video: (document.querySelector(".enlace-video") || {}).href || ""
           };
         });
-        const esperado = DATOS.CATALOGO[d.ejercicios[i]];
+        const clave = d.ejercicios[i];
+        const esperado = DATOS.CATALOGO[clave];
+        const nLaminas = esperado.fotosOk ? 3 : 1;
+
         if (r.nombre !== esperado.nombre) fallo(`${pid} d${d.n} e${i}: muestra "${r.nombre}" y deberia ser "${esperado.nombre}"`);
-        if (r.pasos !== esperado.pasos.length) fallo(`${pid} d${d.n} e${i}: ${r.pasos} pasos en pantalla vs ${esperado.pasos.length} en los datos`);
-        if (r.rotas) fallo(`${pid} d${d.n} e${i}: ${r.rotas} foto(s) rotas`);
+        if (r.pasos !== esperado.pasos.length) fallo(`${pid} d${d.n} e${i}: ${r.pasos} pasos vs ${esperado.pasos.length} en los datos`);
+        if (r.rotas) fallo(`${pid} d${d.n} e${i}: ${r.rotas} imagen(es) rotas`);
         if (!r.video.includes("youtube.com")) fallo(`${pid} d${d.n} e${i}: enlace de video invalido`);
+        if (!r.grupo.includes(esperado.grupo)) fallo(`${pid} d${d.n} e${i}: la pildora no dice el grupo "${esperado.grupo}"`);
+
+        /* Que la imagen sea LA DE ESE ejercicio, no la de otro */
+        if (r.srcs.length !== nLaminas)
+          fallo(`${clave}: ${r.srcs.length} laminas y deberian ser ${nLaminas}`);
+        if (!r.srcs[0] || !r.srcs[0].endsWith(`/${clave}-ficha.jpg`))
+          fallo(`${clave}: la primera lamina apunta a "${r.srcs[0]}" en vez de a su propia ficha`);
+        if (esperado.fotosOk) {
+          if (!r.srcs[1] || !r.srcs[1].endsWith(`/${clave}-0.jpg`)) fallo(`${clave}: la foto de inicio no es la suya`);
+          if (!r.srcs[2] || !r.srcs[2].endsWith(`/${clave}-1.jpg`)) fallo(`${clave}: la foto final no es la suya`);
+        }
+        if (r.tamanos.some(w => w > 0 && w < 200))
+          fallo(`${clave}: alguna imagen es demasiado pequena (${r.tamanos.join(",")})`);
         visitados++;
       }
     }

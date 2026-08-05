@@ -7,9 +7,9 @@
      #/p/:persona                    semana
      #/p/:persona/lista              lista completa de ejercicios
      #/p/:persona/lista/:filtro      lista filtrada ("todos" o 1..7)
-     #/p/:persona/d/:dia             lista de ejercicios del día
-     #/p/:persona/d/:dia/e/:indice   ejercicio, modo entreno
-     #/p/:persona/x/:clave           ejercicio, modo consulta (desde la lista)
+     #/p/:persona/d/:dia             ejercicios de un día
+     #/p/:persona/d/:dia/e/:indice   ejercicio, modo ENTRENO
+     #/p/:persona/x/:clave           ejercicio, modo CONSULTA
    ============================================================ */
 
 (function () {
@@ -32,13 +32,24 @@
       .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   }
 
+  /* "Tríceps" -> "triceps", para el atributo data-grupo del CSS */
+  function claveGrupo(g) {
+    return String(g || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  }
+
+  /* "Pecho" -> "PE": la inicial que acompaña al color, nunca sola */
+  function inicialGrupo(g) {
+    return String(g || "??").normalize("NFD").replace(/[̀-ͯ]/g, "")
+      .slice(0, 2).toUpperCase();
+  }
+
   function urlVideo(termino) {
     return "https://www.youtube.com/results?search_query=" + encodeURIComponent(termino);
   }
 
   /* Día de la semana de hoy: 1 = lunes … 7 = domingo */
   function diaDeHoy() {
-    var d = new Date().getDay();      /* 0 = domingo */
+    var d = new Date().getDay();
     return d === 0 ? 7 : d;
   }
 
@@ -53,18 +64,14 @@
     if (!e) return null;
     var copia = Object.assign({}, e);
     copia.clave = clave;
-    copia.fotos = ["assets/img/ejercicios/" + clave + "-0.jpg",
-                   "assets/img/ejercicios/" + clave + "-1.jpg"];
+    copia.ficha = "assets/img/ejercicios/" + clave + "-ficha.jpg";
     return copia;
   }
 
-  /* En qué días de la semana aparece un ejercicio, para esta persona */
   function diasDeEjercicio(p, clave) {
     return p.dias.filter(function (d) { return d.ejercicios.indexOf(clave) !== -1; });
   }
 
-  /* Todos los ejercicios que le tocan a una persona, sin repetir,
-     ordenados por grupo muscular y luego por nombre. */
   function todosLosEjercicios(p) {
     var vistos = {}, lista = [];
     p.dias.forEach(function (d) {
@@ -81,10 +88,16 @@
     });
   }
 
+  function pildoraGrupo(grupo) {
+    return '<span class="pildora-grupo" data-grupo="' + esc(claveGrupo(grupo)) + '">' +
+             '<span class="inicial" aria-hidden="true">' + esc(inicialGrupo(grupo)) + '</span>' +
+             esc(grupo) +
+           '</span>';
+  }
+
   function puntosDeDias(dias) {
     if (!dias || !dias.length) return "";
-    var titulo = dias.map(function (d) { return d.dia; }).join(" y ");
-    return '<span class="dias-puntos" role="img" aria-label="Te toca: ' + esc(titulo) + '">' +
+    return '<span class="dias-puntos" aria-hidden="true">' +
       dias.map(function (d) {
         return '<span class="dia-punto" style="background:' + window.COLORES_DIA[d.color].hex + '"></span>';
       }).join("") + '</span>';
@@ -103,7 +116,7 @@
       b.setAttribute("aria-pressed", b.dataset.tema === prefs.tema ? "true" : "false");
     });
     var meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute("content", prefs.tema === "claro" ? "#ffffff" : "#000000");
+    if (meta) meta.setAttribute("content", prefs.tema === "claro" ? "#F2F5F9" : "#0A0E14");
   }
 
   function guardarPrefs() { Guardado.guardarPrefs(prefs); aplicarPrefs(); }
@@ -144,15 +157,18 @@
       var p = window.PLANES[id];
       var n = p.dias.reduce(function (a, d) { return a + d.ejercicios.length; }, 0);
       html += '<button class="persona" data-ir="#/p/' + id + '" data-tema-persona="' + esc(p.tema) + '">' +
-                '<span class="persona-nombre">' + esc(p.nombre) + '</span>' +
-                '<span class="persona-detalle">5 días por semana · ' + n + ' ejercicios</span>' +
+                '<span class="persona-inicial" aria-hidden="true">' + esc(p.nombre.charAt(0)) + '</span>' +
+                '<span class="persona-texto">' +
+                  '<span class="persona-nombre">' + esc(p.nombre) + '</span>' +
+                  '<span class="persona-detalle">5 días por semana · ' + n + ' ejercicios</span>' +
+                '</span>' +
               '</button>';
     });
 
     html += '<div class="tarjeta">' +
               '<h3>Cómo funciona</h3>' +
-              '<p>Elige tu nombre y luego el día. Verás la lista de ejercicios con fotos, ' +
-              'los pasos escritos y un botón para que la app te lo lea en voz alta.</p>' +
+              '<p>Elige tu nombre y luego el día. Cada ejercicio trae la ficha del ' +
+              'gimnasio, los pasos escritos y un botón para que la app te lo lea en voz alta.</p>' +
               '<p>Al terminar cada serie toca <strong>Serie hecha</strong> y arranca solo el ' +
               'descanso de un minuto, con aviso de voz y vibración.</p>' +
             '</div>' +
@@ -179,7 +195,8 @@
                '<p class="subtitulo">' + esc(window.PARAMETROS.diasPorSemana) + '</p>';
 
     if (p.notaImportante) {
-      html += '<div class="aviso"><strong>Ojo con esto</strong>' + esc(p.notaImportante) + '</div>';
+      html += '<div class="aviso"><span class="icono" aria-hidden="true">!</span><span>' +
+              '<strong>Ojo con esto</strong>' + esc(p.notaImportante) + '</span></div>';
     }
 
     p.dias.forEach(function (d) {
@@ -187,25 +204,27 @@
       var sesion = Guardado.sesion(idPersona, d.n);
       var hechos = Object.keys(sesion.hechos || {}).length;
       var total = d.ejercicios.length;
-      var conteo = total === 0
-        ? "Sin ejercicios"
+      var descanso = total === 0;
+      var conteo = descanso ? "Sin ejercicios"
         : (hechos > 0 ? hechos + " de " + total + " hechos hoy" : total + " ejercicios");
 
       html += '<button class="dia" data-ir="#/p/' + idPersona + '/d/' + d.n + '"' +
-                (d.n === hoy ? ' data-hoy="si"' : '') + '>' +
-                '<span class="dia-marca" style="background:' + color.hex + '"></span>' +
+                (d.n === hoy ? ' data-hoy="si"' : '') +
+                (descanso ? ' data-descanso="si"' : '') + '>' +
+                '<span class="dia-marca" aria-hidden="true" style="--color-dia:' + color.hex + '">' +
+                  esc(d.dia.charAt(0)) + '</span>' +
                 '<span class="dia-info">' +
                   '<span class="dia-nombre">' + esc(d.dia) +
                     (d.n === hoy ? '<span class="etiqueta-hoy">HOY</span>' : '') + '</span>' +
                   '<span class="dia-titulo">' + esc(d.titulo) + '</span>' +
                   '<span class="dia-conteo">' + esc(conteo) + '</span>' +
                 '</span>' +
-                '<span aria-hidden="true">›</span>' +
+                '<span class="dia-flecha" aria-hidden="true">›</span>' +
               '</button>';
     });
 
     html += '<button class="btn-grande btn-secundario" data-ir="#/p/' + idPersona + '/lista" ' +
-              'style="margin-top:.4rem">📋 Ver la lista completa de ejercicios</button>' +
+              'style="margin-top:var(--e4)">Ver la lista completa de ejercicios</button>' +
 
             '<div class="tarjeta">' +
               '<h3>Reglas de toda la rutina</h3>' +
@@ -243,17 +262,17 @@
         });
 
     var html = '<h2 class="titulo-seccion">Todos tus ejercicios</h2>' +
-               '<p class="subtitulo">' + todos.length + ' ejercicios en total. ' +
-               'Filtra por día para ver qué te asignaron.</p>';
+               '<p class="subtitulo">' + todos.length + ' en total. Filtra por día para ver ' +
+               'qué te asignaron.</p>';
 
-    /* --- botones de filtro --- */
     html += '<div class="filtros" role="group" aria-label="Filtrar por día">' +
               '<button class="filtro" data-filtro="todos" aria-pressed="' +
                 (filtro === "todos") + '">Todos (' + todos.length + ')</button>';
     p.dias.filter(function (d) { return d.ejercicios.length; }).forEach(function (d) {
       html += '<button class="filtro" data-filtro="' + d.n + '" aria-pressed="' +
                 (String(filtro) === String(d.n)) + '">' +
-                '<span class="punto" style="background:' + window.COLORES_DIA[d.color].hex + '"></span>' +
+                '<span class="punto" aria-hidden="true" style="background:' +
+                  window.COLORES_DIA[d.color].hex + '"></span>' +
                 esc(d.dia) + ' (' + d.ejercicios.length + ')</button>';
     });
     html += '</div>';
@@ -268,7 +287,7 @@
                   esc(window.COLORES_DIA[dSel.color].etiqueta.toLowerCase()) + '</strong>.</p>' +
                 '</div>' +
                 '<button class="btn-grande btn-principal" data-ir="#/p/' + idPersona + '/d/' + dSel.n + '">' +
-                  '▶ Entrenar este día</button>';
+                  'Entrenar este día</button>';
       }
     }
 
@@ -280,18 +299,20 @@
     visibles.forEach(function (e) {
       if (e.grupo !== grupoActual) {
         grupoActual = e.grupo;
-        html += '<h3 class="titulo-seccion" style="margin:1.1rem 0 .5rem;font-size:1em">' +
-                esc(grupoActual) + '</h3>';
+        html += '<h3 class="grupo-titulo" data-grupo="' + esc(claveGrupo(grupoActual)) + '">' +
+                  '<span class="marca" aria-hidden="true"></span>' + esc(grupoActual) +
+                '</h3>';
       }
       var etiquetaDias = e.dias.map(function (d) { return d.dia; }).join(" y ");
-      html += '<button class="ejercicio" data-ir="#/p/' + idPersona + '/x/' + e.clave + '">' +
-                '<img class="ejercicio-miniatura" src="' + esc(e.fotos[0]) + '" alt="" loading="lazy">' +
+      html += '<button class="ejercicio" data-grupo="' + esc(claveGrupo(e.grupo)) + '" ' +
+                'data-ir="#/p/' + idPersona + '/x/' + e.clave + '">' +
+                '<img class="ejercicio-miniatura" src="' + esc(e.ficha) + '" alt="" loading="lazy">' +
                 '<span class="ejercicio-texto">' +
                   '<span class="ejercicio-nombre">' + esc(e.nombre) + '</span>' +
                   '<span class="ejercicio-grupo">' + esc(e.equipo) + '</span>' +
                   '<span class="ejercicio-grupo">' + esc(etiquetaDias) + puntosDeDias(e.dias) + '</span>' +
                 '</span>' +
-                '<span aria-hidden="true">›</span>' +
+                '<span class="ejercicio-flecha" aria-hidden="true">›</span>' +
               '</button>';
     });
 
@@ -332,21 +353,32 @@
     }
 
     var pct = Math.round(hechos / total * 100);
-    html += '<p>' + esc(d.resumen) + '</p>' +
-            '<p><strong>' + hechos + ' de ' + total + '</strong> ejercicios hechos hoy</p>' +
-            '<div class="barra-progreso" role="img" aria-label="Progreso del día: ' + pct + ' por ciento">' +
-              '<span style="width:' + pct + '%"></span></div>' +
-            '<button class="btn-grande btn-principal" data-ir="#/p/' + idPersona + '/d/' + d.n + '/e/0">' +
-              '▶ Empezar el entreno</button>';
+    html += '<p>' + esc(d.resumen) + '</p>';
+
+    if (hechos === total) {
+      html += '<div class="estado-final">' +
+                '<span class="icono" aria-hidden="true">✓</span>' +
+                '<strong>Día completo</strong>' +
+                '<p>Hiciste los ' + total + ' ejercicios. Cierra con ' +
+                esc(window.PARAMETROS.cardio) + '.</p>' +
+              '</div>';
+    } else {
+      html += '<p><strong>' + hechos + ' de ' + total + '</strong> ejercicios hechos hoy</p>' +
+              '<div class="barra-progreso" role="img" aria-label="Progreso del día: ' + pct + ' por ciento">' +
+                '<span style="width:' + pct + '%"></span></div>' +
+              '<button class="btn-grande btn-principal" data-ir="#/p/' + idPersona + '/d/' + d.n + '/e/0">' +
+                (hechos ? 'Seguir con el entreno' : 'Empezar el entreno') + '</button>';
+    }
 
     d.ejercicios.forEach(function (clave, i) {
       var e = ejercicioDe(clave);
       if (!e) return;
       var hecho = sesion.hechos && sesion.hechos[clave];
-      html += '<button class="ejercicio" data-ir="#/p/' + idPersona + '/d/' + d.n + '/e/' + i + '"' +
+      html += '<button class="ejercicio" data-grupo="' + esc(claveGrupo(e.grupo)) + '" ' +
+                'data-ir="#/p/' + idPersona + '/d/' + d.n + '/e/' + i + '"' +
                 (hecho ? ' data-hecho="si"' : '') + '>' +
                 '<span class="ejercicio-numero" aria-hidden="true">' + (hecho ? '✓' : (i + 1)) + '</span>' +
-                '<img class="ejercicio-miniatura" src="' + esc(e.fotos[0]) + '" alt="" loading="lazy">' +
+                '<img class="ejercicio-miniatura" src="' + esc(e.ficha) + '" alt="" loading="lazy">' +
                 '<span class="ejercicio-texto">' +
                   '<span class="ejercicio-nombre">' + esc(e.nombre) + '</span>' +
                   '<span class="ejercicio-grupo">' + esc(e.grupo) + ' · ' + esc(e.equipo) +
@@ -361,49 +393,45 @@
   }
 
   /* ---------------------------------------------------------
-     Bloque común del detalle de un ejercicio
+     Piezas comunes del detalle de un ejercicio
      --------------------------------------------------------- */
-  function bloqueEjercicio(e) {
-    return '<h2 class="detalle-nombre">' + esc(e.nombre) + '</h2>' +
-      '<p class="detalle-meta">' + esc(e.grupo) + ' · ' + esc(e.equipo) + '</p>' +
+  function cabeceraEjercicio(e) {
+    return '<div class="detalle-cabecera">' +
+             '<h2 class="detalle-nombre">' + esc(e.nombre) + '</h2>' +
+             '<p class="detalle-meta">' + pildoraGrupo(e.grupo) +
+               '<span class="detalle-equipo">' + esc(e.equipo) + '</span></p>' +
+           '</div>';
+  }
 
-      '<button class="btn-grande btn-principal" id="btnLeer">🔊 Léemelo en voz alta</button>' +
+  function carruselDe(e) {
+    return Carrusel.html(Carrusel.laminasDe(e), e.nombre);
+  }
 
-      '<div class="fotos">' +
-        '<figure class="foto-caja" style="margin:0">' +
-          '<img src="' + esc(e.fotos[0]) + '" alt="Posición de inicio de ' + esc(e.nombre) + '">' +
-          '<figcaption class="foto-pie">1 · Posición de inicio</figcaption>' +
-        '</figure>' +
-        '<figure class="foto-caja" style="margin:0">' +
-          '<img src="' + esc(e.fotos[1]) + '" alt="Posición final de ' + esc(e.nombre) + '">' +
-          '<figcaption class="foto-pie">2 · Posición final</figcaption>' +
-        '</figure>' +
-      '</div>' +
-      (e.exacta
-        ? '<p class="nota-foto">Fotos del ejercicio.</p>'
-        : '<p class="nota-foto">⚠ Las fotos son de un movimiento muy parecido, no idéntico. ' +
-          'Lee los pasos y mira el video para verlo exacto.</p>') +
-
-      '<a class="enlace-video" href="' + esc(urlVideo(e.buscar)) + '" target="_blank" rel="noopener">' +
-        '▶ Ver video del ejercicio</a>' +
-
-      '<div class="tarjeta">' +
-        '<h3>Dónde está / qué necesitas</h3>' +
-        '<p>' + esc(e.donde) + '</p>' +
-      '</div>' +
-
+  function instrucciones(e) {
+    var html =
       '<div class="tarjeta">' +
         '<h3>Cómo se hace</h3>' +
         '<ol class="pasos">' +
           e.pasos.map(function (t) { return '<li><span>' + esc(t) + '</span></li>'; }).join("") +
         '</ol>' +
       '</div>' +
-
-      (e.ojo ? '<div class="aviso"><strong>Ojo con esto</strong>' + esc(e.ojo) + '</div>' : '');
+      '<div class="tarjeta">' +
+        '<h3>Dónde está / qué necesitas</h3>' +
+        '<p>' + esc(e.donde) + '</p>' +
+      '</div>';
+    if (e.ojo) {
+      html += '<div class="aviso"><span class="icono" aria-hidden="true">!</span><span>' +
+              '<strong>Ojo con esto</strong>' + esc(e.ojo) + '</span></div>';
+    }
+    html += '<a class="enlace-video" href="' + esc(urlVideo(e.buscar)) + '" target="_blank" rel="noopener">' +
+              'Ver video del ejercicio (necesita internet)</a>';
+    return html;
   }
 
   function conectarBotonLeer(e) {
-    document.getElementById("btnLeer").addEventListener("click", function () {
+    var b = document.getElementById("btnLeer");
+    if (!b) return;
+    b.addEventListener("click", function () {
       if (Voz.hablando()) { Voz.callar(); return; }
       if (!Voz.leerEjercicio(e)) {
         alert("Este teléfono no tiene lectura por voz disponible.");
@@ -426,22 +454,23 @@
     btnVolver.dataset.ir = "#/p/" + idPersona + "/lista";
 
     var dias = diasDeEjercicio(p, clave);
-    var html = bloqueEjercicio(e);
+    var html = cabeceraEjercicio(e) + carruselDe(e) +
+               '<button class="btn-grande btn-principal" id="btnLeer">Léemelo en voz alta</button>' +
+               instrucciones(e);
 
     if (dias.length) {
-      html += '<div class="tarjeta">' +
-                '<h3>Cuándo te toca</h3>' +
-                '<p>' + esc(dias.map(function (d) { return d.dia; }).join(" y ")) + '.</p>' +
-              '</div>';
+      html += '<div class="tarjeta"><h3>Cuándo te toca</h3><p>' +
+                esc(dias.map(function (d) { return d.dia; }).join(" y ")) + '.</p></div>';
       dias.forEach(function (d) {
         html += '<button class="btn-grande btn-secundario" data-ir="#/p/' + idPersona + '/d/' + d.n + '">' +
-                  '▶ Ir al entreno de ' + esc(d.dia) + '</button>';
+                  'Ir al entreno de ' + esc(d.dia) + '</button>';
       });
     } else {
       html += '<div class="tarjeta"><p>Este ejercicio no está en tu rutina actual.</p></div>';
     }
 
     contenido.innerHTML = html;
+    Carrusel.conectarTodos(contenido);
     conectarBotonLeer(e);
   }
 
@@ -467,18 +496,30 @@
     var seriesHechas = (sesion.series && sesion.series[clave]) || 0;
     var pesoGuardado = Guardado.peso(idPersona, clave);
 
-    var html = bloqueEjercicio(e) +
+    var html = cabeceraEjercicio(e) +
+
+      /* Lo que hay que hacer, antes que nada */
+      '<div class="receta">' +
+        '<div class="receta-celda"><span class="receta-valor">3-4</span>' +
+          '<span class="receta-etiqueta">Series</span></div>' +
+        '<div class="receta-celda"><span class="receta-valor">10-15</span>' +
+          '<span class="receta-etiqueta">Repes</span></div>' +
+        '<div class="receta-celda"><span class="receta-valor">' + window.PARAMETROS.descanso + ' s</span>' +
+          '<span class="receta-etiqueta">Descanso</span></div>' +
+      '</div>' +
+
+      carruselDe(e) +
 
       '<div class="tarjeta series-caja">' +
-        '<h3>' + esc(window.PARAMETROS.series) + ' de ' + esc(window.PARAMETROS.repeticiones) + '</h3>' +
+        '<h3>Series de hoy</h3>' +
         '<p class="series-numero" id="numSeries" aria-live="polite">' + seriesHechas + '</p>' +
         '<p class="series-etiqueta">series hechas</p>' +
         '<div class="series-controles">' +
           '<button class="btn-grande btn-secundario" id="btnMenosSerie" aria-label="Quitar una serie">−</button>' +
           '<button class="btn-grande btn-secundario" id="btnMasSerie" aria-label="Sumar una serie">+</button>' +
         '</div>' +
-        '<button class="btn-grande btn-principal" id="btnSerieHecha" style="margin-top:.7rem">' +
-          '✓ Serie hecha · descansar ' + window.PARAMETROS.descanso + ' s</button>' +
+        '<button class="btn-grande btn-principal" id="btnSerieHecha" style="margin-top:var(--e3)">' +
+          'Serie hecha · descansar ' + window.PARAMETROS.descanso + ' s</button>' +
         '<label class="etiqueta-peso">' +
           '<span>Peso que usaste</span>' +
           '<input type="text" id="campoPeso" class="campo-peso" inputmode="decimal" ' +
@@ -486,11 +527,15 @@
         '</label>' +
       '</div>' +
 
+      '<button class="btn-grande btn-secundario" id="btnLeer">Léemelo en voz alta</button>' +
+
+      instrucciones(e) +
+
       '<button class="btn-grande" id="btnHecho">' +
-        (sesion.hechos && sesion.hechos[clave] ? '↺ Marcar como NO hecho' : '✓ Terminé este ejercicio') +
+        (sesion.hechos && sesion.hechos[clave] ? 'Marcar como NO hecho' : '✓ Terminé este ejercicio') +
       '</button>' +
 
-      '<div class="fila-doble" style="margin-top:.2rem">' +
+      '<div class="fila-doble">' +
         '<button class="btn-grande btn-secundario" id="btnAnterior"' +
           (indice === 0 ? ' disabled' : '') + '>← Anterior</button>' +
         '<button class="btn-grande btn-secundario" id="btnSiguiente"' +
@@ -498,6 +543,7 @@
       '</div>';
 
     contenido.innerHTML = html;
+    Carrusel.conectarTodos(contenido);
     conectarBotonLeer(e);
 
     function refrescarSeries() {
@@ -566,20 +612,19 @@
 
     var t = (location.hash || "#/").replace(/^#\/?/, "").split("/").filter(Boolean);
 
-    if (t[0] !== "p")                                 vistaInicio();
-    else if (t.length === 2)                          vistaSemana(t[1]);
-    else if (t.length === 3 && t[2] === "lista")      vistaLista(t[1], "todos");
-    else if (t.length === 4 && t[2] === "lista")      vistaLista(t[1], t[3]);
-    else if (t.length === 4 && t[2] === "d")          vistaDia(t[1], t[3]);
-    else if (t.length === 4 && t[2] === "x")          vistaConsulta(t[1], t[3]);
-    else if (t.length === 6 && t[4] === "e")          vistaEjercicio(t[1], t[3], t[5]);
-    else                                              vistaInicio();
+    if (t[0] !== "p")                            vistaInicio();
+    else if (t.length === 2)                     vistaSemana(t[1]);
+    else if (t.length === 3 && t[2] === "lista") vistaLista(t[1], "todos");
+    else if (t.length === 4 && t[2] === "lista") vistaLista(t[1], t[3]);
+    else if (t.length === 4 && t[2] === "d")     vistaDia(t[1], t[3]);
+    else if (t.length === 4 && t[2] === "x")     vistaConsulta(t[1], t[3]);
+    else if (t.length === 6 && t[4] === "e")     vistaEjercicio(t[1], t[3], t[5]);
+    else                                         vistaInicio();
 
     window.scrollTo(0, 0);
     contenido.focus();
   }
 
-  /* Un solo listener para todos los botones con data-ir */
   document.addEventListener("click", function (ev) {
     var el = ev.target.closest("[data-ir]");
     if (el && !el.hasAttribute("disabled")) { irA(el.dataset.ir); }
@@ -593,15 +638,17 @@
   aplicarPrefs();
   Cronometro.init();
 
-  if (!location.hash || location.hash === "#" || location.hash === "#/") {
-    var ultima = Guardado.ultimaPersona();
-    if (ultima && window.PLANES[ultima]) location.hash = "#/p/" + ultima;
-    else enrutar();
-  } else {
-    enrutar();
+  /* La app SIEMPRE abre en el selector de persona, pase lo que pase.
+     Antes saltaba sola a la última persona usada, y al recargar te dejaba
+     dentro de la rutina del otro sin que te dieras cuenta. Como la usan dos
+     personas en dos teléfonos, empezar preguntando quién entrena es lo único
+     que no se presta a confusión. */
+  if (location.hash && location.hash !== "#/" && location.hash !== "#") {
+    if (history.replaceState) history.replaceState(null, "", location.pathname + location.search + "#/");
+    else location.hash = "#/";
   }
+  enrutar();
 
-  /* Service worker: permite abrir la app sin internet */
   if (navigator.serviceWorker && location.protocol.indexOf("http") === 0) {
     window.addEventListener("load", function () {
       try {

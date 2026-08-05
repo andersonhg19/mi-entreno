@@ -30,8 +30,9 @@ sobre cualquier otra decisión de diseño.
 6. **Los tres temas mantienen contraste ≥ 7:1.** `npm run pwa` lo mide de verdad
    en el navegador; no fiarse del ojo.
 
-7. **Honestidad sobre las fotos.** Si una foto no es exactamente el ejercicio,
-   `exacta: false` y la app lo advierte en pantalla. Nunca al revés.
+7. **Honestidad sobre las imágenes.** La ficha del gimnasio siempre; las fotos
+   reales solo si `fotosOk: true`, y eso solo tras mirarlas. Ver la sección
+   «Imágenes» más abajo: es la regla que más veces se ha roto.
 
 8. **Todo en español**, incluidos nombres de variables, funciones, comentarios y
    claves de datos. Es el idioma del usuario y de las planillas.
@@ -42,13 +43,16 @@ sobre cualquier otra decisión de diseño.
 index.html · manifest.webmanifest · sw.js · servidor.js
 assets/css/estilos.css
 assets/js/  datos-catalogo.js  datos-planes.js
-            almacenamiento.js  voz.js  cronometro.js  app.js
-assets/img/ejercicios/<clave>-0.jpg  (inicio)
-                      <clave>-1.jpg  (final)
+            almacenamiento.js  voz.js  carrusel.js  cronometro.js  app.js
+assets/img/ejercicios/<clave>-ficha.jpg  (ficha del tablero, SIEMPRE)
+                      <clave>-0.jpg      (foto real inicio, solo si fotosOk)
+                      <clave>-1.jpg      (foto real final,  solo si fotosOk)
 pruebas/  documentación/  seguimiento/  recursos/
 ```
 
-`app.js` es lo único que toca el DOM de las vistas.
+`app.js` es lo único que toca el DOM de las vistas; `carrusel.js` se encarga
+solo del carrusel de imágenes (movimiento con scroll-snap de CSS, nunca
+capturando el táctil, para no romper el pellizco para ampliar).
 `almacenamiento.js` es lo único que toca `localStorage` — si algún día se le
 pone backend, solo cambia ese archivo.
 
@@ -64,23 +68,55 @@ pone backend, solo cambia ese archivo.
 #/p/:persona/x/:clave           ejercicio en modo CONSULTA (desde la lista)
 ```
 
-El modo consulta reutiliza `bloqueEjercicio()` pero **no** lleva contador de
-series: no hay sesión de un día concreto a la que asociarlas.
+El modo consulta reutiliza `cabeceraEjercicio()`, `carruselDe()` e
+`instrucciones()`, pero **no** lleva contador de series: no hay sesión de un
+día concreto a la que asociarlas.
+
+**La app SIEMPRE arranca en el selector de persona.** Al cargar el documento,
+si viene un `#` con ruta, se sustituye por `#/`. La usan dos personas en dos
+teléfonos: abrir directamente en la rutina de uno es la forma más fácil de que
+el otro entrene lo que no es. Por eso el manifest tampoco lleva accesos
+directos a perfiles.
+
+## Imágenes: la regla más importante del proyecto
+
+Cada ejercicio muestra **la ficha del tablero de Life Gym** (`<clave>-ficha.jpg`).
+Esa imagen es el recorte del cartón que entregó el entrenador, así que es
+**exacta por definición**. Siempre va primero en el carrusel.
+
+Las fotos reales (`<clave>-0.jpg` y `<clave>-1.jpg`, de free-exercise-db) solo
+existen si `fotosOk: true`, y ese campo solo se pone en true después de
+**mirar las tres imágenes y confirmar que son el mismo movimiento y el mismo
+equipo**. En la v3 se descartaron 20 de 55 porque no lo eran: la ficha era de
+TRX y la foto de peso libre, la ficha tumbado y la foto sentado, etc.
+
+Una foto que no corresponde es **peor que ninguna foto**. Si hay duda, `false`.
+
+`prueba-completitud.js` comprueba además que ninguna imagen esté repetida entre
+dos ejercicios: ese fue el error que hacía que «TRX abductor» enseñara la
+máquina abductora.
 
 ## Al agregar un ejercicio
 
-1. Añadirlo a `datos-catalogo.js` con los 8 campos:
-   `nombre`, `grupo`, `equipo`, `exacta`, `donde`, `pasos`, `ojo`, `buscar`.
+1. Añadirlo a `datos-catalogo.js` con los 7 campos obligatorios:
+   `nombre`, `grupo`, `equipo`, `fotosOk`, `donde`, `pasos`, `buscar`
+   (más `ojo` si hay advertencia).
+   - `grupo` tiene que ser uno de los 11 que conoce el CSS (los valida
+     `validar-datos.js`), o se queda sin color de músculo.
    - `donde` describe **cómo reconocer la máquina**, no qué músculo trabaja.
      Es lo que resuelve el problema real de no poder leer los letreros.
-   - `pasos`: mínimo 3, una sola acción por paso, en imperativo, frases cortas.
+   - `pasos`: mínimo 3, una acción por paso, en imperativo, cada uno con
+     sentido por sí solo (nada de «Baja despacio.» a secas) y terminado en punto.
    - `ojo`: advertencia de seguridad o adaptación. Si el entrenador anotó algo
-     a mano en la planilla, va aquí en mayúsculas.
-2. Poner las dos fotos en `assets/img/ejercicios/`.
-3. Añadir las dos rutas de imagen a `ARCHIVOS` en `sw.js`.
-4. Referenciar la clave desde el día que corresponda en `datos-planes.js`.
-5. `npm test`.
-6. Subir `VERSION` en `sw.js`.
+     a mano en la planilla, va aquí y en MAYÚSCULAS.
+2. Poner la ficha recortada del tablero en `assets/img/ejercicios/<clave>-ficha.jpg`.
+3. Solo si las fotos reales corresponden de verdad, añadirlas y poner `fotosOk: true`.
+4. Referenciar la clave desde el día que corresponda en `datos-planes.js`
+   **y en la tabla `PLAN_ESPERADO` de `pruebas/prueba-completitud.js`**
+   (son dos fuentes a propósito: si solo se toca una, la prueba lo caza).
+5. `npm run sw` para regenerar la lista del service worker.
+6. `npm run qa`.
+7. Subir `VERSION` en `sw.js`.
 
 ## Al cambiar cualquier archivo
 
@@ -96,10 +132,11 @@ npm run qa  # completo: además abre Chromium de verdad
 
 | Prueba | Qué cubre |
 |--------|-----------|
-| `validar-datos.js` | Sin dependencias. Sintaxis, campos obligatorios, imágenes que faltan, claves rotas entre planes y catálogo, precarga del service worker, referencias de `index.html`, `getElementById` sin destino, y la guardia del `[hidden]`. |
-| `prueba-humo.js` | jsdom. Recorre las 145 pantallas y ejercita series, temporizador, marcar hecho, filtros de la lista, modo consulta, ajustes y rutas inválidas. |
-| `prueba-visual.js` | Chromium real. Lo que jsdom **no** ve: qué tapa qué, desbordes a lo ancho, fotos rotas, áreas tocables, los tres temas y la letra al máximo. Deja capturas en `pruebas/capturas/`. |
-| `prueba-pwa.js` | Manifest e iconos, **modo sin conexión de verdad**, contraste medido, accesibilidad, persistencia al recargar, el día HOY, y un recorrido por los 114 ejercicios en navegador real. |
+| `validar-datos.js` | Sin dependencias. Sintaxis, campos obligatorios, grupos válidos, imágenes que faltan **y que sobran**, huérfanas, claves rotas, precarga del service worker (que no falte ni sobre nada), y la guardia del `[hidden]`. |
+| `prueba-completitud.js` | **La garantía del plan.** Compara la rutina, ejercicio a ejercicio y en orden, contra una segunda copia escrita a mano desde las planillas. Valida también longitud de pasos, avisos manuscritos del entrenador, tamaño y unicidad de cada imagen (MD5) y que la app arranque en el selector. |
+| `prueba-humo.js` | jsdom. Recorre las 145 pantallas y ejercita series, temporizador, marcar hecho, filtros, modo consulta, carrusel, ajustes y rutas inválidas. |
+| `prueba-visual.js` | Chromium real. Lo que jsdom **no** ve: qué tapa qué, desbordes, imágenes rotas, áreas tocables, arranque desde 5 direcciones distintas, carrusel (flechas, puntos, teclado), temporizador (cuenta, anillo, +30 s, cerrar), filtros, día completo, tres temas, letra al 180 %, y enlaces. Deja capturas en `pruebas/capturas/`. |
+| `prueba-pwa.js` | Manifest e iconos, **modo sin conexión de verdad**, contraste medido en 20 pares × 3 temas, accesibilidad, persistencia al recargar, el día HOY, y los 114 ejercicios uno a uno comprobando que **cada imagen es la suya**. |
 
 **Lección aprendida:** jsdom no calcula estilos. Un fallo puramente visual
 (el temporizador tapando la app) pasó sus pruebas. Cualquier cambio de CSS

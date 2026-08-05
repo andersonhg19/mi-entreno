@@ -1,76 +1,145 @@
 /* ============================================================
-   MI ENTRENO — Hoja de estilos
+   MI ENTRENO — Sistema de diseño
 
-   Tamaños ESTÁNDAR por defecto (base 17 px, el tamaño normal de
-   iOS). La app no fuerza letra gigante: quien necesite ampliar
-   usa la lupa del sistema, el zoom del navegador, o el control
-   A− / A+ de la barra superior.
-
-   Lo que sí se mantiene siempre:
-     · Contraste alto en los tres temas
-     · Áreas tocables cómodas (48 px, el estándar de Material)
-     · Nada que dependa solo del color
+   Reglas duras (no romper):
+   1. Todos los pares texto/fondo ≥ 7:1 (WCAG AAA) en los tres temas.
+      `npm run pwa` lo mide de verdad; no fiarse del ojo.
+   2. Tamaños de texto ESTÁNDAR (base 17 px). La lupa del iPhone y el
+      zoom del navegador funcionan ENCIMA de esto.
+   3. Ningún tamaño de texto en px: todo en em sobre --base.
+      Los px del sistema son --toque, radios y espaciados, que NO
+      deben crecer con la letra.
+   4. `opacity` nunca sobre texto (baja el contraste sin avisar).
+      Para atenuar: --texto-suave. Para deshabilitar: --texto-inactivo.
+   5. Ningún gráfico informativo depende de un `background`: los
+      anillos y barras van con `stroke`/`border`, que sobreviven a
+      forced-colors.
+   6. El color nunca informa solo: siempre lleva texto o icono.
    ============================================================ */
 
 :root {
-  --escala: 1;                 /* la cambia el usuario: 0.9 → 1.8 */
+  /* --- escala y medidas --- */
+  --escala: 1;
   --base: calc(17px * var(--escala));
+  --toque: 48px;
 
-  --fondo:        #0b0f14;
-  --fondo-2:      #151d27;
-  --fondo-3:      #1e2936;
-  --texto:        #ffffff;
-  --texto-suave:  #c7d4e2;
-  --borde:        #3b4c60;
-  --acento:       #4cc9f0;
-  --acento-texto: #06202b;
-  --ok:           #7ee787;
-  --alerta:       #ffd166;
-  --peligro:      #ff7b72;
+  --radio-1: 8px;  --radio-2: 14px;  --radio-3: 20px;  --radio-full: 999px;
+  --e0: 2px; --e1: 4px; --e2: 8px;  --e3: 12px;
+  --e4: 16px; --e5: 24px; --e6: 32px; --e7: 48px;
 
-  --radio: 12px;
-  --toque: 48px;               /* alto mínimo de cualquier cosa tocable */
+  /* --- tipografía --- */
+  --fuente:     system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --fuente-num: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --t-display: 3.4em;  --t-cifra: 2.2em;       --t-titulo: 1.4em;
+  --t-seccion: 1.12em; --t-cuerpo: 1em;
+  --t-menor: .875em;   --t-etiqueta: .75em;
+
+  /* --- movimiento --- */
+  --t-rapida: 120ms; --t-media: 200ms;
+  --curva: cubic-bezier(.2,.7,.3,1);
 }
 
+/* ---------------- TEMA OSCURO (por defecto) ---------------- */
+:root, [data-tema="oscuro"] {
+  --fondo: #0A0E14; --superficie-1: #121A24;
+  --superficie-2: #1B2634; --superficie-3: #26333F;
+  --texto: #F2F7FC; --texto-suave: #BFCCDA; --texto-inactivo: #8FA0B4;
+  --borde: #2E3B4C; --borde-fuerte: #54687F;
+  --acento: #5CD5F5; --acento-texto: #04121A; --acento-suave: #103444;
+  --ok: #6EE7A0; --ok-texto: #04220C;
+  --alerta: #FFC85C; --alerta-texto: #1A0E00;
+  --peligro: #FFB4A8; --peligro-texto: #2A0400;
+  --foco: #FFC85C;
+  --sombra-1: 0 1px 2px rgba(0,0,0,.55);
+  --sombra-2: 0 4px 14px rgba(0,0,0,.55);
+
+  --g-pecho:#FFAAA3; --g-espalda:#A0C0FF; --g-hombros:#67D9EC; --g-biceps:#7BE3A4;
+  --g-triceps:#CCB4FF; --g-pierna:#FFC46B; --g-gluteos:#FFA4D5; --g-abdomen:#DDE26E;
+  --g-pantorrilla:#5EDCC6; --g-lumbar:#FFB88C; --g-antebrazos:#B8C6D8;
+  --g-contra: #08121A;
+}
+
+/* ---------------- TEMA CLARO ---------------- */
 [data-tema="claro"] {
-  --fondo:        #ffffff;
-  --fondo-2:      #f2f5f9;
-  --fondo-3:      #e2e8f0;
-  --texto:        #0a0f16;
-  --texto-suave:  #44576d;
-  --borde:        #9aabbe;
-  --acento:       #04486b;
-  --acento-texto: #ffffff;
-  --ok:           #0f6b2a;
-  --alerta:       #7a4c00;
-  --peligro:      #a4131f;
+  --fondo: #F2F5F9; --superficie-1: #FFFFFF;
+  --superficie-2: #E7EDF5; --superficie-3: #D8E1EC;
+  --texto: #0B1220; --texto-suave: #334354; --texto-inactivo: #4F5E6E;
+  --borde: #C2CFDE; --borde-fuerte: #70849C;
+  --acento: #04486B; --acento-texto: #FFFFFF; --acento-suave: #D6E6F2;
+  --ok: #095021; --ok-texto: #FFFFFF;
+  --alerta: #5F3A00; --alerta-texto: #FFFFFF;
+  --peligro: #8C0F1A; --peligro-texto: #FFFFFF;
+  --foco: #8C0F1A;
+  --sombra-1: 0 1px 2px rgba(11,18,32,.10);
+  --sombra-2: 0 4px 14px rgba(11,18,32,.14);
+
+  --g-pecho:#961D15; --g-espalda:#204B97; --g-hombros:#0E5563; --g-biceps:#115932;
+  --g-triceps:#57379F; --g-pierna:#704400; --g-gluteos:#8C2164; --g-abdomen:#525000;
+  --g-pantorrilla:#0B584E; --g-lumbar:#833711; --g-antebrazos:#3B4B60;
+  --g-contra: #FFFFFF;
 }
 
+/* ---------------- TEMA MÁXIMO ---------------- */
 [data-tema="maximo"] {
-  --fondo:        #000000;
-  --fondo-2:      #000000;
-  --fondo-3:      #000000;
-  --texto:        #ffff00;
-  --texto-suave:  #ffff00;
-  --borde:        #ffff00;
-  --acento:       #ffff00;
-  --acento-texto: #000000;
-  --ok:           #00ff66;
-  --alerta:       #ffff00;
-  --peligro:      #ff6060;
-}
-[data-tema="maximo"] .tarjeta,
-[data-tema="maximo"] .btn-grande,
-[data-tema="maximo"] .panel-ajustes { border-width: 2px; }
-[data-tema="maximo"] img { filter: contrast(1.15); }
+  --fondo: #000; --superficie-1: #000; --superficie-2: #000; --superficie-3: #000;
+  --texto: #FFFF00; --texto-suave: #FFFF00; --texto-inactivo: #C8C800;
+  --borde: #FFFF00; --borde-fuerte: #FFFF00;
+  --acento: #FFFF00; --acento-texto: #000; --acento-suave: #000;
+  --ok: #5CFF9A; --ok-texto: #000;
+  --alerta: #FFFF00; --alerta-texto: #000;
+  --peligro: #FF8A80; --peligro-texto: #000;
+  --foco: #FFFFFF;
+  --sombra-1: none; --sombra-2: none;
 
+  --g-pecho:#FFFF00; --g-espalda:#FFFF00; --g-hombros:#FFFF00; --g-biceps:#FFFF00;
+  --g-triceps:#FFFF00; --g-pierna:#FFFF00; --g-gluteos:#FFFF00; --g-abdomen:#FFFF00;
+  --g-pantorrilla:#FFFF00; --g-lumbar:#FFFF00; --g-antebrazos:#FFFF00;
+  --g-contra: #000000;
+}
+/* En Máximo, los bordes hacen el trabajo que en los otros temas hace la superficie */
+[data-tema="maximo"] .tarjeta,
+[data-tema="maximo"] .dia,
+[data-tema="maximo"] .ejercicio,
+[data-tema="maximo"] .persona,
+[data-tema="maximo"] .btn-grande { border-width: 2px; }
+[data-tema="maximo"] img { filter: contrast(1.12); }
+
+/* Resolución del color de grupo: cada componente solo lee --grupo */
+[data-grupo]               { --grupo: var(--texto-suave); }
+[data-grupo="pecho"]       { --grupo: var(--g-pecho); }
+[data-grupo="espalda"]     { --grupo: var(--g-espalda); }
+[data-grupo="hombros"]     { --grupo: var(--g-hombros); }
+[data-grupo="biceps"]      { --grupo: var(--g-biceps); }
+[data-grupo="triceps"]     { --grupo: var(--g-triceps); }
+[data-grupo="pierna"]      { --grupo: var(--g-pierna); }
+[data-grupo="gluteos"]     { --grupo: var(--g-gluteos); }
+[data-grupo="abdomen"]     { --grupo: var(--g-abdomen); }
+[data-grupo="pantorrilla"] { --grupo: var(--g-pantorrilla); }
+[data-grupo="lumbar"]      { --grupo: var(--g-lumbar); }
+[data-grupo="antebrazos"]  { --grupo: var(--g-antebrazos); }
+
+/* ============================================================
+   BASE
+   ============================================================ */
 * { box-sizing: border-box; }
 
-/* IMPORTANTE: cualquier `display` que pongamos en una clase pisa al atributo
-   `hidden` del HTML (que solo vale como regla del navegador). Sin esta línea,
-   `.temporizador { display: grid }` deja el temporizador siempre visible
-   tapando toda la app. No quitar. */
+/* Cualquier `display` de una clase pisa al atributo `hidden`, que solo vale
+   como regla del navegador. Sin esto, el temporizador queda visible tapando
+   toda la app. Ya pasó una vez. No quitar. */
 [hidden] { display: none !important; }
+
+/* Sin esto, el navegador pinta su propio fondo sobre los controles —y sobre
+   todo sobre los deshabilitados— y el contraste medido se desploma de 9:1 a
+   5,7:1 sin que se vea en el CSS. Con `appearance: none` mandamos nosotros. */
+button, input, select, textarea {
+  appearance: none; -webkit-appearance: none;
+}
+
+/* Que los controles nativos (cursor, autorrelleno, barras) sigan al tema */
+:root { color-scheme: dark; }
+[data-tema="claro"] { color-scheme: light; }
+[data-tema="maximo"] { color-scheme: dark; }
 
 html { -webkit-text-size-adjust: 100%; }
 
@@ -78,295 +147,591 @@ body {
   margin: 0;
   background: var(--fondo);
   color: var(--texto);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--fuente);
   font-size: var(--base);
-  line-height: 1.55;
-  padding-bottom: 2.5rem;
+  line-height: 1.5;
+  padding-bottom: var(--e7);
   overflow-wrap: break-word;
+  text-rendering: optimizeLegibility;
 }
 
-/* Foco siempre visible */
 :focus-visible {
-  outline: 3px solid var(--acento);
+  outline: 3px solid var(--foco);
   outline-offset: 2px;
-  border-radius: 6px;
+  border-radius: var(--radio-1);
 }
 
 .salto-contenido {
   position: absolute; left: -9999px;
   background: var(--acento); color: var(--acento-texto);
-  padding: .8rem; z-index: 100;
+  padding: var(--e3); z-index: 100; font-weight: 700;
 }
 .salto-contenido:focus { left: 0; top: 0; }
 
-/* ------------------- BARRA SUPERIOR ------------------- */
+/* Presupuesto de movimiento: realimentación al tocar y poco más */
+button, a.btn-grande, .filtro, .ejercicio, .dia, .persona, .carrusel-punto {
+  transition: transform var(--t-rapida) var(--curva),
+              background-color var(--t-rapida) linear,
+              border-color var(--t-rapida) linear;
+}
+button:active, .ejercicio:active, .dia:active, .persona:active { transform: scale(.985); }
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --t-rapida: 0ms; --t-media: 0ms; }
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================================
+   BARRA SUPERIOR
+   ============================================================ */
 .barra-superior {
   position: sticky; top: 0; z-index: 30;
-  display: flex; align-items: center; gap: .5rem;
-  padding: .5rem .7rem;
-  padding-top: max(.5rem, env(safe-area-inset-top));
-  background: var(--fondo-2);
-  border-bottom: 2px solid var(--borde);
+  display: grid;
+  grid-template-columns: var(--toque) 1fr var(--toque);
+  align-items: center; gap: var(--e2);
+  padding: var(--e2) var(--e3);
+  padding-top: max(var(--e2), env(safe-area-inset-top));
+  background: var(--superficie-1);
+  border-bottom: 1px solid var(--borde);
+  box-shadow: var(--sombra-1);
 }
 .titulo-barra {
-  flex: 1; margin: 0;
-  font-size: 1.05em; font-weight: 700;
+  grid-column: 2; margin: 0; text-align: center;
+  font-size: var(--t-seccion); font-weight: 700;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .btn-icono {
-  min-width: 44px; min-height: 44px;
-  font-size: 1.05em; font-weight: 700;
-  background: var(--fondo-3); color: var(--texto);
-  border: 1px solid var(--borde); border-radius: var(--radio);
+  width: var(--toque); height: var(--toque);
+  display: grid; place-items: center;
+  font-family: inherit; font-size: var(--t-cuerpo); font-weight: 700;
+  background: var(--superficie-2); color: var(--texto);
+  border: 1px solid var(--borde); border-radius: var(--radio-2);
   cursor: pointer;
 }
+#btnVolver { grid-column: 1; }
+#btnAjustes { grid-column: 3; }
 .btn-icono:active { background: var(--acento); color: var(--acento-texto); }
 
-/* ------------------- AJUSTES ------------------- */
+/* ============================================================
+   AJUSTES
+   ============================================================ */
 .panel-ajustes {
-  background: var(--fondo-2);
-  border-bottom: 2px solid var(--borde);
-  padding: .9rem;
+  background: var(--superficie-1);
+  border-bottom: 1px solid var(--borde);
+  padding: var(--e4);
 }
-.grupo-ajuste + .grupo-ajuste { margin-top: 1.1rem; }
+.grupo-ajuste + .grupo-ajuste { margin-top: var(--e5); }
 .titulo-ajuste {
-  margin: 0 0 .5rem; font-size: .8em; font-weight: 700;
-  color: var(--texto-suave); text-transform: uppercase; letter-spacing: .06em;
+  margin: 0 0 var(--e2); font-size: var(--t-etiqueta); font-weight: 700;
+  color: var(--texto-suave); text-transform: uppercase; letter-spacing: .08em;
 }
-.fila-botones { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.fila-botones { display: flex; align-items: center; gap: var(--e2); flex-wrap: wrap; }
 .fila-contraste .btn-ajuste { flex: 1 1 30%; }
 .btn-ajuste {
   min-height: var(--toque); min-width: 72px;
-  padding: 0 .9rem;
-  font-size: .95em; font-weight: 600; font-family: inherit;
-  background: var(--fondo-3); color: var(--texto);
-  border: 1px solid var(--borde); border-radius: var(--radio);
+  padding: 0 var(--e4);
+  font-family: inherit; font-size: var(--t-menor); font-weight: 600;
+  background: var(--superficie-2); color: var(--texto);
+  border: 1px solid var(--borde); border-radius: var(--radio-2);
   cursor: pointer;
 }
-.btn-ajuste[aria-pressed="true"] { background: var(--acento); color: var(--acento-texto); border-color: var(--acento); }
-.valor-ajuste { min-width: 4.5ch; text-align: center; font-weight: 700; }
-.nota-ajuste { margin: .5rem 0 0; font-size: .82em; color: var(--texto-suave); }
+.btn-ajuste[aria-pressed="true"] {
+  background: var(--acento); color: var(--acento-texto); border-color: var(--acento);
+}
+.valor-ajuste {
+  min-width: 4.5ch; text-align: center; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.nota-ajuste { margin: var(--e2) 0 0; font-size: var(--t-menor); color: var(--texto-suave); }
 
 .interruptor {
-  display: flex; align-items: center; gap: .7rem;
-  min-height: var(--toque); cursor: pointer; padding: .2rem 0;
-  font-size: .95em;
+  display: flex; align-items: center; gap: var(--e3);
+  min-height: var(--toque); cursor: pointer; font-size: var(--t-menor);
 }
 .interruptor input { width: 22px; height: 22px; accent-color: var(--acento); flex: none; }
 
-/* ------------------- CONTENIDO ------------------- */
-.contenido { padding: .9rem; max-width: 720px; margin: 0 auto; }
+/* ============================================================
+   CONTENIDO
+   ============================================================ */
+.contenido { padding: var(--e4); max-width: 640px; margin: 0 auto; }
 .contenido:focus { outline: none; }
 
-h2.titulo-seccion { font-size: 1.25em; margin: 0 0 .25rem; }
-p.subtitulo { margin: 0 0 1rem; color: var(--texto-suave); font-size: .9em; }
+.titulo-seccion { font-size: var(--t-titulo); font-weight: 800; margin: 0 0 var(--e1); letter-spacing: -.01em; }
+.subtitulo { margin: 0 0 var(--e5); color: var(--texto-suave); font-size: var(--t-menor); }
 
-/* ------------------- BOTONES ------------------- */
+/* Encabezado de grupo muscular dentro de la lista */
+.grupo-titulo {
+  display: flex; align-items: center; gap: var(--e2);
+  margin: var(--e6) 0 var(--e3);
+  font-size: var(--t-menor); font-weight: 800;
+  text-transform: uppercase; letter-spacing: .08em;
+  color: var(--texto);
+}
+.grupo-titulo::after {
+  content: ""; flex: 1; height: 2px; border-radius: 2px;
+  background: var(--grupo);
+}
+.grupo-titulo .marca {
+  width: 12px; height: 12px; border-radius: var(--radio-full);
+  border: 3px solid var(--grupo); flex: none;
+}
+
+/* Píldora de grupo: color + inicial + nombre escrito */
+.pildora-grupo {
+  display: inline-flex; align-items: center; gap: var(--e2);
+  min-height: 26px; padding: 0 var(--e3) 0 var(--e1);
+  border-radius: var(--radio-full);
+  background: var(--superficie-2);
+  border: 1px solid var(--grupo);
+  color: var(--texto);
+  font-size: var(--t-etiqueta); font-weight: 600;
+}
+.pildora-grupo .inicial {
+  display: grid; place-items: center;
+  width: 20px; height: 20px; border-radius: var(--radio-full);
+  background: var(--grupo); color: var(--g-contra);
+  font-size: .68em; font-weight: 800;
+}
+
+/* ============================================================
+   BOTONES
+   ============================================================ */
 .btn-grande {
-  display: flex; align-items: center; gap: .6rem;
+  display: flex; align-items: center; justify-content: flex-start; gap: var(--e3);
   width: 100%; min-height: var(--toque);
-  padding: .7rem .9rem; margin-bottom: .6rem;
-  font-size: .98em; font-weight: 600; text-align: left;
-  font-family: inherit;
-  background: var(--fondo-2); color: var(--texto);
-  border: 1px solid var(--borde); border-radius: var(--radio);
+  padding: var(--e3) var(--e4); margin-bottom: var(--e2);
+  font-family: inherit; font-size: var(--t-cuerpo); font-weight: 600; text-align: left;
+  background: var(--superficie-1); color: var(--texto);
+  border: 1px solid var(--borde); border-radius: var(--radio-2);
+  box-shadow: var(--sombra-1);
   cursor: pointer; text-decoration: none;
 }
-.btn-grande:active { background: var(--fondo-3); }
-.btn-principal { background: var(--acento); color: var(--acento-texto); border-color: var(--acento); font-weight: 700; }
-.btn-secundario { background: var(--fondo-3); }
-.btn-peligro { background: var(--peligro); color: #10000a; border-color: var(--peligro); }
-.btn-grande[disabled] { opacity: .4; cursor: not-allowed; }
+.btn-principal {
+  background: var(--acento); color: var(--acento-texto);
+  border-color: var(--acento); font-weight: 800;
+  justify-content: center;
+}
+.btn-secundario { background: var(--superficie-2); box-shadow: none; }
+.btn-peligro { background: var(--peligro); color: var(--peligro-texto); border-color: var(--peligro); }
+/* Mismo criterio que en el carrusel: fondo declarado a mano para que
+   Chrome no meta su gris, y borde punteado como señal no cromática. */
+.btn-grande[disabled] {
+  background-color: var(--superficie-3);
+  color: var(--texto-suave);
+  border-color: var(--borde-fuerte); border-style: dashed;
+  cursor: not-allowed; box-shadow: none;
+}
+.btn-grande[disabled]:active { transform: none; }
 
-.fila-doble { display: flex; gap: .6rem; }
+.fila-doble { display: flex; gap: var(--e2); }
 .fila-doble .btn-grande { margin-bottom: 0; justify-content: center; text-align: center; }
 
-/* ------------------- SELECTOR DE PERSONA ------------------- */
+/* ============================================================
+   SELECTOR DE PERSONA
+   ============================================================ */
 .persona {
-  display: block; width: 100%;
-  padding: 1.1rem; margin-bottom: .8rem;
-  border: 2px solid var(--borde); border-radius: 16px;
-  background: var(--fondo-2); color: var(--texto);
+  display: flex; align-items: center; gap: var(--e4);
+  width: 100%; padding: var(--e5) var(--e4); margin-bottom: var(--e3);
+  border: 1px solid var(--borde); border-left: 6px solid var(--acento);
+  border-radius: var(--radio-3);
+  background: var(--superficie-1); color: var(--texto);
+  box-shadow: var(--sombra-2);
   font-family: inherit; text-align: left; cursor: pointer;
 }
-.persona-nombre { display: block; font-size: 1.3em; font-weight: 700; line-height: 1.2; }
-.persona-detalle { display: block; margin-top: .2rem; color: var(--texto-suave); font-size: .88em; }
-.persona[data-tema-persona="azul"]   { border-color: #4cc9f0; }
-.persona[data-tema-persona="fucsia"] { border-color: #f472b6; }
-
-/* ------------------- TARJETAS ------------------- */
-.tarjeta {
-  background: var(--fondo-2);
-  border: 1px solid var(--borde); border-radius: var(--radio);
-  padding: .9rem; margin-bottom: .8rem;
+.persona-inicial {
+  flex: none; width: 52px; height: 52px; border-radius: var(--radio-full);
+  display: grid; place-items: center;
+  background: var(--acento-suave); color: var(--texto);
+  border: 2px solid var(--acento);
+  font-size: var(--t-seccion); font-weight: 800;
 }
-.tarjeta h3 { margin: 0 0 .4rem; font-size: 1em; }
-.tarjeta p { margin: 0 0 .5rem; }
+.persona-texto { min-width: 0; }
+.persona-nombre { display: block; font-size: var(--t-titulo); font-weight: 800; line-height: 1.15; }
+.persona-detalle { display: block; margin-top: var(--e0); color: var(--texto-suave); font-size: var(--t-menor); }
+.persona[data-tema-persona="fucsia"] { border-left-color: #F49AC8; }
+.persona[data-tema-persona="fucsia"] .persona-inicial { border-color: #F49AC8; }
+[data-tema="claro"] .persona[data-tema-persona="fucsia"] { border-left-color: #8C2164; }
+[data-tema="claro"] .persona[data-tema-persona="fucsia"] .persona-inicial { border-color: #8C2164; }
+[data-tema="maximo"] .persona { border-left-color: var(--acento); }
+[data-tema="maximo"] .persona[data-tema-persona="fucsia"] { border-left-color: var(--acento); }
+
+/* ============================================================
+   TARJETAS Y AVISOS
+   ============================================================ */
+.tarjeta {
+  background: var(--superficie-1);
+  border: 1px solid var(--borde); border-radius: var(--radio-2);
+  padding: var(--e4); margin-bottom: var(--e3);
+  box-shadow: var(--sombra-1);
+}
+.tarjeta h3 {
+  margin: 0 0 var(--e2); font-size: var(--t-etiqueta); font-weight: 800;
+  text-transform: uppercase; letter-spacing: .07em; color: var(--texto-suave);
+}
+.tarjeta p { margin: 0 0 var(--e2); }
 .tarjeta p:last-child { margin-bottom: 0; }
 
 .aviso {
-  border-left: 6px solid var(--alerta);
-  background: var(--fondo-3);
-  padding: .8rem .9rem; border-radius: var(--radio);
-  margin-bottom: .8rem; font-size: .95em;
+  display: flex; gap: var(--e3);
+  border: 1px solid var(--alerta); border-left-width: 6px;
+  background: var(--superficie-2);
+  padding: var(--e4); border-radius: var(--radio-2);
+  margin-bottom: var(--e3); font-size: var(--t-menor);
 }
-.aviso strong { color: var(--alerta); display: block; margin-bottom: .2rem; }
+.aviso .icono { flex: none; font-size: 1.2em; line-height: 1.2; }
+.aviso strong { color: var(--alerta); display: block; margin-bottom: var(--e0); }
+[data-tema="claro"] .aviso strong { color: var(--texto); }
 
-/* ------------------- DÍAS ------------------- */
+/* ============================================================
+   FILA DE DÍA
+   ============================================================ */
 .dia {
-  display: flex; align-items: center; gap: .8rem;
-  width: 100%; min-height: 68px;
-  padding: .7rem .8rem; margin-bottom: .6rem;
-  background: var(--fondo-2); color: var(--texto);
-  border: 1px solid var(--borde); border-radius: var(--radio);
+  display: flex; align-items: center; gap: var(--e4);
+  width: 100%; min-height: 72px;
+  padding: var(--e3) var(--e4); margin-bottom: var(--e2);
+  background: var(--superficie-1); color: var(--texto);
+  border: 1px solid var(--borde); border-radius: var(--radio-2);
+  box-shadow: var(--sombra-1);
   font-family: inherit; text-align: left; cursor: pointer;
 }
 .dia-marca {
-  flex: none; width: 10px; align-self: stretch;
-  border-radius: 5px;
+  flex: none; width: 40px; height: 40px; border-radius: var(--radio-full);
+  display: grid; place-items: center;
+  border: 3px solid var(--color-dia, var(--borde-fuerte));
+  color: var(--texto); font-size: var(--t-menor); font-weight: 800;
 }
 .dia-info { flex: 1; min-width: 0; }
-.dia-nombre { display: block; font-size: 1.05em; font-weight: 700; }
-.dia-titulo { display: block; color: var(--texto-suave); font-size: .9em; }
-.dia-conteo { display: block; margin-top: .1rem; font-size: .85em; }
+.dia-nombre { display: block; font-size: var(--t-cuerpo); font-weight: 800; }
+.dia-titulo { display: block; color: var(--texto-suave); font-size: var(--t-menor); }
+.dia-conteo { display: block; margin-top: var(--e0); font-size: var(--t-etiqueta); color: var(--texto-suave); }
+.dia-flecha { color: var(--texto-suave); font-size: 1.2em; }
 .dia[data-hoy="si"] { border-color: var(--acento); border-width: 2px; }
+.dia[data-descanso="si"] { background: var(--fondo); box-shadow: none; }
 .etiqueta-hoy {
-  display: inline-block; margin-left: .4rem;
+  display: inline-block; margin-left: var(--e2);
   background: var(--acento); color: var(--acento-texto);
-  font-size: .7em; font-weight: 700;
-  padding: .1rem .45rem; border-radius: 999px;
+  font-size: var(--t-etiqueta); font-weight: 800;
+  padding: 1px var(--e2); border-radius: var(--radio-full);
   vertical-align: middle;
 }
 
-/* ------------------- LISTA DE EJERCICIOS ------------------- */
+/* ============================================================
+   FILA DE EJERCICIO
+   ============================================================ */
 .ejercicio {
-  display: flex; align-items: center; gap: .8rem;
-  width: 100%; min-height: 72px;
-  padding: .6rem .7rem; margin-bottom: .5rem;
-  background: var(--fondo-2); color: var(--texto);
-  border: 1px solid var(--borde); border-radius: var(--radio);
+  display: flex; align-items: center; gap: var(--e3);
+  width: 100%; min-height: 76px;
+  padding: var(--e2) var(--e3); margin-bottom: var(--e2);
+  background: var(--superficie-1); color: var(--texto);
+  border: 1px solid var(--borde); border-left: 4px solid var(--grupo, var(--borde));
+  border-radius: var(--radio-2);
+  box-shadow: var(--sombra-1);
   font-family: inherit; text-align: left; cursor: pointer;
 }
 .ejercicio-numero {
   flex: none;
-  width: 34px; height: 34px; border-radius: 50%;
+  width: 30px; height: 30px; border-radius: var(--radio-full);
   display: grid; place-items: center;
-  background: var(--fondo-3); border: 1px solid var(--borde);
-  font-weight: 700; font-size: .9em;
+  background: var(--superficie-2); border: 1px solid var(--borde);
+  color: var(--texto);
+  font-weight: 800; font-size: var(--t-etiqueta);
+  font-variant-numeric: tabular-nums;
 }
 .ejercicio-miniatura {
-  flex: none; width: 64px; height: 50px;
-  object-fit: cover; border-radius: 8px;
+  flex: none; width: 64px; height: 52px;
+  object-fit: contain; border-radius: var(--radio-1);
   border: 1px solid var(--borde); background: #fff;
 }
 .ejercicio-texto { flex: 1; min-width: 0; }
-.ejercicio-nombre { display: block; font-size: .98em; font-weight: 600; line-height: 1.3; }
-.ejercicio-grupo { display: block; color: var(--texto-suave); font-size: .82em; }
-.ejercicio[data-hecho="si"] { border-color: var(--ok); }
-.ejercicio[data-hecho="si"] .ejercicio-numero { background: var(--ok); color: #04220c; border-color: var(--ok); }
-
-/* Puntos de color de los días a los que pertenece un ejercicio */
-.dias-puntos { display: inline-flex; gap: .25rem; margin-left: .4rem; vertical-align: middle; }
-.dia-punto {
-  width: 10px; height: 10px; border-radius: 50%;
-  border: 1px solid rgba(255,255,255,.35);
+.ejercicio-nombre { display: block; font-size: var(--t-cuerpo); font-weight: 700; line-height: 1.25; }
+.ejercicio-grupo { display: block; margin-top: var(--e0); color: var(--texto-suave); font-size: var(--t-etiqueta); }
+.ejercicio-flecha { color: var(--texto-suave); }
+.ejercicio[data-hecho="si"] { border-color: var(--ok); border-left-color: var(--ok); }
+.ejercicio[data-hecho="si"] .ejercicio-numero {
+  background: var(--ok); color: var(--ok-texto); border-color: var(--ok);
 }
 
-/* ------------------- FILTRO POR DÍA ------------------- */
+/* Puntos de los días a los que pertenece un ejercicio */
+.dias-puntos { display: inline-flex; gap: var(--e1); margin-left: var(--e2); vertical-align: middle; }
+.dia-punto { width: 9px; height: 9px; border-radius: var(--radio-full); border: 1px solid var(--borde-fuerte); }
+
+/* ============================================================
+   FILTRO POR DÍA
+   ============================================================ */
 .filtros {
-  display: flex; gap: .4rem; flex-wrap: wrap;
-  margin-bottom: .9rem;
+  display: flex; gap: var(--e2); flex-wrap: wrap;
+  margin-bottom: var(--e4);
 }
 .filtro {
-  display: inline-flex; align-items: center; gap: .35rem;
-  min-height: 44px; padding: 0 .8rem;
-  font-size: .88em; font-weight: 600; font-family: inherit;
-  background: var(--fondo-2); color: var(--texto);
-  border: 1px solid var(--borde); border-radius: 999px;
+  display: inline-flex; align-items: center; gap: var(--e2);
+  min-height: 44px; padding: 0 var(--e4);
+  font-family: inherit; font-size: var(--t-menor); font-weight: 600;
+  background: var(--superficie-1); color: var(--texto);
+  border: 1px solid var(--borde); border-radius: var(--radio-full);
   cursor: pointer; white-space: nowrap;
 }
 .filtro[aria-pressed="true"] {
-  background: var(--acento); color: var(--acento-texto); border-color: var(--acento);
+  background: var(--acento); color: var(--acento-texto);
+  border-color: var(--acento); border-width: 2px; font-weight: 800;
 }
-.filtro .punto { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.filtro .punto { width: 10px; height: 10px; border-radius: var(--radio-full); flex: none; }
+.filtro[aria-pressed="true"] .punto { box-shadow: 0 0 0 2px var(--acento-texto); }
 
-/* ------------------- DETALLE DEL EJERCICIO ------------------- */
-.detalle-nombre { font-size: 1.3em; font-weight: 700; margin: 0 0 .2rem; line-height: 1.25; }
-.detalle-meta { color: var(--texto-suave); margin: 0 0 .8rem; font-size: .88em; }
-
-.fotos { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin-bottom: .4rem; }
-.foto-caja { background: #ffffff; border: 1px solid var(--borde); border-radius: var(--radio); overflow: hidden; }
-.foto-caja img { display: block; width: 100%; height: auto; }
-.foto-pie {
-  background: var(--fondo-3); color: var(--texto);
-  font-size: .78em; font-weight: 600; text-align: center;
-  padding: .3rem;
+/* ============================================================
+   DETALLE DEL EJERCICIO
+   ============================================================ */
+.detalle-cabecera { margin-bottom: var(--e4); }
+.detalle-nombre {
+  font-size: var(--t-titulo); font-weight: 800; margin: 0 0 var(--e2);
+  line-height: 1.2; letter-spacing: -.01em;
 }
-.nota-foto { font-size: .82em; color: var(--texto-suave); margin: 0 0 .8rem; }
+.detalle-meta { display: flex; align-items: center; gap: var(--e2); flex-wrap: wrap; margin: 0; }
+.detalle-equipo { color: var(--texto-suave); font-size: var(--t-menor); }
+
+/* Prescripción destacada: lo que hay que hacer, antes que nada */
+.receta {
+  display: flex; align-items: stretch;
+  border: 1px solid var(--borde); border-radius: var(--radio-2);
+  background: var(--superficie-2);
+  margin-bottom: var(--e4); overflow: hidden;
+}
+.receta-celda { flex: 1; padding: var(--e3) var(--e2); text-align: center; }
+.receta-celda + .receta-celda { border-left: 1px solid var(--borde); }
+.receta-valor {
+  display: block; font-family: var(--fuente-num);
+  font-size: var(--t-seccion); font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.receta-etiqueta {
+  display: block; margin-top: var(--e0);
+  font-size: var(--t-etiqueta); color: var(--texto-suave);
+  text-transform: uppercase; letter-spacing: .06em;
+}
 
 .pasos { margin: 0; padding-left: 0; list-style: none; counter-reset: paso; }
 .pasos li {
   counter-increment: paso;
-  display: flex; gap: .65rem;
-  padding: .55rem 0; border-bottom: 1px solid var(--borde);
+  display: flex; gap: var(--e3);
+  padding: var(--e3) 0; border-bottom: 1px solid var(--borde);
+  font-size: var(--t-menor);
 }
-.pasos li:last-child { border-bottom: none; }
+.pasos li:first-child { padding-top: 0; }
+.pasos li:last-child { border-bottom: none; padding-bottom: 0; }
 .pasos li::before {
   content: counter(paso);
-  flex: none; width: 26px; height: 26px; border-radius: 50%;
+  flex: none; width: 26px; height: 26px; border-radius: var(--radio-full);
   display: grid; place-items: center;
   background: var(--acento); color: var(--acento-texto);
-  font-weight: 700; font-size: .8em;
+  font-weight: 800; font-size: var(--t-etiqueta);
 }
 
-/* ------------------- CONTADOR DE SERIES ------------------- */
+/* ============================================================
+   CARRUSEL DE LÁMINAS
+   Movimiento 100 % CSS (scroll-snap). El JS solo pinta controles.
+   Nunca se capturan eventos táctiles: así el pellizco para ampliar
+   sigue funcionando, imprescindible para quien usa la lupa.
+   ============================================================ */
+.carrusel { margin: 0 0 var(--e4); }
+
+.carrusel-pista {
+  display: flex; gap: var(--e2);
+  margin: 0; padding: 0;
+  list-style: none;                 /* por esto el <ul> lleva role="list" */
+  overflow-x: auto; overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  border-radius: var(--radio-2);
+  scrollbar-width: none; -ms-overflow-style: none;
+}
+.carrusel-pista::-webkit-scrollbar { display: none; width: 0; height: 0; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .carrusel-pista { scroll-behavior: smooth; }
+}
+
+.carrusel-lamina {
+  /* Medida explícita: WebKit cachea mal los anclajes con ancho implícito */
+  flex: 0 0 100%; min-width: 100%;
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+}
+
+.foto-caja {
+  margin: 0; height: 100%;
+  display: flex; flex-direction: column;
+  background: #fff;
+  border: 1px solid var(--borde); border-radius: var(--radio-2);
+  overflow: hidden;
+}
+.foto-caja img {
+  display: block; width: 100%; height: auto;
+  aspect-ratio: 4 / 3;              /* reserva el hueco antes de cargar */
+  object-fit: contain;              /* nada de recortes */
+  background: #fff;
+}
+.foto-pie {
+  background: var(--superficie-2); color: var(--texto);
+  font-size: var(--t-menor); font-weight: 600; text-align: center;
+  min-height: 2.6em; padding: var(--e2);
+  display: flex; align-items: center; justify-content: center;
+  border-top: 1px solid var(--borde);
+}
+
+/* La barra envuelve: con la letra al 180 % los botones no caben en una
+   línea y, sin `wrap`, se salían de la pantalla. */
+.carrusel-barra {
+  display: flex; align-items: center; gap: var(--e2);
+  margin-top: var(--e2); flex-wrap: wrap;
+}
+.carrusel-flecha {
+  flex: 1 1 auto;
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--e1);
+  min-height: var(--toque); min-width: 44px; max-width: 100%;
+  padding: 0 var(--e3);
+  font-family: inherit; font-size: var(--t-menor); font-weight: 700;
+  background: var(--superficie-2); color: var(--texto);
+  border: 1px solid var(--borde); border-radius: var(--radio-2);
+  cursor: pointer;
+}
+.carrusel-flecha:active { background: var(--acento); color: var(--acento-texto); }
+/* El estado deshabilitado se declara ENTERO (fondo incluido). Si solo se
+   declara el color, Chrome aplica su propio gris al control y el contraste
+   se desploma sin avisar. El borde punteado lo comunica sin depender del color. */
+.carrusel-flecha[disabled] {
+  background-color: var(--superficie-3);
+  color: var(--texto-suave);
+  border-color: var(--borde-fuerte); border-style: dashed;
+  cursor: not-allowed;
+}
+.carrusel-posicion {
+  flex: 1 1 7em; margin: 0; text-align: center;
+  font-size: var(--t-menor); font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.carrusel-num { font-size: 1.15em; font-weight: 800; }
+
+.carrusel-puntos { display: flex; justify-content: center; gap: var(--e1); flex-wrap: wrap; margin-top: var(--e2); }
+.carrusel-punto {
+  min-width: 44px; min-height: 44px; padding: 0;
+  font-family: inherit; font-size: var(--t-menor); font-weight: 700;
+  background: var(--superficie-1); color: var(--texto);
+  border: 1px solid var(--borde); border-radius: var(--radio-full);
+  cursor: pointer;
+}
+/* El activo se marca por tres vías: color, grosor y anillo interior */
+.carrusel-punto[aria-current="true"] {
+  background: var(--acento); color: var(--acento-texto);
+  border-color: var(--acento); border-width: 3px;
+  box-shadow: inset 0 0 0 2px var(--acento-texto);
+}
+.carrusel[data-unica="si"] .carrusel-barra,
+.carrusel[data-unica="si"] .carrusel-puntos { display: none; }
+
+/* ============================================================
+   CONTADOR DE SERIES
+   ============================================================ */
 .series-caja { text-align: center; }
-.series-numero { font-size: 2.2em; font-weight: 700; line-height: 1; margin: .2rem 0 0; }
-.series-etiqueta { margin: 0 0 .7rem; font-size: .85em; color: var(--texto-suave); }
-.series-controles { display: flex; gap: .6rem; justify-content: center; }
-.series-controles .btn-grande { width: auto; flex: 1; justify-content: center; font-size: 1.2em; margin-bottom: 0; }
-.campo-peso {
-  width: 100%; min-height: var(--toque); font-size: .95em; font-family: inherit;
-  padding: .5rem .6rem;
-  background: var(--fondo-3); color: var(--texto);
-  border: 1px solid var(--borde); border-radius: var(--radio);
+.series-numero {
+  font-family: var(--fuente-num);
+  font-size: var(--t-cifra); font-weight: 800; line-height: 1;
+  margin: var(--e2) 0 0; font-variant-numeric: tabular-nums;
 }
-.etiqueta-peso { display: block; text-align: left; margin-top: .7rem; }
-.etiqueta-peso span { display: block; margin-bottom: .3rem; font-weight: 600; font-size: .88em; }
+.series-etiqueta { margin: var(--e0) 0 var(--e3); font-size: var(--t-etiqueta); color: var(--texto-suave); text-transform: uppercase; letter-spacing: .06em; }
+.series-controles { display: flex; gap: var(--e2); justify-content: center; }
+.series-controles .btn-grande {
+  width: auto; flex: 1; justify-content: center;
+  font-size: var(--t-seccion); margin-bottom: 0;
+}
+.campo-peso {
+  width: 100%; min-height: var(--toque);
+  font-family: inherit; font-size: var(--t-cuerpo);
+  padding: var(--e2) var(--e3);
+  background: var(--superficie-2); color: var(--texto);
+  border: 1px solid var(--borde); border-radius: var(--radio-2);
+}
+.campo-peso::placeholder { color: var(--texto-suave); }
+.etiqueta-peso { display: block; text-align: left; margin-top: var(--e3); }
+.etiqueta-peso span {
+  display: block; margin-bottom: var(--e1);
+  font-size: var(--t-etiqueta); font-weight: 700;
+  text-transform: uppercase; letter-spacing: .06em; color: var(--texto-suave);
+}
 
-/* ------------------- TEMPORIZADOR ------------------- */
+/* ============================================================
+   TEMPORIZADOR
+   ============================================================ */
 .temporizador {
   position: fixed; inset: 0; z-index: 50;
-  background: rgba(0,0,0,.92);
-  display: grid; place-items: center; padding: 1rem;
+  background: rgba(0,0,0,.93);
+  display: grid; place-items: center; padding: var(--e4);
 }
 .temporizador-caja {
-  background: var(--fondo-2); border: 2px solid var(--acento);
-  border-radius: 18px; padding: 1.3rem; width: 100%; max-width: 400px;
-  text-align: center;
+  background: var(--superficie-1); border: 2px solid var(--acento);
+  border-radius: var(--radio-3); padding: var(--e5);
+  width: 100%; max-width: 380px; text-align: center;
+  box-shadow: var(--sombra-2);
 }
-.temporizador-etiqueta { margin: 0; font-size: .9em; text-transform: uppercase; letter-spacing: .1em; color: var(--texto-suave); }
-.temporizador-numero { margin: .2rem 0 1rem; font-size: 3.4em; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
-.temporizador-acciones { display: flex; gap: .6rem; }
+.temporizador-etiqueta {
+  margin: 0; font-size: var(--t-etiqueta); font-weight: 700;
+  text-transform: uppercase; letter-spacing: .12em; color: var(--texto-suave);
+}
+.temporizador-reloj {
+  position: relative;
+  width: 9em; height: 9em;
+  margin: var(--e4) auto;
+  display: grid; place-items: center;
+}
+.anillo { position: absolute; inset: 0; width: 100%; height: 100%; }
+.anillo circle { fill: none; stroke-width: 7; }
+.anillo-fondo { stroke: var(--superficie-3); }
+.anillo-progreso {
+  stroke: var(--acento); stroke-linecap: round;
+  transform: rotate(-90deg); transform-origin: 50% 50%;
+  transition: stroke-dashoffset var(--t-media) linear;
+}
+.temporizador-reloj[data-fase="final"] .anillo-progreso { stroke: var(--alerta); }
+[data-tema="maximo"] .anillo-fondo { stroke: var(--texto-inactivo); }
+.temporizador-numero {
+  position: relative; margin: 0;
+  font-family: var(--fuente-num);
+  font-size: var(--t-display); font-weight: 800; line-height: 1;
+  color: var(--texto); font-variant-numeric: tabular-nums;
+}
+.temporizador-acciones { display: flex; gap: var(--e2); }
 .temporizador-acciones .btn-grande { justify-content: center; margin-bottom: 0; }
 
-/* ------------------- VARIOS ------------------- */
+/* ============================================================
+   VARIOS
+   ============================================================ */
 .enlace-video {
-  display: flex; align-items: center; justify-content: center; gap: .5rem;
-  min-height: var(--toque); padding: .7rem;
-  background: var(--fondo-3); color: var(--texto);
-  border: 1px solid var(--borde); border-radius: var(--radio);
-  font-weight: 600; font-size: .95em; text-decoration: none; margin-bottom: .8rem;
+  display: flex; align-items: center; justify-content: center; gap: var(--e2);
+  min-height: var(--toque); padding: var(--e3);
+  background: var(--superficie-2); color: var(--texto);
+  border: 1px solid var(--borde); border-radius: var(--radio-2);
+  font-weight: 600; font-size: var(--t-menor); text-decoration: none;
+  margin-bottom: var(--e3);
 }
 .barra-progreso {
-  height: 10px; background: var(--fondo-3);
-  border: 1px solid var(--borde); border-radius: 999px; overflow: hidden;
-  margin: .3rem 0 .9rem;
+  height: 8px; background: var(--superficie-3);
+  border: 1px solid var(--borde); border-radius: var(--radio-full);
+  overflow: hidden; margin: var(--e2) 0 var(--e4);
 }
-.barra-progreso span { display: block; height: 100%; background: var(--ok); }
-
-.pie-nota { color: var(--texto-suave); font-size: .8em; text-align: center; margin-top: 1.6rem; }
-
-@media (prefers-reduced-motion: reduce) {
-  * { transition: none !important; animation: none !important; }
+.barra-progreso span {
+  display: block; height: 100%; background: var(--ok);
+  transition: width var(--t-media) var(--curva);
 }
+.pie-nota { color: var(--texto-suave); font-size: var(--t-etiqueta); text-align: center; margin-top: var(--e6); }
+
+.estado-final {
+  text-align: center; padding: var(--e5) var(--e4);
+  border: 2px solid var(--ok); border-radius: var(--radio-3);
+  background: var(--superficie-1); margin-bottom: var(--e3);
+}
+.estado-final .icono { font-size: 2em; display: block; margin-bottom: var(--e2); }
+.estado-final strong { display: block; font-size: var(--t-seccion); }
+.estado-final p { margin: var(--e2) 0 0; color: var(--texto-suave); font-size: var(--t-menor); }

@@ -37,7 +37,7 @@ window.scrollTo = () => {};
 /* Cargar los scripts en el mismo orden que el HTML */
 for (const f of ["assets/js/datos-catalogo.js", "assets/js/datos-planes.js",
                  "assets/js/almacenamiento.js", "assets/js/voz.js",
-                 "assets/js/cronometro.js", "assets/js/app.js"]) {
+                 "assets/js/carrusel.js", "assets/js/cronometro.js", "assets/js/app.js"]) {
   try { window.eval(fs.readFileSync(path.join(ROOT, f), "utf8")); }
   catch (e) { errores.push(`Al cargar ${f}: ${e.message}`); }
 }
@@ -109,16 +109,46 @@ for (const pid of ["anderson", "sharid"]) {
       const cat = window.CATALOGO[d.ejercicios[i]];
       comprobar(doc.querySelector(".detalle-nombre").textContent === cat.nombre,
         `${pid} d${d.n} e${i}: el nombre no coincide`);
-      comprobar(doc.querySelectorAll(".fotos img").length === 2,
-        `${pid} d${d.n} e${i}: deberian mostrarse 2 fotos`);
+      /* Carrusel: siempre la ficha del gimnasio primero; las fotos reales
+         solo si se verifico que corresponden al mismo ejercicio. */
+      const nEsperadas = cat.fotosOk ? 3 : 1;
+      const nLaminas = doc.querySelectorAll(".carrusel-lamina").length;
+      comprobar(nLaminas === nEsperadas,
+        `${pid} d${d.n} e${i}: ${nLaminas} laminas y se esperaban ${nEsperadas}`);
+      comprobar(/-ficha[.]jpg$/.test(doc.querySelector(".carrusel-lamina img").getAttribute("src")),
+        `${pid} d${d.n} e${i}: la primera lamina debe ser la ficha del gimnasio`);
+      comprobar(doc.querySelectorAll(".carrusel-lamina .foto-pie").length === nEsperadas,
+        `${pid} d${d.n} e${i}: cada lamina necesita su rotulo escrito`);
+      doc.querySelectorAll(".carrusel-lamina img").forEach(im => {
+        comprobar((im.getAttribute("alt") || "").length > 10,
+          `${pid} d${d.n} e${i}: una lamina no tiene texto alternativo util`);
+      });
+      if (nEsperadas === 1) {
+        comprobar(doc.querySelector(".carrusel").getAttribute("data-unica") === "si",
+          `${pid} d${d.n} e${i}: con una sola imagen el carrusel debe marcarse data-unica`);
+        comprobar(!doc.querySelector(".carrusel-flecha"),
+          `${pid} d${d.n} e${i}: con una sola imagen no deberia haber flechas`);
+      } else {
+        comprobar(doc.querySelectorAll(".carrusel-punto").length === nEsperadas,
+          `${pid} d${d.n} e${i}: faltan puntos de posicion`);
+        comprobar(/Imagen/.test(doc.querySelector(".carrusel-posicion").textContent),
+          `${pid} d${d.n} e${i}: falta el contador escrito "Imagen X de Y"`);
+        comprobar(doc.querySelector('.carrusel-flecha[data-paso="-1"]').disabled,
+          `${pid} d${d.n} e${i}: la flecha anterior debe empezar deshabilitada`);
+      }
+
       comprobar(doc.querySelectorAll(".pasos li").length === cat.pasos.length,
         `${pid} d${d.n} e${i}: los pasos mostrados no coinciden`);
       comprobar(doc.getElementById("btnLeer") && doc.getElementById("btnSerieHecha"),
         `${pid} d${d.n} e${i}: faltan los botones de voz o de serie`);
-      comprobar(/youtube\.com/.test(doc.querySelector(".enlace-video").href),
+      comprobar(/youtube[.]com/.test(doc.querySelector(".enlace-video").href),
         `${pid} d${d.n} e${i}: el enlace de video esta mal formado`);
-      if (!cat.exacta) comprobar(/parecido/.test(texto()),
-        `${pid} d${d.n} e${i}: falta el aviso de foto aproximada`);
+      comprobar(texto().includes(cat.donde),
+        `${pid} d${d.n} e${i}: no se muestra donde esta la maquina`);
+      if (cat.ojo) comprobar(texto().includes(cat.ojo),
+        `${pid} d${d.n} e${i}: no se muestra la advertencia`);
+      comprobar(!!doc.querySelector(".pildora-grupo"),
+        `${pid} d${d.n} e${i}: falta la pildora del grupo muscular`);
     }
   }
 }

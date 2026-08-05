@@ -71,7 +71,16 @@
 <div class="temporizador" id="temporizador" hidden role="timer" aria-live="assertive">
   <div class="temporizador-caja">
     <p class="temporizador-etiqueta">Descanso</p>
-    <p class="temporizador-numero" id="temporizadorNumero">60</p>
+
+    <div class="temporizador-reloj" id="temporizadorReloj">
+      <svg class="anillo" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <circle class="anillo-fondo" cx="50" cy="50" r="45"></circle>
+        <circle class="anillo-progreso" id="anilloProgreso" cx="50" cy="50" r="45"
+                stroke-dasharray="282.7" stroke-dashoffset="0"></circle>
+      </svg>
+      <p class="temporizador-numero" id="temporizadorNumero">60</p>
+    </div>
+
     <div class="temporizador-acciones">
       <button class="btn-grande btn-secundario" id="btnMasTiempo">+30 s</button>
       <button class="btn-grande btn-peligro" id="btnPararTiempo">Terminar</button>
@@ -83,6 +92,7 @@
 <script src="assets/js/datos-planes.js"></script>
 <script src="assets/js/almacenamiento.js"></script>
 <script src="assets/js/voz.js"></script>
+<script src="assets/js/carrusel.js"></script>
 <script src="assets/js/cronometro.js"></script>
 <script src="assets/js/app.js"></script>
 </body>

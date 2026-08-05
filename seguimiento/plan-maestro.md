@@ -1,6 +1,6 @@
 # Mi Entreno — Plan Maestro de Desarrollo
 
-## Estado General: Completado (v2, publicada)
+## Estado General: Completado (v3, publicada)
 ## Fecha inicio: 2026-08-04
 ## Fecha verificación: 2026-08-04
 ## Tecnologías: HTML5, CSS3, JavaScript ES5+, PWA (Service Worker, Web App Manifest), Web Speech API
@@ -27,13 +27,14 @@
 
 - **Ejercicios en catálogo:** 55 (100 % usados por algún día)
 - **Fotos:** 110 (2 por ejercicio) · 5,5 MB optimizados a 720 px
-- **Ejercicios con foto exacta:** 41 de 55 · los 14 restantes lo advierten en pantalla
+- **Fichas del tablero de Life Gym:** 55 de 55 (exactas por definición)
+- **Con fotos reales verificadas:** 35 de 55 · las otras 20 se descartaron por no corresponder
 - **Rutina de Anderson:** 59 ejercicios/semana (L 17 · M 8 · X 9 · J 9 · V 16)
 - **Rutina de Sharid:** 55 ejercicios/semana (L 13 · M 11 · X 12 · J 10 · V 9)
 - **Archivos precargados por el service worker:** 124
 - **Dependencias en tiempo de ejecución:** 0
-- **Pruebas:** 4 suites en verde — datos, humo (145 pantallas), visual (Chromium) y PWA/offline
-- **Contraste medido:** oscuro 8,7:1 · claro 7,4:1 · máximo 19,6:1 (todos por encima de AAA)
+- **Pruebas:** 5 suites en verde — datos, completitud, humo (145 pantallas), visual (Chromium) y PWA/offline
+- **Contraste medido:** 20 pares × 3 temas · peor caso 7,68:1 (AAA exige 7:1)
 - **Modo sin conexión:** verificado con la red apagada; 124 archivos en caché
 
 ---
@@ -192,3 +193,24 @@ y montar un QA que sea capaz de detectar fallos visuales.
 Las pruebas de jsdom validan **estructura y logica**, nunca **presentacion**.
 Un elemento puede tener `hidden === true` y pintarse encima de todo. Cualquier
 cambio de CSS exige `npm run qa`, que abre Chromium de verdad.
+
+---
+
+## FASE 10: v3 - fichas del gimnasio, carrusel y rediseno
+
+**Objetivo:** Que cada imagen sea la del ejercicio de verdad, y que la app se
+vea como una app y no como un prototipo.
+
+### Entregables
+- [x] Correccion de perspectiva de los 4 tableros y extraccion de las 55 fichas
+- [x] Verificacion de las 165 imagenes con 4 revisiones en paralelo
+- [x] 40 fotos descartadas por no corresponder (20 ejercicios) + 2 duplicadas detectadas
+- [x] Carrusel accesible con scroll-snap, sin capturar el tactil
+- [x] Sistema de diseno: tokens, color por musculo, prescripcion, anillo de progreso
+- [x] La app arranca siempre en el selector de persona
+- [x] `prueba-completitud.js` y `generar-sw.js`
+- [x] `prueba-visual.js` y `prueba-pwa.js` ampliadas
+
+### Leccion
+Una foto que no corresponde es peor que ninguna foto. El campo `exacta` se
+renombro a `fotosOk` y solo se pone en true despues de mirar las imagenes.

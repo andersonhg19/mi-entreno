@@ -6,17 +6,23 @@
    ============================================================ */
 
 window.Cronometro = (function () {
-  var caja, numero, btnMas, btnParar;
-  var finEn = 0, intervalo = null, ultimoAviso = -1;
+  var VUELTA = 282.7;                 /* 2·π·45, el perímetro del anillo */
+
+  var caja, numero, reloj, anillo, btnMas, btnParar;
+  var finEn = 0, total = 60, intervalo = null, ultimoAviso = -1;
   var alTerminar = null;
 
   function init() {
     caja     = document.getElementById("temporizador");
     numero   = document.getElementById("temporizadorNumero");
+    reloj    = document.getElementById("temporizadorReloj");
+    anillo   = document.getElementById("anilloProgreso");
     btnMas   = document.getElementById("btnMasTiempo");
     btnParar = document.getElementById("btnPararTiempo");
 
-    btnMas.addEventListener("click", function () { finEn += 30000; pintar(); });
+    btnMas.addEventListener("click", function () {
+      finEn += 30000; total += 30; pintar();
+    });
     btnParar.addEventListener("click", function () { parar(true); });
   }
 
@@ -26,6 +32,14 @@ window.Cronometro = (function () {
     var s = restante();
     numero.textContent = s;
     numero.setAttribute("aria-label", s + " segundos restantes");
+
+    /* El anillo se vacía a medida que pasa el tiempo. Es decoración:
+       la cuenta real la da el número y la voz. */
+    if (anillo) {
+      var queda = Math.max(0, Math.min(1, (finEn - Date.now()) / (total * 1000)));
+      anillo.setAttribute("stroke-dashoffset", (VUELTA * (1 - queda)).toFixed(1));
+    }
+    if (reloj) reloj.setAttribute("data-fase", s <= 10 ? "final" : "normal");
 
     /* Avisos hablados en los momentos clave */
     if (s !== ultimoAviso) {
@@ -58,6 +72,7 @@ window.Cronometro = (function () {
     if (!caja) init();
     alTerminar = callback || null;
     finEn = Date.now() + segundos * 1000;
+    total = segundos;
     ultimoAviso = -1;
     caja.hidden = false;
     pintar();
