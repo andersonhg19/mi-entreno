@@ -445,7 +445,32 @@ async function abrir(page, base, hash, espera = 500) {
 
   await ctx.close();
 
-  /* ====== 10. Pantallas pequeñas ====== */
+  /* ====== 10. El caso extremo: 320 px CON la letra al 180 % ======
+     Es el criterio Reflow 1.4.10 de WCAG, y aquí no es teórico: un iPhone con
+     el Zoom de pantalla activado —que alguien con baja visión sí usa— se
+     comporta como 320 px de ancho. Si además sube la letra en la app, se juntan
+     las dos cosas. Ya se salió una vez el bloque de series/repes. */
+  for (const escala of [1, 1.8]) {
+    const c = await navegador.newContext({ viewport: { width: 320, height: 568 }, isMobile: true, hasTouch: true });
+    const pg = await c.newPage();
+    pg.on("pageerror", e => errores.push(`[320px x${escala}] excepcion: ${e.message}`));
+    await pg.goto(base, { waitUntil: "networkidle" });
+    await pg.evaluate(e => document.documentElement.style.setProperty("--escala", e), escala);
+    for (const h of ["#/", "#/p/anderson", "#/p/anderson/lista", "#/p/anderson/d/2",
+                     "#/p/anderson/d/2/e/0", "#/p/anderson/d/1/e/0"]) {
+      await ir(pg, h, 450);
+      await auditar(pg, `18-320px-x${escala}${h.replace(/\//g, "_")}`, { captura: false });
+    }
+    /* y con el temporizador abierto, que es el bloque más ancho */
+    await ir(pg, "#/p/anderson/d/2/e/0", 400);
+    await pg.click("#btnSerieHecha");
+    await pg.waitForTimeout(400);
+    await auditar(pg, `18-320px-x${escala}-temporizador`, { timerVisible: true, soloViewport: true });
+    await c.close();
+  }
+  info.push("Aguanta 320 px de ancho, tambien con la letra al 180 %");
+
+  /* ====== 11. Pantallas pequeñas ====== */
   for (const disp of [
     { nombre: "19-iphone-se", w: 375, h: 667 },
     { nombre: "20-android", w: 412, h: 915 }

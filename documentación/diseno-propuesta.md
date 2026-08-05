@@ -240,42 +240,84 @@ Club, Apple Fitness+, Peloton, Caliber y la literatura de UI/UX de 2025-2026.
 Solo se recoge lo que es **aplicable** a esta app: sin cuenta de usuario, sin
 gráficas, sin red social, y con la restricción de baja visión encima.
 
-### 3.1 · La pantalla de ejercicio
+### 3.1 · La pantalla de ejercicio: tres arquetipos
 
-El patrón es unánime y esta app lo tiene invertido:
+No hay un solo patrón, hay tres, y elegir uno es la primera decisión de diseño.
 
-| Zona | Qué va ahí | Apps |
-|---|---|---|
-| Arriba, fijo | Nombre del ejercicio + músculo. Compacto, una o dos líneas. | todas |
-| Inmediatamente debajo | **La tabla de series.** Es lo primero que se ve sin scroll. | Hevy, Strong, Caliber |
-| Debajo de la tabla | «Añadir serie» / «Serie hecha» a ancho completo | Hevy, Strong |
-| Colapsado o en otra pestaña | Instrucciones, video, notas, historial | Fitbod, NTC |
-| Flotante | Temporizador de descanso | Hevy, Strong |
+**A · «Hoja de cálculo»** (Hevy, Strong, Boostcamp, JEFIT). Manda el registro.
+El orden exacto de Hevy: barra con duración y botón *Finish* → hilo de progreso
+de 2-3 px pegado bajo la barra → miniatura circular de ~40 pt + nombre del
+ejercicio en azul → nota → temporizador → **cabeceras de columna** → filas de
+serie. La instrucción no está: vive detrás de un toque.
 
-La regla es que **la instrucción es consulta, no flujo**. Fitbod y NTC ponen la
-demostración arriba porque son apps que te *enseñan* el ejercicio; Hevy y Strong
-la esconden porque asumen que ya lo sabes. Esta app tiene que hacer las dos
-cosas —Anderson necesita las fotos y los pasos escritos— pero **el registro de
-la serie no puede estar a tres pantallas de scroll**. Solución adoptada: todo en
-la misma página, pero el bloque de series sube al segundo lugar (§8.7).
+**B · «Video con HUD»** (Peloton, Ladder, Nike TC, Apple Fitness+). El video es
+la pantalla y el registro es un panel superpuesto. Peloton pone el nombre del
+movimiento en blanco a ~28 px y, en la base de la misma tarjeta, **dos métricas
+grandes en extremos opuestos**: `10 / Reps` y `15 / Weight`.
+
+**C · «Línea de tiempo vertical»** (Fitbod). Cada serie es un nodo hexagonal;
+pendiente en gris, activo en blanco, **completado en menta con ✓**. Y el detalle
+más interesante: **el descanso es un nodo más de la línea** (`⏱ 2:00 REST`
+intercalado entre series), no una capa aparte.
+
+Lo que las tres comparten y esta app no tiene:
+
+| Zona | Qué va ahí |
+|---|---|
+| Arriba, compacto | Nombre + músculo, una o dos líneas |
+| Inmediatamente debajo | **El registro.** Visible sin scroll |
+| Abajo, en la zona del pulgar | La acción de completar |
+| Detrás de un toque o colapsado | Instrucciones, video, historial |
+
+La regla de fondo: **la instrucción es consulta, no flujo**. Fitbod y NTC ponen
+la demostración arriba porque te *enseñan* el ejercicio; Hevy y Strong la
+esconden porque asumen que ya lo sabes. Esta app tiene que hacer las dos cosas
+—Anderson necesita las fotos y los pasos escritos— pero **el registro no puede
+estar a tres pantallas de scroll**. Solución adoptada: todo en la misma página,
+el bloque de series en segundo lugar (§8.7).
+
+Dos datos que refuerzan la decisión y que además obligan a un cambio más:
+
+- **Zona del pulgar.** El 75 % de las interacciones móviles se hacen con el
+  pulgar y la zona cómoda es el **tercio inferior** de la pantalla. Durante el
+  entreno, todo lo accionable debería estar abajo; arriba solo información.
+- **Dedos sudados.** El sudor **agranda y desplaza el centroide del toque** en
+  las pantallas capacitivas. Por eso las apps de gimnasio usan botones primarios
+  de **56-64 pt de alto**, no de 44-48. Ver el token nuevo `--toque-primario`
+  en §4.5.
 
 ### 3.2 · Series, repeticiones y peso
 
-- **Columna «PREVIOUS».** Es *el* patrón. Hevy muestra a la izquierda de cada
-  fila de serie lo que hiciste la última vez («45 kg × 9») y **tocarlo rellena
-  la fila actual**. Es la función mejor valorada de la app y la que hace que
-  registrar cueste un toque en vez de tres.
-- **Números tabulares.** Todas usan cifras de ancho fijo (`tabular-nums`) en
-  peso, reps y tiempo. Sin eso, el contador «baila» al pasar de 9 a 10 y en
-  una columna de series se nota muchísimo.
-- **La serie completada se marca con relleno de fila, no con un icono
-  pequeño.** Hevy tiñe la fila entera de verde tenue; Strong la marca con un
-  check grande a la izquierda. Nunca con solo un cambio de color de texto.
-- **Steppers, no teclado.** El peso se ajusta con − / + de incremento fijo
-  además de poder teclearse. En un gimnasio, con las manos sudadas, teclear un
-  decimal es hostil.
-- **Objetivo siempre visible en versalita** («3 × 10-15») encima de la tabla,
-  en gris, como rótulo.
+- **«La vez pasada» es *el* patrón.** Cuatro maneras de resolverlo, de menos a
+  más ligera:
+  1. **Columna dedicada** (Hevy, Strong): `45 kg × 9` en gris claro, y **un
+     guion `–` cuando no hay dato**. En Hevy **se toca para copiar el valor** a
+     la serie actual.
+  2. **Pista bajo cada campo** (Caliber): `🕐 Last: 270 lbs` en gris azulado a
+     ~11 pt, alineado a la derecha del campo. Es la mejor solución cuando no
+     cabe una columna. **Es la que se adopta aquí** (§8.9).
+  3. **Doble línea** con el objetivo debajo (Boostcamp).
+  4. **Prellenado fantasma**: el valor del plan aparece en gris dentro del
+     campo y se vuelve sólido al escribir (JEFIT, Fitbod).
+- **La serie completada se marca con DOS señales.** Hevy pinta el ✓ en verde
+  **y tiñe la fila entera** de lima; Strong hace lo mismo pero tan pálido que
+  pierde la mitad del efecto. Fitbod usa hexágono menta con ✓ negro. Nunca solo
+  un cambio de color de texto — es literalmente WCAG 1.4.1.
+- **Números tabulares en todo.** El problema exacto que resuelven: *«cuando un
+  número pasa de 11:11 a 12:23, toda la cadena se desplaza horizontalmente»*.
+  No hace falta monospace: `font-variant-numeric: tabular-nums` iguala solo las
+  cifras y deja las letras proporcionales. Soporte >96 %.
+- **Patrón Apple para las unidades**, el más elegante que apareció: número
+  grande + **unidad en versalitas pequeñas del mismo color que el dato**, y la
+  etiqueta descriptiva en el color de texto normal. `665/750 CAL` con `CAL` en
+  el rosa del anillo. Resuelve tres niveles de jerarquía con **dos tamaños**.
+- **Steppers grandes, no ruedas ni teclado.** Con las manos sudadas, teclear un
+  decimal es hostil; un ± de incremento fijo es un toque.
+- **Objetivo siempre visible en versalita** («3 × 10-15») encima del bloque, en
+  gris, como rótulo.
+- **Escala tipográfica observada**: nombre del ejercicio 17-22 pt semibold ·
+  cifras de serie 16-28 pt bold · cabeceras de columna 11-12 pt en versalita al
+  60 % de opacidad · cronómetro de descanso **48-64 pt bold tabular**.
 
 Traducción a esta app: como aquí las series no se registran una a una (el plan
 es «3 a 4 series de 10 a 15» para todo), la tabla se reduce a **cuatro puntos de
@@ -284,27 +326,57 @@ pasada» ya existe en `Guardado.peso()` y hoy no se muestra.
 
 ### 3.3 · Agrupación por músculo
 
-- **Encabezados sticky.** En cualquier lista larga (Hevy, Strong, Fitbod), el
-  encabezado de la sección se queda pegado bajo la barra superior. Es lo único
-  que hace navegable una lista de 40 elementos.
-- **Chips de filtro en una sola fila con scroll horizontal**, no envueltos en
-  tres líneas.
-- **El color por músculo es marginal.** Fitbod usa un mapa corporal con relleno
-  por fatiga; el resto usa una barra fina o un punto, siempre con el nombre
-  escrito. Ninguna app seria codifica el músculo *solo* por color.
-- **Conteo a la derecha del encabezado** («Pecho · 7»), en cifra tabular gris.
+**El hallazgo más útil de toda la investigación: ninguna de las diez apps
+agrupa la sesión activa por grupo muscular.** La sesión se agrupa por bloque de
+programación (`Bloque 1`, `Calentamiento`, o simplemente numerada). El color por
+músculo y el mapa corporal viven **solo en las pantallas de biblioteca y de
+estadísticas**.
+
+Eso valida exactamente el reparto que ya tiene esta app y que hay que mantener:
+
+- **La lista completa (§8.6) es la biblioteca** → ahí sí se agrupa por músculo,
+  con encabezados sticky, y ahí sí tiene sentido el color por grupo.
+- **La vista del día es la sesión** → ahí los ejercicios van **numerados en el
+  orden del plan**, sin agrupar. Que es lo que hace hoy. No se toca.
+
+El resto de patrones de lista:
+
+- **Encabezados sticky con el conteo a la derecha** («Pecho · 7») en cifra
+  tabular gris. Es lo único que hace navegable una lista de 40 elementos.
+- **En modo oscuro, el encabezado sticky debe subir un nivel de superficie al
+  hacer scroll**, porque las sombras no se leen sobre fondo oscuro. Por eso
+  §8.6 usa `--fondo` con `backdrop-filter` en vez de una sombra.
+- **Chips de filtro: el estado activo en contorno de acento, no en relleno.**
+  Ladder y Nike TC lo hacen así y en oscuro se lee mucho mejor que un bloque
+  sólido — que es justo el problema de `04-lista-filtro-martes.png`. Y **el
+  contador va dentro del chip**: `Barbell (30)`, `Todos (40)`.
+- Nike TC además muestra **el número de resultados en vivo** mientras filtras.
+- **Los mapas corporales** (Fitbod, Caliber, JEFIT) siempre acompañan el color
+  con el nombre escrito y una leyenda. Ninguna app codifica el músculo *solo*
+  por color.
 
 ### 3.4 · Uso del color
 
-Consenso llamativo: **un solo acento**. Hevy es azul, Strong es azul, Caliber es
-naranja, NTC es volt. El acento se usa en:
+Consenso rotundo: **un solo acento**. Hevy azul, Strong azul, Fitbod rosa,
+Ladder lima, Boostcamp amarillo, Apple Fitness lima. **Nike Training Club no
+usa ninguno**: negro, blanco y gris, y el único color de la pantalla está dentro
+de las fotografías. El acento se usa en tres sitios:
 
-1. el botón primario de la pantalla (uno),
+1. el botón primario de la pantalla (uno solo),
 2. el estado activo de un control,
 3. datos de progreso (barras, anillos),
 
-y **en ningún otro sitio**. Los estados semánticos (verde/ámbar/rojo) aparecen
-solo en microelementos: un check, un borde de 2 px, un punto.
+y **en ningún otro**. La proporción de referencia es **60-30-10**: 60 % fondos,
+30 % superficies y elementos secundarios, **10 % acento**. Los colores
+semánticos (verde de «hecho», ámbar de aviso) van **fuera** de ese 10 %.
+
+**El anti-patrón documentado es exactamente el problema de esta app**: dos
+acentos que compiten. A Caliber se lo critican por poner una pestaña con texto
+azul y subrayado rojo, y al rediseño de Strong le respondieron literalmente
+*«el azul y el rojo quedan raros, parecen dos apps distintas»*. Es la misma
+sensación que producen hoy el cian eléctrico del tema oscuro y el azul marino
+apagado del tema claro (§1.7): el acento debe **sentirse el mismo color** en los
+tres temas, solo con la luminancia invertida.
 
 Lo que hace que se vean «premium» sin usar más color es la **elevación tonal en
 modo oscuro**: 4-6 niveles de superficie separados por muy poco (Material 3 y
@@ -315,61 +387,153 @@ antes de perder el 7:1 con texto claro. **El cuello de botella nunca es el texto
 principal; es el secundario.** Por eso este documento fija los cuatro niveles y
 comprueba `--texto-suave` contra los cuatro (§4.2).
 
-Segundo truco: **degradados de una sola parada y muy sutiles** para dar
-identidad (Peloton y Apple Fitness+ tiñen la cabecera según la disciplina).
-Aplicado aquí como el degradado por grupo muscular (§9.2).
+Tres detalles más que se copian directamente:
+
+- **Nunca `#000000` puro como fondo base si necesitas capas.** Sobre negro la
+  elevación es indistinguible, y además produce *halation*: los bordes del texto
+  blanco se ven borrosos o demasiado luminosos, peor todavía con astigmatismo.
+  Por eso `--fondo` es `#0A0E14` y no negro — y por eso el tema Máximo, que sí
+  es negro puro, **renuncia a las superficies y usa grosor de borde** (§4.4).
+- **Tintar las superficies elevadas con el acento al 6-8 %** en vez de usar
+  grises neutros. Apple usa `#101801` (un verde casi negro) para las tarjetas de
+  entreno; Fitbod usa `#191923`, que no es gris sino **negro azulado**. Da
+  cohesión cromática sin añadir un segundo color. Las cuatro superficies de §4.2
+  están construidas así: todas llevan el mismo tinte azul.
+- **Material publica una escalera de opacidad de texto en oscuro** (87 % / 60 %
+  / 38 %). Aquí eso se traduce a **tres tokens sólidos** —`--texto`,
+  `--texto-suave`, `--texto-inactivo`— porque `opacity` sobre texto rompe el
+  contraste de forma invisible (§6.5, regla 1).
+
+Y sobre degradados: **casi ninguna app los usa en producto**. Hevy, Strong,
+Fitbod, Nike TC, Boostcamp y JEFIT tienen cero. Peloton usa solo un **halo
+radial ambiental** detrás del título, y Apple Fitness+ los reserva a las
+tarjetas de plan. Eso es exactamente la dosis del degradado por grupo muscular
+de §9.2: radial, al 14-16 %, y nunca detrás de texto crítico.
 
 ### 3.5 · Temporizador de descanso
 
-Dos escuelas:
+Cinco patrones, uno por arquetipo:
 
-- **Barra persistente abajo** (Hevy, Strong): no tapa nada, permite seguir
-  editando. Buena para quien registra series una a una.
-- **Pantalla completa** (NTC, Peloton, Apple Fitness+): número enorme + anillo,
-  y el nombre de lo que viene después.
+1. **Barra inferior persistente** (Hevy). No tapa la tabla, vive en la zona del
+   pulgar, línea de progreso lineal en su borde superior, número a **~48 pt bold
+   tabular** y solo tres controles: `−15`, `+15` y `Skip`.
+2. **Píldora en línea que se expande** (Strong). Reposo → una línea fina con
+   `2:00` entre las filas; corriendo → esa línea se convierte en píldora de
+   acento a ancho completo.
+3. **Anillo grande fijo** (JEFIT). Anillo de ~170 px con **cabo redondeado y un
+   pomo en la punta**, la duración objetivo en gris pequeño arriba y el tiempo
+   restante enorme debajo (~44 pt) — una relación de **2,7×** respecto al nombre
+   del ejercicio. Cuatro botones circulares alrededor.
+4. **Un nodo más de la línea de tiempo** (Fitbod). El descanso no tiene UI
+   propia.
+5. **Superpuesto sobre el video** (Ladder). Número gigante en condensada pesada
+   con un **arco de marcas tipo velocímetro**: las consumidas brillantes, las
+   restantes atenuadas.
 
-Para baja visión, la segunda gana con claridad: nada que competir, número al
-mayor tamaño posible, y **el anillo da la información sin leer**. La app ya está
-en esa escuela pero a medias —modal pequeño, sin anillo, fondo semitransparente
-que deja ver el contenido detrás—. Se lleva al final (§8.10 + §9.1).
+Para baja visión gana la escuela de pantalla completa con anillo: nada con lo
+que competir, el número al mayor tamaño posible, y **el anillo da la información
+sin leer**. La app ya está en esa escuela pero a medias —modal pequeño, sin
+anillo, fondo semitransparente que deja ver el contenido detrás—. Se lleva al
+final (§8.10 + §9.1), tomando prestado:
 
-Detalle robado de Apple Fitness+ y NTC: durante el descanso, **decir qué viene
-después**. Es la única información que el usuario quiere en ese minuto.
+- de **JEFIT**, la relación de tamaños y el pomo en la punta del arco;
+- de **Hevy**, los tres controles y solo tres (`+30 s`, `Terminar` y nada más);
+- de **Apple Fitness+ y Peloton**, decir **qué viene después** durante el
+  descanso. Es la única información que el usuario quiere en ese minuto.
 
-### 3.6 · Estados finales
+Justificación formal: un descanso de 60-180 s está muy por encima del umbral de
+atención de 10 s, y por encima de ese umbral la recomendación clásica es
+**indicador de porcentaje o anillo, nunca un indicador indeterminado**. Y el
+toque de «serie hecha» debe pintar el estado en **menos de 100 ms** — aquí es
+gratis, porque todo es `localStorage`.
 
-Todas cierran la sesión con una pantalla de resumen: tres o cuatro cifras
-grandes (ejercicios, series, tiempo) y una animación breve. No es decoración:
-es el cierre del bucle, y es lo que hace que la app se sienta terminada. Esta
-app no tiene ninguno (§9.4).
+### 3.6 · Estados vacíos, cierres y microinteracciones
+
+**Estados vacíos.** La estructura es siempre la misma y tiene tres partes:
+**encabezado que describe qué habrá ahí cuando esté lleno + explicación +
+llamada a la acción**. Strong: *«Historial del ejercicio — aquí aparecerán tus
+marcas anteriores, ¡vuelve más tarde!»*. Nike TC, en cambio, se limita a «No se
+encontraron resultados», y se lo señalan como oportunidad perdida por no
+sugerir alternativas. El dato que lo justifica: *«los estados vacíos son las
+pantallas más vistas de tu app — todo usuario nuevo las ve el primer día»*.
+Esta app tiene hoy un «No hay ejercicios para ese filtro» sin salida (§9.4b).
+
+**Cierre de sesión.** Todas terminan con un resumen: tres o cuatro cifras
+grandes (ejercicios, series, tiempo o volumen) y una animación breve. Fitbod
+lanza confeti; Hevy escribe frases como *«levantaste 13 264 kg en total — como
+levantar un camión»*.
+
+**Y la regla que evita pasarse**, que es la más importante de todas:
+
+> *«Una herramienta de gestión celebraba cada tarea completada con una animación
+> de confeti a pantalla completa. La primera vez fue divertido; la quincuagésima
+> el usuario quería tirar el portátil por la ventana.»* El diagnóstico: **la
+> intención correcta con la amplitud equivocada.**
+
+De ahí el mapeo que se adopta (§9.4): un pulso de 700 ms para el día terminado,
+y nada más. Con el reparto de intensidad por evento:
+
+| Evento | Visual | Vibración (`navigator.vibrate`) |
+|---|---|---|
+| Serie hecha | tinte de fila + ✓, <300 ms | `[12]` — un golpe corto |
+| Fin del descanso | anillo completo + pulso | `[300,120,300]` (ya existe) |
+| Día terminado | tarjeta de cierre, 700 ms | `[60,60,60,60,200]` |
+| Ajustar ± serie | la cifra cambia | nada |
+
+**Microinteracciones que sí valen aquí**: la animación del ✓ al completar
+(<300 ms), y **tocar el valor de «la vez pasada» para copiarlo** al campo de
+peso — dos líneas de JS y quita el único momento de teclear que queda en la app.
 
 ### 3.7 · Los diez patrones que vale la pena copiar
 
-1. Tabla/bloque de series **antes** que las instrucciones.
-2. Columna **«la vez pasada»** con el peso guardado.
-3. Números **tabulares** en todo lo que cambia.
-4. Encabezados de grupo **sticky** con conteo a la derecha.
-5. Chips de filtro en **una fila con scroll horizontal**.
-6. **Un solo acento**, un solo botón primario por pantalla.
-7. **Elevación tonal** en oscuro (4 superficies, no 1).
-8. Temporizador a **pantalla completa con anillo** + «qué viene después».
-9. **Resumen de cierre** con tres cifras.
-10. Degradado **muy tenue** de identidad en la cabecera.
+1. **El registro antes que las instrucciones.** El bloque de series sube al
+   segundo lugar de la pantalla de ejercicio (§8.7). Es el cambio de mayor
+   impacto de todo el documento.
+2. **«La vez pasada» como pista bajo el campo** (modelo Caliber), no como
+   columna: `la vez pasada · 17,5 kg`. El dato ya está guardado y hoy no se ve.
+3. **Doble señal para lo completado**: ✓ **y** cambio de la fila entera. Nunca
+   solo color de texto (§8.5).
+4. **Números tabulares** en todo lo que cambia, y **unidad en versalitas del
+   color del dato** (modelo Apple): tres niveles de jerarquía con dos tamaños.
+5. **Barra segmentada de progreso**, un segmento por serie o por ejercicio. Se
+   aplica dos veces: los cuatro puntos de serie (§8.9) y el hilo de progreso del
+   día bajo la barra superior (§8.1).
+6. **Encabezados de grupo sticky** con conteo a la derecha, subiendo un nivel de
+   superficie al hacer scroll (§8.6).
+7. **Chips de filtro en contorno de acento, no en relleno**, con el contador
+   dentro y en una sola fila con scroll horizontal (§8.4).
+8. **Un solo acento y un solo botón primario por pantalla**, con proporción
+   60-30-10.
+9. **Elevación tonal tintada** en oscuro: cuatro superficies, todas con el mismo
+   tinte azul, ninguna en negro puro (§4.2).
+10. **Temporizador a pantalla completa con anillo**, cabo redondeado, tres
+    controles como mucho, y **«después viene: …»** (§8.10).
 
-Y dos que **no** se copian, a propósito:
+Y tres que **no** se copian, a propósito:
 
-- **Barra de navegación inferior.** Añade 5 destinos permanentes y aquí el flujo
-  es lineal (persona → día → ejercicio). Sumaría ruido y 60 px de alto.
-- **Gráficas de progreso.** Requieren leer ejes finos; están explícitamente
+- **Barra de navegación inferior.** Añade cinco destinos permanentes y aquí el
+  flujo es lineal (persona → día → ejercicio). Sumaría ruido y 60 px de alto.
+- **Gráficas y mapas corporales.** Requieren leer ejes y siluetas finas; están
   fuera del alcance de una app pensada para baja visión.
+- **Confeti y celebraciones repetidas.** Un solo pulso de 700 ms al terminar el
+  día, y nada más (§9.4). La amplitud importa más que la intención.
 
 Fuentes:
 [Hevy — Previous Workout Values](https://www.hevyapp.com/features/track-exercises/) ·
-[Hevy — Exercise Log](https://www.hevyapp.com/use-cases/exercise-log/) ·
-[Fireart — Fitness App UI UX Design 2026](https://fireart.studio/blog/user-interface-design-for-a-fitness-app/) ·
-[Stormotion — Fitness App UI Design Principles](https://stormotion.io/blog/fitness-app-ux/) ·
+[Hevy — Rest Timer](https://www.hevyapp.com/features/workout-rest-timer/) ·
+[Strong — Set Tags](https://help.strongapp.io/article/166-set-tags) ·
+[Fitbod — Muscle Recovery](https://fitbod.zendesk.com/hc/en-us/articles/360006269014-Muscle-Recovery) ·
+[Apple HIG — Activity Rings](https://developer.apple.com/design/human-interface-guidelines/activity-rings) ·
+[Apple HIG — Workouts](https://developer.apple.com/design/human-interface-guidelines/workouts) ·
+[Material 3 — Applying Elevation](https://m3.material.io/styles/elevation/applying-elevation) ·
 [Material 3 — Tone-based Surfaces](https://m3.material.io/blog/tone-based-surface-color-m3) ·
-[Radix Colors — Understanding the scale](https://www.radix-ui.com/colors/docs/palette-composition/understanding-the-scale)
+[Radix Colors — Understanding the scale](https://www.radix-ui.com/colors/docs/palette-composition/understanding-the-scale) ·
+[Smashing — Inclusive Dark Mode](https://www.smashingmagazine.com/2025/04/inclusive-dark-mode-designing-accessible-dark-themes/) ·
+[Smashing — The Thumb Zone](https://www.smashingmagazine.com/2016/09/the-thumb-zone-designing-for-mobile-users/) ·
+[NN/g — Response Time Limits](https://www.nngroup.com/articles/response-times-3-important-limits/) ·
+[Pencil&Paper — Mobile Filter UX](https://www.pencilandpaper.io/articles/ux-pattern-analysis-mobile-filters) ·
+[Stormotion — Fitness App UX](https://stormotion.io/blog/fitness-app-ux/) ·
+[Fireart — Fitness App UI/UX 2026](https://fireart.studio/blog/user-interface-design-for-a-fitness-app/)
 
 ---
 
@@ -619,7 +783,8 @@ el relleno se lo queda «Serie hecha»; «Léemelo en voz alta» pasa a borde.
 :root {
   --escala: 1;
   --base: calc(17px * var(--escala));
-  --toque: 48px;
+  --toque: 48px;            /* mínimo de cualquier cosa tocable */
+  --toque-primario: 58px;   /* botones que se tocan con las manos sudadas */
 
   /* radios: cuatro escalones, no uno */
   --radio-1: 8px;    /* miniaturas, puntos, celdas pequeñas */
@@ -1541,12 +1706,23 @@ a los lados). Y aparece el peso con memoria.
   border: 1px solid var(--borde-fuerte); border-radius: var(--radio-2);
 }
 .campo-peso::placeholder { color: var(--texto-suave); opacity: 1; }
+/* «la vez pasada» es un BOTÓN: se toca y copia el valor al campo (§3.7-2) */
 .peso-anterior {
-  font-size: var(--t-menor); color: var(--texto-suave); text-align: right; white-space: nowrap;
+  min-height: var(--toque); padding: 0 var(--e2);
+  font-size: var(--t-menor); color: var(--texto-suave);
+  text-align: right; white-space: nowrap;
+  background: transparent; border: 1px dashed var(--borde-fuerte);
+  border-radius: var(--radio-2); font-family: inherit; cursor: pointer;
 }
 .peso-anterior b {
   display: block; font-family: var(--fuente-num); font-variant-numeric: tabular-nums;
   font-size: var(--t-seccion); font-weight: 800; color: var(--texto);
+}
+/* unidad en versalitas del color del dato — patrón Apple (§3.2) */
+.peso-anterior b u {
+  font-size: var(--t-etiqueta); font-weight: 700; text-decoration: none;
+  text-transform: uppercase; letter-spacing: .06em;
+  color: var(--texto-suave); margin-left: 2px;
 }
 ```
 
@@ -1577,9 +1753,22 @@ a los lados). Y aparece el peso con memoria.
       <span class="etiqueta">Peso que estás usando</span>
       <input class="campo-peso" inputmode="decimal" placeholder="20 kg">
     </label>
-    <p class="peso-anterior">la vez pasada<b>17,5 kg</b></p>
+    <button class="peso-anterior" id="btnPesoAnterior"
+            aria-label="Usar el peso de la vez pasada: 17,5 kilos">
+      la vez pasada<b>17,5<u>kg</u></b>
+    </button>
   </div>
 </section>
+```
+
+Tocar «la vez pasada» rellena el campo. Son tres líneas:
+
+```js
+document.getElementById("btnPesoAnterior").addEventListener("click", function () {
+  var campo = document.getElementById("campoPeso");
+  campo.value = pesoGuardado;
+  Guardado.guardarPeso(idPersona, clave, pesoGuardado);
+});
 ```
 
 > Los puntos de serie son **redundantes**: el `role="img"` con `aria-label`
@@ -1734,6 +1923,7 @@ distintas con el mismo peso. Se define:
   cursor: pointer;
 }
 .btn-principal {
+  min-height: var(--toque-primario);        /* 58 px: dedos sudados (§3.1) */
   background: var(--acento); color: var(--acento-texto);
   border: 2px solid var(--acento); font-weight: 800;
   box-shadow: var(--sombra-2);
@@ -2202,7 +2392,8 @@ transiciones (§9.5), `prefers-contrast` (§9.6).
 | `app.js` | anillo mini en la fila de día (`--p`) | 2 |
 | `app.js` | reordenar `bloqueEjercicio()` / `vistaEjercicio()` | mover bloques |
 | `app.js` | puntos de serie (`.series-punto`) | ~5 |
-| `app.js` | «la vez pasada» leyendo `Guardado.peso()` en la lista del día | ~3 |
+| `app.js` | «la vez pasada» leyendo `Guardado.peso()`, y tocarla para copiarla | ~6 |
+| `app.js` | vibración corta `[12]` al marcar serie y `[60,60,60,60,200]` al cerrar el día | ~3 |
 | `app.js` | `pintar()` con `startViewTransition` | ~5 |
 | `app.js` | detectar `prefers-contrast: more` | ~4 |
 | `cronometro.js` | `--p` y `data-fase` en `pintar()`; total en `iniciar()` | ~4 |
@@ -2274,7 +2465,7 @@ rediseño no ha terminado.
   /* --- escala y medidas --- */
   --escala: 1;
   --base: calc(17px * var(--escala));
-  --toque: 48px;
+  --toque: 48px;  --toque-primario: 58px;
 
   --radio-1: 8px;  --radio-2: 14px;  --radio-3: 20px;  --radio-full: 999px;
   --e0: 2px; --e1: 4px; --e2: 8px;  --e3: 12px;

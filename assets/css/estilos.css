@@ -303,7 +303,7 @@ button:active, .ejercicio:active, .dia:active, .persona:active { transform: scal
    ============================================================ */
 .btn-grande {
   display: flex; align-items: center; justify-content: flex-start; gap: var(--e3);
-  width: 100%; min-height: var(--toque);
+  width: 100%; min-width: 0; min-height: var(--toque);
   padding: var(--e3) var(--e4); margin-bottom: var(--e2);
   font-family: inherit; font-size: var(--t-cuerpo); font-weight: 600; text-align: left;
   background: var(--superficie-1); color: var(--texto);
@@ -328,8 +328,12 @@ button:active, .ejercicio:active, .dia:active, .persona:active { transform: scal
 }
 .btn-grande[disabled]:active { transform: none; }
 
-.fila-doble { display: flex; gap: var(--e2); }
-.fila-doble .btn-grande { margin-bottom: 0; justify-content: center; text-align: center; }
+/* Envuelve para que a 320 px con la letra al 180 % no se salga */
+.fila-doble { display: flex; gap: var(--e2); flex-wrap: wrap; }
+.fila-doble .btn-grande {
+  flex: 1 1 8em; width: auto; min-width: 0;
+  margin-bottom: 0; justify-content: center; text-align: center;
+}
 
 /* ============================================================
    SELECTOR DE PERSONA
@@ -493,15 +497,23 @@ button:active, .ejercicio:active, .dia:active, .persona:active { transform: scal
 .detalle-meta { display: flex; align-items: center; gap: var(--e2); flex-wrap: wrap; margin: 0; }
 .detalle-equipo { color: var(--texto-suave); font-size: var(--t-menor); }
 
-/* Prescripción destacada: lo que hay que hacer, antes que nada */
+/* Prescripción destacada: lo que hay que hacer, antes que nada.
+   Envuelve y las celdas encogen: a 320 px con la letra al 180 % (un iPhone
+   con Zoom de pantalla, que alguien con baja visión sí usa) las tres en una
+   línea se salían de la pantalla. La separación la hace el `gap` sobre el
+   fondo, no un borde, para que al envolver siga viéndose bien. */
 .receta {
-  display: flex; align-items: stretch;
+  display: flex; align-items: stretch; flex-wrap: wrap;
+  gap: 1px;
   border: 1px solid var(--borde); border-radius: var(--radio-2);
-  background: var(--superficie-2);
+  background: var(--borde);
   margin-bottom: var(--e4); overflow: hidden;
 }
-.receta-celda { flex: 1; padding: var(--e3) var(--e2); text-align: center; }
-.receta-celda + .receta-celda { border-left: 1px solid var(--borde); }
+.receta-celda {
+  flex: 1 1 6.5em; min-width: 0;
+  padding: var(--e3) var(--e2); text-align: center;
+  background: var(--superficie-2);
+}
 .receta-valor {
   display: block; font-family: var(--fuente-num);
   font-size: var(--t-seccion); font-weight: 800;
@@ -644,8 +656,8 @@ button:active, .ejercicio:active, .dia:active, .persona:active { transform: scal
 .series-etiqueta { margin: var(--e0) 0 var(--e3); font-size: var(--t-etiqueta); color: var(--texto-suave); text-transform: uppercase; letter-spacing: .06em; }
 .series-controles { display: flex; gap: var(--e2); justify-content: center; }
 .series-controles .btn-grande {
-  width: auto; flex: 1; justify-content: center;
-  font-size: var(--t-seccion); margin-bottom: 0;
+  width: auto; flex: 1 1 4em; min-width: 0; justify-content: center;
+  font-size: var(--t-seccion); margin-bottom: 0; padding: var(--e3) var(--e2);
 }
 .campo-peso {
   width: 100%; min-height: var(--toque);
