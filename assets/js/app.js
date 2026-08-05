@@ -125,6 +125,7 @@
     var abierto = panel.hidden;
     panel.hidden = !abierto;
     btnAjustes.setAttribute("aria-expanded", abierto ? "true" : "false");
+    if (abierto) pintarResumenDatos();
   });
 
   document.getElementById("btnLetraMas").addEventListener("click", function () {
@@ -141,6 +142,39 @@
   });
   document.getElementById("chkVibrar").addEventListener("change", function (e) {
     prefs.vibrar = e.target.checked; guardarPrefs();
+  });
+
+  /* ---------------------------------------------------------
+     Tus datos: qué hay guardado, copia de seguridad y borrado
+     --------------------------------------------------------- */
+  function pintarResumenDatos() {
+    var r = Guardado.resumen();
+    var kb = Math.max(1, Math.round(r.bytes / 1024));
+    document.getElementById("resumenDatos").textContent = r.disponible
+      ? "Ahora mismo hay " + r.sesiones + " día(s) de entreno anotados y " +
+        r.pesos + " peso(s) recordados. Ocupa " + kb + " KB."
+      : "El navegador no deja guardar nada (¿navegación privada?). " +
+        "La app funciona, pero no recordará tus series ni tus pesos.";
+  }
+
+  document.getElementById("btnExportar").addEventListener("click", function () {
+    var texto = Guardado.exportar();
+    var url = URL.createObjectURL(new Blob([texto], { type: "application/json" }));
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "mi-entreno-" + Guardado.hoy() + ".json";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+  });
+
+  document.getElementById("btnBorrarDatos").addEventListener("click", function () {
+    if (!confirm("¿Borrar todo lo que has anotado (series, pesos y ejercicios hechos)?\n\n" +
+                 "La rutina NO se borra: esa viene con la app.")) return;
+    Guardado.borrarTodo();
+    prefs = Guardado.prefs();
+    aplicarPrefs();
+    pintarResumenDatos();
+    enrutar();
   });
 
   /* ---------------------------------------------------------
@@ -403,8 +437,17 @@
            '</div>';
   }
 
+  /* El carrusel y, justo debajo, el enlace al video: son la misma cosa
+     (ver cómo se hace), así que van juntos y a un dedo de distancia. */
   function carruselDe(e) {
-    return Carrusel.html(Carrusel.laminasDe(e), e.nombre);
+    return Carrusel.html(Carrusel.laminasDe(e), e.nombre) +
+      '<a class="enlace-video" href="' + esc(urlVideo(e.buscar)) + '" target="_blank" rel="noopener">' +
+        '▶ Ver video de este ejercicio' +
+        '<span class="enlace-nota">necesita internet</span>' +
+      '</a>' +
+      (e.fotosOk ? '' :
+        '<p class="nota-foto">Las dos fotos son de un movimiento <strong>parecido</strong>, ' +
+        'no idéntico. La que manda es la ficha del gimnasio.</p>');
   }
 
   function instrucciones(e) {
@@ -423,8 +466,6 @@
       html += '<div class="aviso"><span class="icono" aria-hidden="true">!</span><span>' +
               '<strong>Ojo con esto</strong>' + esc(e.ojo) + '</span></div>';
     }
-    html += '<a class="enlace-video" href="' + esc(urlVideo(e.buscar)) + '" target="_blank" rel="noopener">' +
-              'Ver video del ejercicio (necesita internet)</a>';
     return html;
   }
 
@@ -649,11 +690,24 @@
   }
   enrutar();
 
+  document.getElementById("versionApp").textContent = "Mi Entreno · versión " + window.VERSION_APP;
+  pintarResumenDatos();
+
   if (navigator.serviceWorker && location.protocol.indexOf("http") === 0) {
     window.addEventListener("load", function () {
       try {
         navigator.serviceWorker.register("sw.js").catch(function () { /* sin conexión, da igual */ });
       } catch (e) { /* navegación privada en iOS: la app sigue funcionando online */ }
+    });
+
+    /* Cuando el service worker nuevo toma el control, la página que estás
+       viendo sigue siendo la vieja. Se recarga una sola vez para que la
+       actualización se vea sin tener que borrar nada a mano. */
+    var yaRecargado = false;
+    navigator.serviceWorker.addEventListener("controllerchange", function () {
+      if (yaRecargado) return;
+      yaRecargado = true;
+      location.reload();
     });
   }
 })();

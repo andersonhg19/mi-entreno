@@ -131,8 +131,14 @@
 
 /* Sin esto, el navegador pinta su propio fondo sobre los controles —y sobre
    todo sobre los deshabilitados— y el contraste medido se desploma de 9:1 a
-   5,7:1 sin que se vea en el CSS. Con `appearance: none` mandamos nosotros. */
-button, input, select, textarea {
+   5,7:1 sin que se vea en el CSS. Con `appearance: none` mandamos nosotros.
+
+   OJO: las casillas y los botones de radio quedan FUERA. Ahí `appearance: none`
+   los deja completamente invisibles (sin cuadro, sin marca), y eso ya pasó una
+   vez con los interruptores de Voz. */
+button,
+input:not([type="checkbox"]):not([type="radio"]),
+select, textarea {
   appearance: none; -webkit-appearance: none;
 }
 
@@ -721,13 +727,15 @@ button:active, .ejercicio:active, .dia:active, .persona:active { transform: scal
    VARIOS
    ============================================================ */
 .enlace-video {
-  display: flex; align-items: center; justify-content: center; gap: var(--e2);
+  display: flex; align-items: center; justify-content: center;
+  gap: var(--e2); flex-wrap: wrap;
   min-height: var(--toque); padding: var(--e3);
   background: var(--superficie-2); color: var(--texto);
   border: 1px solid var(--borde); border-radius: var(--radio-2);
-  font-weight: 600; font-size: var(--t-menor); text-decoration: none;
+  font-weight: 700; font-size: var(--t-menor); text-decoration: none;
   margin-bottom: var(--e3);
 }
+.enlace-nota { font-weight: 400; font-size: var(--t-etiqueta); color: var(--texto-suave); }
 .barra-progreso {
   height: 8px; background: var(--superficie-3);
   border: 1px solid var(--borde); border-radius: var(--radio-full);

@@ -235,7 +235,7 @@ async function abrir(page, base, hash, espera = 500) {
   await auditar(page, "07-ejercicio-entreno");
 
   await ir(page, "#/p/anderson/d/1/e/0", 350);
-  await auditar(page, "08-ejercicio-solo-ficha");
+  await auditar(page, "08-ejercicio-foto-parecida");
 
   await ir(page, "#/p/sharid", 250);
   await auditar(page, "09-semana-sharid");
@@ -245,6 +245,34 @@ async function abrir(page, base, hash, espera = 500) {
   await page.waitForTimeout(150);
   if (!await page.evaluate(() => getComputedStyle(document.getElementById("panelAjustes")).display !== "none"))
     fallo("10-ajustes", "el panel de ajustes no se abre");
+
+  /* Las casillas TIENEN que verse. Con `appearance: none` se quedan
+     invisibles (sin cuadro ni marca) y el ajuste deja de existir de hecho. */
+  const casillas = await page.evaluate(() =>
+    [...document.querySelectorAll('#panelAjustes input[type="checkbox"]')].map(el => {
+      const cs = getComputedStyle(el);
+      const r = el.getBoundingClientRect();
+      return { ancho: Math.round(r.width), alto: Math.round(r.height), apariencia: cs.appearance };
+    }));
+  if (casillas.length !== 2) fallo("10-ajustes", `hay ${casillas.length} casillas y deberian ser 2`);
+  casillas.forEach((c, i) => {
+    if (c.ancho < 16 || c.alto < 16) fallo("10-ajustes", `la casilla ${i + 1} mide ${c.ancho}x${c.alto}`);
+    if (c.apariencia === "none") fallo("10-ajustes", `la casilla ${i + 1} es invisible (appearance: none)`);
+  });
+
+  /* Y los datos guardados se explican y se pueden descargar o borrar */
+  const infoDatos = await page.evaluate(() => ({
+    explica: /solo en este tel/i.test(document.getElementById("notaDatos").textContent),
+    resumen: document.getElementById("resumenDatos").textContent.length > 20,
+    exportar: !!document.getElementById("btnExportar"),
+    borrar: !!document.getElementById("btnBorrarDatos"),
+    version: document.getElementById("versionApp").textContent
+  }));
+  if (!infoDatos.explica) fallo("10-ajustes", "no se explica donde se guardan los datos");
+  if (!infoDatos.resumen) fallo("10-ajustes", "no se muestra cuanto hay guardado");
+  if (!infoDatos.exportar || !infoDatos.borrar) fallo("10-ajustes", "faltan los botones de copia o de borrado");
+  if (!/versi/i.test(infoDatos.version)) fallo("10-ajustes", "no se muestra la version de la app");
+
   await auditar(page, "10-ajustes");
   await page.click("#btnAjustes");
   await page.waitForTimeout(150);
@@ -298,16 +326,16 @@ async function abrir(page, base, hash, espera = 500) {
     fallo("11-carrusel", "la flecha derecha del teclado no avanza");
   await auditar(page, "11-carrusel", { soloViewport: true });
 
-  /* con una sola lamina no debe haber controles */
-  await ir(page, "#/p/anderson/d/1/e/0", 400);
-  const unica = await page.evaluate(() => ({
+  /* Un ejercicio cuya foto es solo parecida: 3 laminas igual, con el aviso */
+  await ir(page, "#/p/anderson/d/1/e/0", 500);
+  const parecida = await page.evaluate(() => ({
     laminas: document.querySelectorAll(".carrusel-lamina").length,
     flechas: document.querySelectorAll(".carrusel-flecha").length,
-    puntos: document.querySelectorAll(".carrusel-punto").length,
-    marcado: document.querySelector(".carrusel").getAttribute("data-unica")
+    aviso: /parecid/.test(document.getElementById("contenido").textContent),
+    rotulos: [...document.querySelectorAll(".foto-pie")].map(x => x.textContent).join(" | ")
   }));
-  if (unica.laminas !== 1 || unica.flechas || unica.puntos || unica.marcado !== "si")
-    fallo("11-carrusel", `con una sola lamina: ${JSON.stringify(unica)}`);
+  if (parecida.laminas !== 3 || parecida.flechas !== 2 || !parecida.aviso)
+    fallo("11-carrusel", `ejercicio con foto parecida: ${JSON.stringify(parecida)}`);
 
   /* ====== 4. TEMPORIZADOR ====== */
   await ir(page, "#/p/anderson/d/2/e/0", 350);

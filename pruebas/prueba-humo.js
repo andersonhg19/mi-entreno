@@ -109,33 +109,51 @@ for (const pid of ["anderson", "sharid"]) {
       const cat = window.CATALOGO[d.ejercicios[i]];
       comprobar(doc.querySelector(".detalle-nombre").textContent === cat.nombre,
         `${pid} d${d.n} e${i}: el nombre no coincide`);
-      /* Carrusel: siempre la ficha del gimnasio primero; las fotos reales
-         solo si se verifico que corresponden al mismo ejercicio. */
-      const nEsperadas = cat.fotosOk ? 3 : 1;
+      /* Carrusel: SIEMPRE 3 laminas — la ficha del gimnasio primero (exacta
+         por definicion) y las dos fotos del movimiento. */
       const nLaminas = doc.querySelectorAll(".carrusel-lamina").length;
-      comprobar(nLaminas === nEsperadas,
-        `${pid} d${d.n} e${i}: ${nLaminas} laminas y se esperaban ${nEsperadas}`);
-      comprobar(/-ficha[.]jpg$/.test(doc.querySelector(".carrusel-lamina img").getAttribute("src")),
-        `${pid} d${d.n} e${i}: la primera lamina debe ser la ficha del gimnasio`);
-      comprobar(doc.querySelectorAll(".carrusel-lamina .foto-pie").length === nEsperadas,
+      comprobar(nLaminas === 3, `${pid} d${d.n} e${i}: ${nLaminas} laminas y deberian ser 3`);
+      const srcs = [...doc.querySelectorAll(".carrusel-lamina img")].map(x => x.getAttribute("src"));
+      comprobar(srcs[0] && srcs[0].endsWith(`${d.ejercicios[i]}-ficha.jpg`),
+        `${pid} d${d.n} e${i}: la primera lamina debe ser SU ficha del gimnasio`);
+      comprobar(srcs[1] && srcs[1].endsWith(`${d.ejercicios[i]}-0.jpg`),
+        `${pid} d${d.n} e${i}: la segunda lamina no es su foto de inicio`);
+      comprobar(srcs[2] && srcs[2].endsWith(`${d.ejercicios[i]}-1.jpg`),
+        `${pid} d${d.n} e${i}: la tercera lamina no es su foto final`);
+      comprobar(doc.querySelectorAll(".carrusel-lamina .foto-pie").length === 3,
         `${pid} d${d.n} e${i}: cada lamina necesita su rotulo escrito`);
       doc.querySelectorAll(".carrusel-lamina img").forEach(im => {
         comprobar((im.getAttribute("alt") || "").length > 10,
           `${pid} d${d.n} e${i}: una lamina no tiene texto alternativo util`);
       });
-      if (nEsperadas === 1) {
-        comprobar(doc.querySelector(".carrusel").getAttribute("data-unica") === "si",
-          `${pid} d${d.n} e${i}: con una sola imagen el carrusel debe marcarse data-unica`);
-        comprobar(!doc.querySelector(".carrusel-flecha"),
-          `${pid} d${d.n} e${i}: con una sola imagen no deberia haber flechas`);
+      comprobar(doc.querySelectorAll(".carrusel-punto").length === 3,
+        `${pid} d${d.n} e${i}: faltan puntos de posicion`);
+      comprobar(/Imagen/.test(doc.querySelector(".carrusel-posicion").textContent),
+        `${pid} d${d.n} e${i}: falta el contador escrito "Imagen X de Y"`);
+      comprobar(doc.querySelector('.carrusel-flecha[data-paso="-1"]').disabled,
+        `${pid} d${d.n} e${i}: la flecha anterior debe empezar deshabilitada`);
+
+      /* Cuando la foto no es el ejercicio exacto hay que decirlo */
+      const rotulos = [...doc.querySelectorAll(".carrusel-lamina .foto-pie")]
+        .map(x => x.textContent).join(" ");
+      if (!cat.fotosOk) {
+        comprobar(/parecida/.test(rotulos),
+          `${pid} d${d.n} e${i}: las fotos son parecidas y el rotulo no lo dice`);
+        comprobar(/parecido/.test(texto()),
+          `${pid} d${d.n} e${i}: falta el aviso de que la foto es parecida`);
       } else {
-        comprobar(doc.querySelectorAll(".carrusel-punto").length === nEsperadas,
-          `${pid} d${d.n} e${i}: faltan puntos de posicion`);
-        comprobar(/Imagen/.test(doc.querySelector(".carrusel-posicion").textContent),
-          `${pid} d${d.n} e${i}: falta el contador escrito "Imagen X de Y"`);
-        comprobar(doc.querySelector('.carrusel-flecha[data-paso="-1"]').disabled,
-          `${pid} d${d.n} e${i}: la flecha anterior debe empezar deshabilitada`);
+        comprobar(!/parecida/.test(rotulos),
+          `${pid} d${d.n} e${i}: las fotos son exactas y el rotulo dice que son parecidas`);
       }
+
+      /* El video va justo debajo de las imagenes, no al final de todo */
+      const carrusel = doc.querySelector(".carrusel");
+      const video = doc.querySelector(".enlace-video");
+      comprobar(video && carrusel.compareDocumentPosition(video) & 4,
+        `${pid} d${d.n} e${i}: el enlace de video deberia ir despues del carrusel`);
+      const pasos = doc.querySelector(".pasos");
+      comprobar(pasos && video.compareDocumentPosition(pasos) & 4,
+        `${pid} d${d.n} e${i}: el video deberia ir ANTES de los pasos`);
 
       comprobar(doc.querySelectorAll(".pasos li").length === cat.pasos.length,
         `${pid} d${d.n} e${i}: los pasos mostrados no coinciden`);

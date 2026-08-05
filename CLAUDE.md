@@ -84,13 +84,20 @@ Cada ejercicio muestra **la ficha del tablero de Life Gym** (`<clave>-ficha.jpg`
 Esa imagen es el recorte del cartón que entregó el entrenador, así que es
 **exacta por definición**. Siempre va primero en el carrusel.
 
-Las fotos reales (`<clave>-0.jpg` y `<clave>-1.jpg`, de free-exercise-db) solo
-existen si `fotosOk: true`, y ese campo solo se pone en true después de
-**mirar las tres imágenes y confirmar que son el mismo movimiento y el mismo
-equipo**. En la v3 se descartaron 20 de 55 porque no lo eran: la ficha era de
-TRX y la foto de peso libre, la ficha tumbado y la foto sentado, etc.
+Después van **siempre** dos fotos reales del movimiento
+(`<clave>-0.jpg` y `<clave>-1.jpg`, de free-exercise-db). El carrusel tiene
+por tanto **3 láminas en todos los ejercicios**, sin excepción.
 
-Una foto que no corresponde es **peor que ninguna foto**. Si hay duda, `false`.
+`fotosOk` NO decide si se muestran, decide **qué dice el rótulo**:
+- `true`  -> «Foto · posición de inicio»
+- `false` -> «⚠ Foto parecida · posición de inicio», más un aviso escrito bajo
+  el carrusel: *«Las dos fotos son de un movimiento parecido, no idéntico.
+  La que manda es la ficha del gimnasio.»*
+
+En 20 de los 55 las fotos son solo parecidas (la ficha es de TRX y la foto de
+peso libre, la ficha tumbado y la foto sentado…). Se probó a ocultarlas y el
+usuario pidió que volvieran: le sirven de referencia. La solución no es
+esconderlas, es **etiquetarlas sin rodeos**.
 
 `prueba-completitud.js` comprueba además que ninguna imagen esté repetida entre
 dos ejercicios: ese fue el error que hacía que «TRX abductor» enseñara la
@@ -116,12 +123,29 @@ máquina abductora.
    (son dos fuentes a propósito: si solo se toca una, la prueba lo caza).
 5. `npm run sw` para regenerar la lista del service worker.
 6. `npm run qa`.
-7. Subir `VERSION` en `sw.js`.
+7. Subir `VERSION` en `sw.js` **y `VERSION_APP` en `datos-planes.js`**
+   (tienen que coincidir; lo comprueba `validar-datos.js`).
 
 ## Al cambiar cualquier archivo
 
-**Siempre** subir `VERSION` en `sw.js` (`mi-entreno-v1` → `v2` → …).
-Si no, los teléfonos que ya la tienen instalada siguen con la versión vieja.
+**Siempre** subir `VERSION` en `sw.js` y `VERSION_APP` en `datos-planes.js`
+(los dos, y con el mismo número). Si no, los teléfonos que ya la tienen
+instalada siguen con la versión vieja.
+
+La versión se muestra en Ajustes, abajo del todo: sirve para confirmar de un
+vistazo que el teléfono ya se actualizó. Además, cuando el service worker nuevo
+toma el control, `app.js` recarga la página una sola vez para que el cambio se
+vea sin tener que borrar nada a mano.
+
+## Trampas conocidas de CSS en este proyecto
+
+1. `[hidden]` lo pisa cualquier `display` de una clase → regla global
+   `[hidden] { display: none !important; }`.
+2. Chrome pinta su propio fondo sobre los controles (sobre todo los
+   deshabilitados) y hunde el contraste → `appearance: none` en botones.
+3. **Pero `appearance: none` deja las casillas y los radios INVISIBLES**, sin
+   cuadro ni marca. Por eso el selector los excluye explícitamente. Ya pasó una
+   vez con los interruptores de Voz; `prueba-visual.js` lo comprueba.
 
 ## Pruebas
 

@@ -191,8 +191,7 @@ function dimensionesJPG(buf) {
 const huellas = new Map();
 let nFichas = 0, nFotos = 0;
 for (const [k, e] of Object.entries(CAT)) {
-  const archivos = [`${k}-ficha.jpg`];
-  if (e.fotosOk) archivos.push(`${k}-0.jpg`, `${k}-1.jpg`);
+  const archivos = [`${k}-ficha.jpg`, `${k}-0.jpg`, `${k}-1.jpg`];
 
   for (const a of archivos) {
     const p = path.join(IMG, a);

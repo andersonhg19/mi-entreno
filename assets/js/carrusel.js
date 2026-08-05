@@ -30,39 +30,41 @@ window.Carrusel = (function () {
   }
 
   /* ---------------------------------------------------------
-     Láminas de un ejercicio.
+     Láminas de un ejercicio: siempre tres.
 
-     La PRIMERA es siempre la ficha del gimnasio: es el recorte del
-     tablero que entregó el entrenador, así que es exacta por
-     definición.
+     1. La ficha del gimnasio. Es el recorte del cartón que entregó el
+        entrenador, así que es EXACTA por definición. Siempre primero.
+     2 y 3. Dos fotos reales del movimiento.
 
-     Las fotos reales solo se añaden si `fotosOk` es true. Cuando la
-     verificación encontró que la foto era de otro movimiento (TRX
-     sustituido por peso libre, tumbado por sentado…), esas fotos se
-     borraron y aquí no hay nada que añadir.
+     `fotosOk` dice si esas fotos son exactamente ese ejercicio o solo
+     un movimiento parecido. No se ocultan cuando son parecidas —
+     sirven igual como referencia— pero el rótulo lo dice sin rodeos,
+     debajo de cada foto, para que nadie se confunda.
      --------------------------------------------------------- */
   function laminasDe(e) {
     var base = "assets/img/ejercicios/" + e.clave;
-    var lista = [{
-      src: base + "-ficha.jpg",
-      rotulo: "Ficha del gimnasio",
-      alt: "Ficha del tablero de Life Gym para " + e.nombre +
-           ": dibujo del movimiento con el nombre impreso."
-    }];
+    var exacta = !!e.fotosOk;
+    var marca = exacta ? "Foto" : "⚠ Foto parecida";
+    var aviso = exacta ? "" : " (movimiento parecido, no idéntico: manda la ficha)";
 
-    if (e.fotosOk) {
-      lista.push({
+    return [
+      {
+        src: base + "-ficha.jpg",
+        rotulo: "Ficha del gimnasio",
+        alt: "Ficha del tablero de Life Gym para " + e.nombre +
+             ": dibujo del movimiento con el nombre impreso."
+      },
+      {
         src: base + "-0.jpg",
-        rotulo: "Foto · posición de inicio",
-        alt: "Foto real: posición de inicio de " + e.nombre
-      });
-      lista.push({
+        rotulo: marca + " · posición de inicio",
+        alt: "Foto: posición de inicio de " + e.nombre + aviso
+      },
+      {
         src: base + "-1.jpg",
-        rotulo: "Foto · posición final",
-        alt: "Foto real: posición final de " + e.nombre
-      });
-    }
-    return lista;
+        rotulo: marca + " · posición final",
+        alt: "Foto: posición final de " + e.nombre + aviso
+      }
+    ];
   }
 
   /* ---------------------------------------------------------

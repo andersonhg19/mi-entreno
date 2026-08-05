@@ -78,6 +78,34 @@ window.Guardado = (function () {
       escribirTodo(d);
     },
 
+    /* -------- transparencia: qué hay guardado y dónde -------- */
+    resumen: function () {
+      var d = leerTodo();
+      var sesiones = Object.keys(d.sesiones || {});
+      var pesos = 0;
+      Object.values(d.pesos || {}).forEach(function (p) { pesos += Object.keys(p).length; });
+      var bytes = 0;
+      try { bytes = (localStorage.getItem(CLAVE) || "").length; } catch (e) {}
+      return {
+        sesiones: sesiones.length,
+        pesos: pesos,
+        bytes: bytes,
+        disponible: (function () {
+          try { localStorage.setItem("__p", "1"); localStorage.removeItem("__p"); return true; }
+          catch (e) { return false; }
+        })()
+      };
+    },
+
+    /* Copia de todo lo guardado, para descargarla */
+    exportar: function () {
+      return JSON.stringify({
+        app: "Mi Entreno",
+        exportado: new Date().toISOString(),
+        datos: leerTodo()
+      }, null, 2);
+    },
+
     borrarTodo: function () { try { localStorage.removeItem(CLAVE); } catch (e) {} }
   };
 })();

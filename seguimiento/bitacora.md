@@ -420,3 +420,82 @@ anillo de progreso en el temporizador, y estado de dia completo.
 - `generar-sw.js`: regenera la lista del service worker desde el disco.
 
 **Resultado:** `npm run qa` en verde. Contraste peor caso 7,68:1 (AAA es 7:1).
+
+---
+
+### 2026-08-05 (tarde) - v5: recortes bien hechos, fotos de vuelta y transparencia de datos
+
+**Actividad:** Cinco correcciones pedidas por el usuario tras probar la v4.
+
+#### 1. «No vi los slider en ninguna parte»
+
+Causa real: 20 de los 55 ejercicios tenian una sola imagen, y con una sola
+lamina el carrusel no dibuja controles. Y esos 20 son casi todo el lunes y el
+viernes de Anderson (dias funcionales), asi que en su rutina el carrusel no
+aparecia practicamente nunca. Al devolver las fotos (punto 3) ahora TODOS los
+ejercicios tienen 3 laminas y el carrusel esta siempre.
+
+Ademas, para que las actualizaciones se vean sin trucos: cuando el service
+worker nuevo toma el control, la pagina se recarga sola una vez, y la version
+se muestra en Ajustes para poder confirmarlo de un vistazo.
+
+#### 2. Recortes mal hechos, con contenido cortado
+
+Se recortaba desde el final de la franja de musculo, y eso se comia titulos.
+Ahora se recorta **la tarjeta entera** (franja + titulo + dibujo) y todas las
+fichas se encajan en un **lienzo 4:3 identico**, centradas y rellenando con el
+tono del papel. Todas salen del mismo tamano y ninguna se recorta.
+
+Se probo a borrar la columna de casillas (llevan las marcas de color de una
+sola de las dos personas). Se descarto: el parche se veia peor que las propias
+marcas y se comia los titulos de dos lineas. La ficha se muestra tal cual esta
+en el carton, que es lo mas honesto y lo mas legible.
+
+#### 3. «Quitaste las fotos y eso no esta bien, porque si validan»
+
+Tenia razon. La decision de borrarlas era demasiado tajante: aunque el
+movimiento no sea identico, la foto sirve de referencia. Se restauran las 40.
+
+La solucion no es esconderlas, es **etiquetarlas sin rodeos**: el rotulo de la
+lamina dice «⚠ Foto parecida» y bajo el carrusel aparece *«Las dos fotos son de
+un movimiento parecido, no identico. La que manda es la ficha del gimnasio.»*
+El campo `fotosOk` deja de decidir si se muestran y pasa a decidir que dice el
+rotulo.
+
+Al restaurarlas se cambiaron dos mapeos para no repetir imagenes entre
+ejercicios: `trx-sentadilla-profunda` -> Suspended_Split_Squat y
+`trx-abductor` -> Lunge_Pass_Through.
+
+#### 4. El video, debajo de las imagenes
+
+Estaba al final de todo, despues de los pasos y las advertencias. Ahora va
+justo bajo el carrusel: es la misma pregunta («como se hace esto») y esta a un
+dedo de distancia. La prueba de humo comprueba el orden en el DOM.
+
+#### 5. «¿Tu donde guardas esa info?»
+
+Pregunta justa: la app pide datos y no decia donde iban. Nuevo bloque en
+Ajustes, **Tus datos: donde se guardan**:
+
+- Explicacion en una frase: se guardan solo en ese telefono, en el almacen del
+  navegador; no se envian a ningun servidor y funcionan sin internet.
+- Cuanto hay ahora mismo: dias anotados, pesos recordados y KB ocupados.
+- Boton para **descargar una copia** en JSON.
+- Boton para **borrar lo guardado**, con confirmacion, aclarando que la rutina
+  no se borra.
+- Aviso de que si se desinstala la app o se borran los datos del navegador,
+  eso se pierde.
+
+Si el navegador no deja guardar (navegacion privada), lo dice en vez de fallar
+en silencio.
+
+#### Bug encontrado por la captura de la propia prueba
+
+El `appearance: none` global que se puso en la v3 para que Chrome no pintara su
+gris sobre los botones dejaba **las casillas de Voz completamente invisibles**:
+sin cuadro y sin marca. El selector ahora excluye `checkbox` y `radio`, y
+`prueba-visual.js` comprueba que las casillas midan al menos 16 px y que su
+`appearance` no sea `none`.
+
+**Resultado:** `npm run qa` en verde. 165 imagenes (55 fichas + 110 fotos),
+ninguna repetida, 180 archivos en el service worker.

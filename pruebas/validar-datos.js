@@ -54,16 +54,12 @@ for (const [k, e] of Object.entries(CAT)) {
   esperadas.add(ficha);
   if (!fs.existsSync(path.join(DIR_IMG, ficha))) errores.push(`FALTA la ficha: ${ficha}`);
 
-  /* Las fotos reales solo deben existir si se verificó que corresponden */
+  /* Todas las fotos reales existen. `fotosOk` solo dice si son el ejercicio
+     exacto o un movimiento parecido; el rótulo de la lámina lo avisa. */
   for (const n of [0, 1]) {
     const foto = `${k}-${n}.jpg`;
-    const hay = fs.existsSync(path.join(DIR_IMG, foto));
-    if (e.fotosOk) {
-      esperadas.add(foto);
-      if (!hay) errores.push(`FALTA la foto real: ${foto} (fotosOk es true)`);
-    } else if (hay) {
-      errores.push(`SOBRA la foto ${foto}: fotosOk es false, no debería estar en disco`);
-    }
+    esperadas.add(foto);
+    if (!fs.existsSync(path.join(DIR_IMG, foto))) errores.push(`FALTA la foto: ${foto}`);
   }
 }
 
@@ -105,6 +101,14 @@ for (const m of sw.matchAll(/"(assets\/[^"]+)"/g)) {
 /* Todos los scripts del HTML deben estar en el service worker */
 for (const m of fs.readFileSync(path.join(ROOT, "index.html"), "utf8").matchAll(/<script src="([^"]+)"/g)) {
   if (!sw.includes(m[1])) errores.push(`SW no precarga el script ${m[1]}`);
+}
+
+/* --- 5a. La versión mostrada y la del service worker deben coincidir ---
+   Es lo que permite confirmar desde Ajustes que el teléfono ya se actualizó. */
+const vSw = (fs.readFileSync(path.join(ROOT, "sw.js"), "utf8")
+  .match(/VERSION = "mi-entreno-v(\d+)"/) || [])[1];
+if (vSw !== String(ctx.VERSION_APP)) {
+  errores.push(`VERSION_APP es "${ctx.VERSION_APP}" y sw.js dice "v${vSw}": tienen que coincidir`);
 }
 
 /* --- 5b. Guardia del atributo `hidden` ---

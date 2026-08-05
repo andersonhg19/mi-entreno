@@ -172,9 +172,9 @@ function aRgb(css) {
   /* Un ejercicio de solo ficha tambien tiene que verse sin conexion */
   await page.evaluate(() => { window.location.hash = "#/p/anderson/d/1/e/0"; });
   await page.waitForTimeout(800);
-  const soloFicha = await page.evaluate(() =>
+  const otro = await page.evaluate(() =>
     [...document.querySelectorAll(".carrusel-lamina img")].filter(i => i.naturalWidth > 0).length);
-  if (soloFicha !== 1) fallo(`SIN INTERNET: el ejercicio de solo ficha muestra ${soloFicha} laminas`);
+  if (otro !== 3) fallo(`SIN INTERNET: un ejercicio funcional muestra ${otro} laminas de 3`);
 
   info.push(`Sin internet: la app abre, lista los ejercicios y muestra las imagenes ("${detalleOffline.nombre}")`);
   await ctx.setOffline(false);
@@ -330,7 +330,7 @@ function aRgb(css) {
         });
         const clave = d.ejercicios[i];
         const esperado = DATOS.CATALOGO[clave];
-        const nLaminas = esperado.fotosOk ? 3 : 1;
+        const nLaminas = 3;   /* ficha del gimnasio + 2 fotos, siempre */
 
         if (r.nombre !== esperado.nombre) fallo(`${pid} d${d.n} e${i}: muestra "${r.nombre}" y deberia ser "${esperado.nombre}"`);
         if (r.pasos !== esperado.pasos.length) fallo(`${pid} d${d.n} e${i}: ${r.pasos} pasos vs ${esperado.pasos.length} en los datos`);
@@ -343,10 +343,8 @@ function aRgb(css) {
           fallo(`${clave}: ${r.srcs.length} laminas y deberian ser ${nLaminas}`);
         if (!r.srcs[0] || !r.srcs[0].endsWith(`/${clave}-ficha.jpg`))
           fallo(`${clave}: la primera lamina apunta a "${r.srcs[0]}" en vez de a su propia ficha`);
-        if (esperado.fotosOk) {
-          if (!r.srcs[1] || !r.srcs[1].endsWith(`/${clave}-0.jpg`)) fallo(`${clave}: la foto de inicio no es la suya`);
-          if (!r.srcs[2] || !r.srcs[2].endsWith(`/${clave}-1.jpg`)) fallo(`${clave}: la foto final no es la suya`);
-        }
+        if (!r.srcs[1] || !r.srcs[1].endsWith(`/${clave}-0.jpg`)) fallo(`${clave}: la foto de inicio no es la suya`);
+        if (!r.srcs[2] || !r.srcs[2].endsWith(`/${clave}-1.jpg`)) fallo(`${clave}: la foto final no es la suya`);
         if (r.tamanos.some(w => w > 0 && w < 200))
           fallo(`${clave}: alguna imagen es demasiado pequena (${r.tamanos.join(",")})`);
         visitados++;
