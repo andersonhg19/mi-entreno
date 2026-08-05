@@ -1,0 +1,372 @@
+/* ============================================================
+   MI ENTRENO — Hoja de estilos
+
+   Tamaños ESTÁNDAR por defecto (base 17 px, el tamaño normal de
+   iOS). La app no fuerza letra gigante: quien necesite ampliar
+   usa la lupa del sistema, el zoom del navegador, o el control
+   A− / A+ de la barra superior.
+
+   Lo que sí se mantiene siempre:
+     · Contraste alto en los tres temas
+     · Áreas tocables cómodas (48 px, el estándar de Material)
+     · Nada que dependa solo del color
+   ============================================================ */
+
+:root {
+  --escala: 1;                 /* la cambia el usuario: 0.9 → 1.8 */
+  --base: calc(17px * var(--escala));
+
+  --fondo:        #0b0f14;
+  --fondo-2:      #151d27;
+  --fondo-3:      #1e2936;
+  --texto:        #ffffff;
+  --texto-suave:  #c7d4e2;
+  --borde:        #3b4c60;
+  --acento:       #4cc9f0;
+  --acento-texto: #06202b;
+  --ok:           #7ee787;
+  --alerta:       #ffd166;
+  --peligro:      #ff7b72;
+
+  --radio: 12px;
+  --toque: 48px;               /* alto mínimo de cualquier cosa tocable */
+}
+
+[data-tema="claro"] {
+  --fondo:        #ffffff;
+  --fondo-2:      #f2f5f9;
+  --fondo-3:      #e2e8f0;
+  --texto:        #0a0f16;
+  --texto-suave:  #44576d;
+  --borde:        #9aabbe;
+  --acento:       #04486b;
+  --acento-texto: #ffffff;
+  --ok:           #0f6b2a;
+  --alerta:       #7a4c00;
+  --peligro:      #a4131f;
+}
+
+[data-tema="maximo"] {
+  --fondo:        #000000;
+  --fondo-2:      #000000;
+  --fondo-3:      #000000;
+  --texto:        #ffff00;
+  --texto-suave:  #ffff00;
+  --borde:        #ffff00;
+  --acento:       #ffff00;
+  --acento-texto: #000000;
+  --ok:           #00ff66;
+  --alerta:       #ffff00;
+  --peligro:      #ff6060;
+}
+[data-tema="maximo"] .tarjeta,
+[data-tema="maximo"] .btn-grande,
+[data-tema="maximo"] .panel-ajustes { border-width: 2px; }
+[data-tema="maximo"] img { filter: contrast(1.15); }
+
+* { box-sizing: border-box; }
+
+/* IMPORTANTE: cualquier `display` que pongamos en una clase pisa al atributo
+   `hidden` del HTML (que solo vale como regla del navegador). Sin esta línea,
+   `.temporizador { display: grid }` deja el temporizador siempre visible
+   tapando toda la app. No quitar. */
+[hidden] { display: none !important; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: var(--base);
+  line-height: 1.55;
+  padding-bottom: 2.5rem;
+  overflow-wrap: break-word;
+}
+
+/* Foco siempre visible */
+:focus-visible {
+  outline: 3px solid var(--acento);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.salto-contenido {
+  position: absolute; left: -9999px;
+  background: var(--acento); color: var(--acento-texto);
+  padding: .8rem; z-index: 100;
+}
+.salto-contenido:focus { left: 0; top: 0; }
+
+/* ------------------- BARRA SUPERIOR ------------------- */
+.barra-superior {
+  position: sticky; top: 0; z-index: 30;
+  display: flex; align-items: center; gap: .5rem;
+  padding: .5rem .7rem;
+  padding-top: max(.5rem, env(safe-area-inset-top));
+  background: var(--fondo-2);
+  border-bottom: 2px solid var(--borde);
+}
+.titulo-barra {
+  flex: 1; margin: 0;
+  font-size: 1.05em; font-weight: 700;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.btn-icono {
+  min-width: 44px; min-height: 44px;
+  font-size: 1.05em; font-weight: 700;
+  background: var(--fondo-3); color: var(--texto);
+  border: 1px solid var(--borde); border-radius: var(--radio);
+  cursor: pointer;
+}
+.btn-icono:active { background: var(--acento); color: var(--acento-texto); }
+
+/* ------------------- AJUSTES ------------------- */
+.panel-ajustes {
+  background: var(--fondo-2);
+  border-bottom: 2px solid var(--borde);
+  padding: .9rem;
+}
+.grupo-ajuste + .grupo-ajuste { margin-top: 1.1rem; }
+.titulo-ajuste {
+  margin: 0 0 .5rem; font-size: .8em; font-weight: 700;
+  color: var(--texto-suave); text-transform: uppercase; letter-spacing: .06em;
+}
+.fila-botones { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.fila-contraste .btn-ajuste { flex: 1 1 30%; }
+.btn-ajuste {
+  min-height: var(--toque); min-width: 72px;
+  padding: 0 .9rem;
+  font-size: .95em; font-weight: 600; font-family: inherit;
+  background: var(--fondo-3); color: var(--texto);
+  border: 1px solid var(--borde); border-radius: var(--radio);
+  cursor: pointer;
+}
+.btn-ajuste[aria-pressed="true"] { background: var(--acento); color: var(--acento-texto); border-color: var(--acento); }
+.valor-ajuste { min-width: 4.5ch; text-align: center; font-weight: 700; }
+.nota-ajuste { margin: .5rem 0 0; font-size: .82em; color: var(--texto-suave); }
+
+.interruptor {
+  display: flex; align-items: center; gap: .7rem;
+  min-height: var(--toque); cursor: pointer; padding: .2rem 0;
+  font-size: .95em;
+}
+.interruptor input { width: 22px; height: 22px; accent-color: var(--acento); flex: none; }
+
+/* ------------------- CONTENIDO ------------------- */
+.contenido { padding: .9rem; max-width: 720px; margin: 0 auto; }
+.contenido:focus { outline: none; }
+
+h2.titulo-seccion { font-size: 1.25em; margin: 0 0 .25rem; }
+p.subtitulo { margin: 0 0 1rem; color: var(--texto-suave); font-size: .9em; }
+
+/* ------------------- BOTONES ------------------- */
+.btn-grande {
+  display: flex; align-items: center; gap: .6rem;
+  width: 100%; min-height: var(--toque);
+  padding: .7rem .9rem; margin-bottom: .6rem;
+  font-size: .98em; font-weight: 600; text-align: left;
+  font-family: inherit;
+  background: var(--fondo-2); color: var(--texto);
+  border: 1px solid var(--borde); border-radius: var(--radio);
+  cursor: pointer; text-decoration: none;
+}
+.btn-grande:active { background: var(--fondo-3); }
+.btn-principal { background: var(--acento); color: var(--acento-texto); border-color: var(--acento); font-weight: 700; }
+.btn-secundario { background: var(--fondo-3); }
+.btn-peligro { background: var(--peligro); color: #10000a; border-color: var(--peligro); }
+.btn-grande[disabled] { opacity: .4; cursor: not-allowed; }
+
+.fila-doble { display: flex; gap: .6rem; }
+.fila-doble .btn-grande { margin-bottom: 0; justify-content: center; text-align: center; }
+
+/* ------------------- SELECTOR DE PERSONA ------------------- */
+.persona {
+  display: block; width: 100%;
+  padding: 1.1rem; margin-bottom: .8rem;
+  border: 2px solid var(--borde); border-radius: 16px;
+  background: var(--fondo-2); color: var(--texto);
+  font-family: inherit; text-align: left; cursor: pointer;
+}
+.persona-nombre { display: block; font-size: 1.3em; font-weight: 700; line-height: 1.2; }
+.persona-detalle { display: block; margin-top: .2rem; color: var(--texto-suave); font-size: .88em; }
+.persona[data-tema-persona="azul"]   { border-color: #4cc9f0; }
+.persona[data-tema-persona="fucsia"] { border-color: #f472b6; }
+
+/* ------------------- TARJETAS ------------------- */
+.tarjeta {
+  background: var(--fondo-2);
+  border: 1px solid var(--borde); border-radius: var(--radio);
+  padding: .9rem; margin-bottom: .8rem;
+}
+.tarjeta h3 { margin: 0 0 .4rem; font-size: 1em; }
+.tarjeta p { margin: 0 0 .5rem; }
+.tarjeta p:last-child { margin-bottom: 0; }
+
+.aviso {
+  border-left: 6px solid var(--alerta);
+  background: var(--fondo-3);
+  padding: .8rem .9rem; border-radius: var(--radio);
+  margin-bottom: .8rem; font-size: .95em;
+}
+.aviso strong { color: var(--alerta); display: block; margin-bottom: .2rem; }
+
+/* ------------------- DÍAS ------------------- */
+.dia {
+  display: flex; align-items: center; gap: .8rem;
+  width: 100%; min-height: 68px;
+  padding: .7rem .8rem; margin-bottom: .6rem;
+  background: var(--fondo-2); color: var(--texto);
+  border: 1px solid var(--borde); border-radius: var(--radio);
+  font-family: inherit; text-align: left; cursor: pointer;
+}
+.dia-marca {
+  flex: none; width: 10px; align-self: stretch;
+  border-radius: 5px;
+}
+.dia-info { flex: 1; min-width: 0; }
+.dia-nombre { display: block; font-size: 1.05em; font-weight: 700; }
+.dia-titulo { display: block; color: var(--texto-suave); font-size: .9em; }
+.dia-conteo { display: block; margin-top: .1rem; font-size: .85em; }
+.dia[data-hoy="si"] { border-color: var(--acento); border-width: 2px; }
+.etiqueta-hoy {
+  display: inline-block; margin-left: .4rem;
+  background: var(--acento); color: var(--acento-texto);
+  font-size: .7em; font-weight: 700;
+  padding: .1rem .45rem; border-radius: 999px;
+  vertical-align: middle;
+}
+
+/* ------------------- LISTA DE EJERCICIOS ------------------- */
+.ejercicio {
+  display: flex; align-items: center; gap: .8rem;
+  width: 100%; min-height: 72px;
+  padding: .6rem .7rem; margin-bottom: .5rem;
+  background: var(--fondo-2); color: var(--texto);
+  border: 1px solid var(--borde); border-radius: var(--radio);
+  font-family: inherit; text-align: left; cursor: pointer;
+}
+.ejercicio-numero {
+  flex: none;
+  width: 34px; height: 34px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--fondo-3); border: 1px solid var(--borde);
+  font-weight: 700; font-size: .9em;
+}
+.ejercicio-miniatura {
+  flex: none; width: 64px; height: 50px;
+  object-fit: cover; border-radius: 8px;
+  border: 1px solid var(--borde); background: #fff;
+}
+.ejercicio-texto { flex: 1; min-width: 0; }
+.ejercicio-nombre { display: block; font-size: .98em; font-weight: 600; line-height: 1.3; }
+.ejercicio-grupo { display: block; color: var(--texto-suave); font-size: .82em; }
+.ejercicio[data-hecho="si"] { border-color: var(--ok); }
+.ejercicio[data-hecho="si"] .ejercicio-numero { background: var(--ok); color: #04220c; border-color: var(--ok); }
+
+/* Puntos de color de los días a los que pertenece un ejercicio */
+.dias-puntos { display: inline-flex; gap: .25rem; margin-left: .4rem; vertical-align: middle; }
+.dia-punto {
+  width: 10px; height: 10px; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.35);
+}
+
+/* ------------------- FILTRO POR DÍA ------------------- */
+.filtros {
+  display: flex; gap: .4rem; flex-wrap: wrap;
+  margin-bottom: .9rem;
+}
+.filtro {
+  display: inline-flex; align-items: center; gap: .35rem;
+  min-height: 44px; padding: 0 .8rem;
+  font-size: .88em; font-weight: 600; font-family: inherit;
+  background: var(--fondo-2); color: var(--texto);
+  border: 1px solid var(--borde); border-radius: 999px;
+  cursor: pointer; white-space: nowrap;
+}
+.filtro[aria-pressed="true"] {
+  background: var(--acento); color: var(--acento-texto); border-color: var(--acento);
+}
+.filtro .punto { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+
+/* ------------------- DETALLE DEL EJERCICIO ------------------- */
+.detalle-nombre { font-size: 1.3em; font-weight: 700; margin: 0 0 .2rem; line-height: 1.25; }
+.detalle-meta { color: var(--texto-suave); margin: 0 0 .8rem; font-size: .88em; }
+
+.fotos { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin-bottom: .4rem; }
+.foto-caja { background: #ffffff; border: 1px solid var(--borde); border-radius: var(--radio); overflow: hidden; }
+.foto-caja img { display: block; width: 100%; height: auto; }
+.foto-pie {
+  background: var(--fondo-3); color: var(--texto);
+  font-size: .78em; font-weight: 600; text-align: center;
+  padding: .3rem;
+}
+.nota-foto { font-size: .82em; color: var(--texto-suave); margin: 0 0 .8rem; }
+
+.pasos { margin: 0; padding-left: 0; list-style: none; counter-reset: paso; }
+.pasos li {
+  counter-increment: paso;
+  display: flex; gap: .65rem;
+  padding: .55rem 0; border-bottom: 1px solid var(--borde);
+}
+.pasos li:last-child { border-bottom: none; }
+.pasos li::before {
+  content: counter(paso);
+  flex: none; width: 26px; height: 26px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--acento); color: var(--acento-texto);
+  font-weight: 700; font-size: .8em;
+}
+
+/* ------------------- CONTADOR DE SERIES ------------------- */
+.series-caja { text-align: center; }
+.series-numero { font-size: 2.2em; font-weight: 700; line-height: 1; margin: .2rem 0 0; }
+.series-etiqueta { margin: 0 0 .7rem; font-size: .85em; color: var(--texto-suave); }
+.series-controles { display: flex; gap: .6rem; justify-content: center; }
+.series-controles .btn-grande { width: auto; flex: 1; justify-content: center; font-size: 1.2em; margin-bottom: 0; }
+.campo-peso {
+  width: 100%; min-height: var(--toque); font-size: .95em; font-family: inherit;
+  padding: .5rem .6rem;
+  background: var(--fondo-3); color: var(--texto);
+  border: 1px solid var(--borde); border-radius: var(--radio);
+}
+.etiqueta-peso { display: block; text-align: left; margin-top: .7rem; }
+.etiqueta-peso span { display: block; margin-bottom: .3rem; font-weight: 600; font-size: .88em; }
+
+/* ------------------- TEMPORIZADOR ------------------- */
+.temporizador {
+  position: fixed; inset: 0; z-index: 50;
+  background: rgba(0,0,0,.92);
+  display: grid; place-items: center; padding: 1rem;
+}
+.temporizador-caja {
+  background: var(--fondo-2); border: 2px solid var(--acento);
+  border-radius: 18px; padding: 1.3rem; width: 100%; max-width: 400px;
+  text-align: center;
+}
+.temporizador-etiqueta { margin: 0; font-size: .9em; text-transform: uppercase; letter-spacing: .1em; color: var(--texto-suave); }
+.temporizador-numero { margin: .2rem 0 1rem; font-size: 3.4em; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.temporizador-acciones { display: flex; gap: .6rem; }
+.temporizador-acciones .btn-grande { justify-content: center; margin-bottom: 0; }
+
+/* ------------------- VARIOS ------------------- */
+.enlace-video {
+  display: flex; align-items: center; justify-content: center; gap: .5rem;
+  min-height: var(--toque); padding: .7rem;
+  background: var(--fondo-3); color: var(--texto);
+  border: 1px solid var(--borde); border-radius: var(--radio);
+  font-weight: 600; font-size: .95em; text-decoration: none; margin-bottom: .8rem;
+}
+.barra-progreso {
+  height: 10px; background: var(--fondo-3);
+  border: 1px solid var(--borde); border-radius: 999px; overflow: hidden;
+  margin: .3rem 0 .9rem;
+}
+.barra-progreso span { display: block; height: 100%; background: var(--ok); }
+
+.pie-nota { color: var(--texto-suave); font-size: .8em; text-align: center; margin-top: 1.6rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}

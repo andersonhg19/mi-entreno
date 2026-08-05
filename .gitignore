@@ -1,0 +1,12 @@
+node_modules/
+.DS_Store
+Thumbs.db
+*.log
+
+# Capturas que generan las pruebas visuales (se regeneran con `npm run visual`)
+pruebas/capturas/
+
+# DATOS PERSONALES — nunca se publican.
+# Contiene las fotos originales de las planillas (nombre completo, documento,
+# teléfono) y el archivo con peso, IMC y % de grasa de los dos.
+recursos/

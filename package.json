@@ -1,0 +1,19 @@
+{
+  "name": "mi-entreno",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PWA accesible con la rutina de gimnasio de Anderson y Sharid (Life Gym)",
+  "scripts": {
+    "servir": "node servidor.js",
+    "validar": "node pruebas/validar-datos.js",
+    "humo": "node pruebas/prueba-humo.js",
+    "visual": "node pruebas/prueba-visual.js",
+    "pwa": "node pruebas/prueba-pwa.js",
+    "test": "node pruebas/validar-datos.js && node pruebas/prueba-humo.js",
+    "qa": "node pruebas/validar-datos.js && node pruebas/prueba-humo.js && node pruebas/prueba-visual.js && node pruebas/prueba-pwa.js"
+  },
+  "devDependencies": {
+    "jsdom": "^26.0.0",
+    "playwright": "^1.62.1"
+  }
+}

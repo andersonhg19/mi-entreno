@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mi Entreno</title>
+<meta name="description" content="Rutina de gimnasio de Anderson y Sharid, en grande y con fotos.">
+<meta name="theme-color" content="#0b0f14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mi Entreno">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="assets/iconos/icono-180.png">
+<link rel="icon" href="assets/iconos/icono-180.png">
+<link rel="stylesheet" href="assets/css/estilos.css">
+</head>
+<body>
+
+<a class="salto-contenido" href="#contenido">Saltar al contenido</a>
+
+<header class="barra-superior" id="barraSuperior">
+  <button class="btn-icono" id="btnVolver" aria-label="Volver a la pantalla anterior" hidden>
+    <span aria-hidden="true">←</span>
+  </button>
+  <h1 class="titulo-barra" id="tituloBarra">Mi Entreno</h1>
+  <button class="btn-icono" id="btnAjustes" aria-label="Abrir ajustes de visualización" aria-expanded="false">
+    <span aria-hidden="true">Aa</span>
+  </button>
+</header>
+
+<!-- ================= PANEL DE AJUSTES ================= -->
+<section class="panel-ajustes" id="panelAjustes" hidden aria-label="Ajustes de visualización">
+  <div class="grupo-ajuste">
+    <h2 class="titulo-ajuste">Tamaño de letra</h2>
+    <div class="fila-botones">
+      <button class="btn-ajuste" id="btnLetraMenos" aria-label="Reducir tamaño de letra">A −</button>
+      <output class="valor-ajuste" id="valorLetra" aria-live="polite">100%</output>
+      <button class="btn-ajuste" id="btnLetraMas" aria-label="Aumentar tamaño de letra">A +</button>
+    </div>
+    <p class="nota-ajuste">
+      Al 100 % la letra es del tamaño normal del sistema. La lupa del iPhone y
+      el zoom del navegador funcionan encima de esto.
+    </p>
+  </div>
+
+  <div class="grupo-ajuste">
+    <h2 class="titulo-ajuste">Contraste</h2>
+    <div class="fila-botones fila-contraste">
+      <button class="btn-ajuste" data-tema="oscuro">Oscuro</button>
+      <button class="btn-ajuste" data-tema="claro">Claro</button>
+      <button class="btn-ajuste" data-tema="maximo">Máximo</button>
+    </div>
+  </div>
+
+  <div class="grupo-ajuste">
+    <h2 class="titulo-ajuste">Voz</h2>
+    <label class="interruptor">
+      <input type="checkbox" id="chkVozAuto">
+      <span>Leer el ejercicio automáticamente al abrirlo</span>
+    </label>
+    <label class="interruptor">
+      <input type="checkbox" id="chkVibrar" checked>
+      <span>Vibrar cuando termine el descanso</span>
+    </label>
+  </div>
+</section>
+
+<main id="contenido" class="contenido" tabindex="-1"></main>
+
+<!-- ================= TEMPORIZADOR FLOTANTE ================= -->
+<div class="temporizador" id="temporizador" hidden role="timer" aria-live="assertive">
+  <div class="temporizador-caja">
+    <p class="temporizador-etiqueta">Descanso</p>
+    <p class="temporizador-numero" id="temporizadorNumero">60</p>
+    <div class="temporizador-acciones">
+      <button class="btn-grande btn-secundario" id="btnMasTiempo">+30 s</button>
+      <button class="btn-grande btn-peligro" id="btnPararTiempo">Terminar</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/datos-catalogo.js"></script>
+<script src="assets/js/datos-planes.js"></script>
+<script src="assets/js/almacenamiento.js"></script>
+<script src="assets/js/voz.js"></script>
+<script src="assets/js/cronometro.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
