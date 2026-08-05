@@ -9,27 +9,31 @@ haya señal.
 
 ---
 
-## Probarla ahora mismo
+## Abrirla
+
+# → https://andersonhg19.github.io/mi-entreno/
+
+Funciona en cualquier navegador, del computador o del celular.
+
+## Instalarla como app
+
+- **iPhone:** abrir la dirección en **Safari** → botón **Compartir** →
+  *Añadir a pantalla de inicio*.
+- **Android:** abrir en **Chrome** → menú **⋮** → *Instalar aplicación*.
+
+Después de instalarla, ábrela **una vez con WiFi** y navega medio minuto: ahí
+descarga las 110 fotos. A partir de ahí funciona en el gimnasio sin señal.
+
+Guía completa con capturas de cada paso en
+**[documentación/despliegue-gratuito.md](documentación/despliegue-gratuito.md)**.
+
+## Probar cambios antes de subirlos
 
 ```bash
 node servidor.js
 ```
 
-Imprime dos direcciones: una para el computador y otra para abrirla desde el
-celular estando en la misma WiFi.
-
-## Publicarla
-
-Paso a paso completo en **[documentación/despliegue-gratuito.md](documentación/despliegue-gratuito.md)**.
-Resumen: `git init` → `gh repo create` → Settings → Pages → branch `main`, carpeta raíz.
-
-## Instalarla en el celular
-
-- **iPhone:** abrir en **Safari** → Compartir → *Añadir a pantalla de inicio*.
-- **Android:** abrir en **Chrome** → menú ⋮ → *Instalar aplicación*.
-
-Después de instalar, ábrela **una vez con internet** para que descargue las fotos.
-A partir de ahí funciona sin señal.
+Imprime una dirección para el computador y otra para el celular en la misma WiFi.
 
 ---
 

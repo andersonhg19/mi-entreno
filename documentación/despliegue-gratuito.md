@@ -1,5 +1,20 @@
 # Cómo ponerla en el celular, gratis y sin licencias
 
+## YA ESTÁ PUBLICADA
+
+# https://andersonhg19.github.io/mi-entreno/
+
+Repositorio: <https://github.com/andersonhg19/mi-entreno>
+Desplegada el 2026-08-04. Verificada en vivo: carga por HTTPS, las fotos se ven,
+y con la red apagada sigue funcionando (124 archivos en caché).
+
+> **El repositorio es público.** GitHub Pages gratis lo exige. Por eso los
+> apellidos, la edad y las medidas corporales de los dos **no** están ahí: viven
+> en `recursos/datos-personales.md`, y toda la carpeta `recursos/` está en
+> `.gitignore`. Se publican solo los nombres de pila y la rutina.
+
+---
+
 ## Resumen de la decisión
 
 | Necesidad | Solución elegida |
@@ -20,65 +35,45 @@ proyecto tenga servidor.
 
 ---
 
-## 1. Publicarla en GitHub Pages
+## 1. Verla en el **computador** (lo más rápido)
 
-GitHub Pages sirve archivos estáticos gratis, con HTTPS (obligatorio para que
-funcione el service worker) y sin límite práctico para este tamaño (~7 MB).
-
-### Paso a paso
-
-```bash
-cd "C:\Users\ander\Documents\Anderson\Personales\entreno"
-
-git init
-git add .
-git commit -m "Mi Entreno: rutina Life Gym accesible"
-
-# Crear el repo en GitHub (con gh CLI). Puede ser PÚBLICO:
-# el .gitignore deja fuera las fotos con datos personales.
-gh repo create mi-entreno --public --source=. --push
-```
-
-Luego, en GitHub:
-
-1. Entra al repo → **Settings** → **Pages**
-2. En *Source* elige **Deploy from a branch**
-3. Branch: **main**, carpeta: **/ (root)** → **Save**
-4. Espera 1–2 minutos. La dirección queda:
+Abre cualquier navegador (Chrome, Edge, Firefox) y escribe:
 
 ```
-https://<tu-usuario>.github.io/mi-entreno/
+https://andersonhg19.github.io/mi-entreno/
 ```
 
-### Si prefieres que nadie más lo vea
+Eso es todo. No hay que instalar nada ni levantar ningún servidor.
 
-GitHub Pages en repos privados requiere plan de pago. Alternativas gratuitas
-con repo privado:
+> Nota: el Chrome de este equipo no alcanza `localhost` (Docker Desktop tiene
+> puertos capturados), pero esta dirección es de internet, no local, así que
+> abre sin problema.
 
-- **Cloudflare Pages** — conecta el repo privado, despliegue gratis, HTTPS.
-- **Netlify** — igual, plan gratuito con repos privados.
-
-Cualquiera de las tres sirve: la app es 100 % estática.
+Si quieres verla como se verá en el celular: pulsa **F12** y luego el icono de
+celular arriba a la izquierda del panel que se abre (o `Ctrl+Shift+M`).
 
 ---
 
-## 2. Instalarla en el **iPhone**
+## 2. Verla e **instalarla en el iPhone**
 
-iOS **sí** permite instalar PWAs desde iOS 16.4 en adelante, y desde iOS 26
-cualquier sitio agregado a la pantalla de inicio abre como app. No pide licencia
-de desarrollador ni App Store.
+iOS permite instalar PWAs desde la versión 16.4, y desde iOS 26 cualquier sitio
+añadido a la pantalla de inicio abre como app. No hace falta App Store ni
+licencia de desarrollador.
 
-1. Abre la dirección **en Safari** (no sirve desde Chrome en iPhone).
-2. Toca el botón **Compartir** (el cuadro con la flecha hacia arriba).
-3. Baja y toca **Añadir a pantalla de inicio**.
-4. Ponle el nombre *Mi Entreno* y toca **Añadir**.
+1. Abre **Safari** (tiene que ser Safari; desde Chrome en iPhone no se instala).
+2. Escribe: `andersonhg19.github.io/mi-entreno`
+3. Ya la estás viendo. Para dejarla como app:
+4. Toca el botón **Compartir** — el cuadrado con la flecha hacia arriba,
+   abajo en el centro de la pantalla.
+5. Desliza hacia abajo en el menú y toca **Añadir a pantalla de inicio**.
+6. El nombre ya sale como *Mi Entreno*. Toca **Añadir** arriba a la derecha.
 
-Queda un icono en la pantalla de inicio. Al abrirlo no se ve la barra de Safari:
-se comporta como una app normal.
+Queda un icono azul con una mancuerna en la pantalla de inicio. Al abrirlo no se
+ve la barra de Safari: se comporta como una app normal.
 
-**Importante:** ábrela una vez **con internet** después de instalarla. Ahí el
-service worker descarga las 110 fotos y todo el código. A partir de ese momento
-funciona sin señal.
+**Paso importante:** con la app ya instalada, ábrela **una vez con WiFi** y
+espera medio minuto navegando por ella. Ahí descarga las 110 fotos y todo el
+código. A partir de ese momento funciona en el gimnasio aunque no haya señal.
 
 > Aviso conocido de iOS: si pasas varias semanas sin abrirla, el sistema puede
 > borrar el caché para liberar espacio. Si un día abre lenta o sin fotos, ábrela
@@ -86,20 +81,35 @@ funciona sin señal.
 
 ---
 
-## 3. Instalarla en el **Android**
+## 3. Verla e **instalarla en el Android**
 
-1. Abre la dirección en **Chrome**.
-2. Chrome muestra abajo *"Añadir a la pantalla de inicio"* o *"Instalar app"*.
-   Si no aparece: menú **⋮** → **Instalar aplicación** / **Añadir a pantalla de inicio**.
-3. Confirma.
+1. Abre **Chrome**.
+2. Escribe: `andersonhg19.github.io/mi-entreno`
+3. Chrome suele mostrar abajo un aviso de *«Añadir a la pantalla de inicio»* o
+   *«Instalar app»*. Tócalo.
+4. Si no aparece: menú **⋮** (arriba a la derecha) → **Instalar aplicación**
+   o **Añadir a pantalla de inicio**.
 
-Android es más generoso con el almacenamiento: una vez descargada, se queda.
+Igual que en el iPhone: ábrela una vez con WiFi para que se descargue todo.
+Android es más generoso con el almacenamiento, así que una vez bajada se queda.
 
 ---
 
-## 4. Probarla antes de publicar
+## 4. Pasarle la dirección al celular sin escribirla
 
-Desde el computador:
+Tres formas, la que te resulte más cómoda:
+
+- **Mándatela por WhatsApp** a ti mismo y tócala desde el celular.
+- **En el computador**, abre la página en Chrome y usa *Compartir → Enviar a
+  tus dispositivos* si tienes la sesión de Google iniciada en los dos.
+- **Escríbela a mano**: es corta y no lleva guiones raros —
+  `andersonhg19.github.io/mi-entreno`
+
+---
+
+## 5. Probar cambios antes de publicarlos
+
+Cuando toques algo del código y quieras verlo antes de subirlo:
 
 ```bash
 cd "C:\Users\ander\Documents\Anderson\Personales\entreno"
@@ -109,17 +119,29 @@ node servidor.js
 Imprime dos direcciones:
 
 - `http://localhost:41317` → para el navegador del computador
-- `http://192.168.x.x:41317` → **para el celular**, estando en la misma WiFi
-
-Así puedes probarla en los dos teléfonos sin haber publicado nada.
+- `http://192.168.40.32:41317` → **para el celular**, estando en la misma WiFi
 
 > El service worker solo se registra sobre `http://localhost` o sobre `https://`.
-> Desde la IP de la red WiFi la app funciona, pero **sin** modo sin conexión.
-> Eso es normal y es una regla del navegador, no un fallo de la app.
+> Desde la IP de la WiFi la app funciona, pero **sin** modo sin conexión. Es una
+> regla del navegador, no un fallo de la app.
 
 ---
 
-## 5. Cuando cambies algo
+## 6. Si algún día quieres que nadie más pueda verla
+
+GitHub Pages con repositorio privado exige plan de pago. Alternativas gratuitas
+que sí aceptan repositorios privados:
+
+- **Cloudflare Pages** — conectas el repo, despliegue gratis, HTTPS.
+- **Netlify** — igual, plan gratuito con repos privados.
+
+Cualquiera sirve: la app es 100 % estática. Si te pasas a una de esas, puedes
+devolver los datos personales al código (está explicado en
+`recursos/datos-personales.md`).
+
+---
+
+## 7. Cuando cambies algo
 
 El service worker guarda una copia de todo. Para que los teléfonos vean los
 cambios hay que subir el número de versión:
@@ -134,15 +156,26 @@ de precarga del `sw.js` (está documentado en `seguimiento/plan-maestro.md`).
 Antes de subir, corre siempre:
 
 ```bash
-npm test
+npm run qa
 ```
 
-Verifica que ningún día apunte a un ejercicio inexistente, que estén las 110
-fotos, que el service worker las precargue todas y que las pantallas rendericen.
+Si solo tocaste datos, `npm test` basta. **Si tocaste CSS o maquetación, no**:
+las pruebas rápidas no ven fallos visuales. Ya pasó una vez y el temporizador
+acabó tapando toda la app.
+
+Para publicar el cambio:
+
+```bash
+git add -A
+git commit -m "lo que cambiaste"
+git push
+```
+
+GitHub Pages se reconstruye solo en un par de minutos.
 
 ---
 
-## 6. Alternativas descartadas y por qué
+## 8. Alternativas descartadas y por qué
 
 | Opción | Por qué no |
 |--------|-----------|
