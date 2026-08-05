@@ -34,10 +34,11 @@ window.navigator.vibrate = () => true;
 window.alert = () => {};
 window.scrollTo = () => {};
 
-/* Cargar los scripts en el mismo orden que el HTML */
-for (const f of ["assets/js/datos-catalogo.js", "assets/js/datos-planes.js",
-                 "assets/js/almacenamiento.js", "assets/js/voz.js",
-                 "assets/js/carrusel.js", "assets/js/cronometro.js", "assets/js/app.js"]) {
+/* Los scripts se leen del PROPIO index.html, en su orden.
+   Antes era una lista a mano y se desincronizaba al añadir un archivo. */
+const SCRIPTS = [...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map(m => m[1]);
+if (!SCRIPTS.length) errores.push("no se encontro ningun <script> en index.html");
+for (const f of SCRIPTS) {
   try { window.eval(fs.readFileSync(path.join(ROOT, f), "utf8")); }
   catch (e) { errores.push(`Al cargar ${f}: ${e.message}`); }
 }
@@ -126,12 +127,17 @@ for (const pid of ["anderson", "sharid"]) {
         comprobar((im.getAttribute("alt") || "").length > 10,
           `${pid} d${d.n} e${i}: una lamina no tiene texto alternativo util`);
       });
-      comprobar(doc.querySelectorAll(".carrusel-punto").length === 3,
-        `${pid} d${d.n} e${i}: faltan puntos de posicion`);
       comprobar(/Imagen/.test(doc.querySelector(".carrusel-posicion").textContent),
         `${pid} d${d.n} e${i}: falta el contador escrito "Imagen X de Y"`);
-      comprobar(doc.querySelector('.carrusel-flecha[data-paso="-1"]').disabled,
-        `${pid} d${d.n} e${i}: la flecha anterior debe empezar deshabilitada`);
+      comprobar(!doc.querySelector(".carrusel-punto"),
+        `${pid} d${d.n} e${i}: los puntos numerados se quitaron, sobran con las flechas`);
+      /* aria-disabled, nunca disabled: deshabilitar el boton enfocado
+         cancelaba el desplazamiento y dejaba el carrusel clavado */
+      const prev = doc.querySelector('.carrusel-flecha[data-paso="-1"]');
+      comprobar(prev.getAttribute("aria-disabled") === "true",
+        `${pid} d${d.n} e${i}: en la primera lamina Anterior debe marcarse aria-disabled`);
+      comprobar(!prev.disabled,
+        `${pid} d${d.n} e${i}: la flecha NO debe usar el atributo disabled`);
 
       /* Cuando la foto no es el ejercicio exacto hay que decirlo */
       const rotulos = [...doc.querySelectorAll(".carrusel-lamina .foto-pie")]
@@ -203,6 +209,51 @@ comprobar(doc.documentElement.getAttribute("data-tema") === "maximo",
   "el tema de maximo contraste no se aplico");
 doc.getElementById("btnLetraMenos").click();
 doc.querySelector('button[data-tema="oscuro"]').click();
+
+/* ---------- 7b. Tabata: temporizador por intervalos ---------- */
+ir("#/tabata");
+pantallas++;
+comprobar(/Tabata/.test(texto()), "la pantalla de Tabata no se pinta");
+comprobar(doc.querySelectorAll(".tabata-preset").length >= 3, "faltan preajustes de Tabata");
+comprobar(doc.querySelectorAll(".tabata-mas-menos").length === 12,
+  "deberia haber 6 ajustes con boton de mas y de menos");
+
+/* Los valores por defecto son el Tabata clasico */
+const porDefecto = window.Tabata._construir({
+  preparacion: 10, trabajo: 20, descanso: 10, rondas: 8, ciclos: 1, descansoCiclo: 60
+});
+comprobar(porDefecto.filter(t => t.fase === "trabajo").length === 8,
+  "el Tabata clasico debe tener 8 rondas de trabajo");
+comprobar(porDefecto.filter(t => t.fase === "descanso").length === 7,
+  "debe haber 7 descansos: tras la ultima ronda no se descansa");
+comprobar(window.Tabata._total(porDefecto) === 10 + 8 * 20 + 7 * 10,
+  `la duracion total no cuadra: ${window.Tabata._total(porDefecto)}`);
+comprobar(doc.getElementById("tv-trabajo").textContent.trim() === "20 s",
+  "el trabajo por defecto deberia ser 20 s");
+comprobar(doc.getElementById("tv-descanso").textContent.trim() === "10 s",
+  "el descanso por defecto deberia ser 10 s");
+comprobar(doc.getElementById("tv-rondas").textContent.trim() === "8",
+  "las rondas por defecto deberian ser 8");
+
+/* Los botones + y − mueven el valor y respetan los limites */
+const antesTrabajo = doc.getElementById("tv-trabajo").textContent;
+doc.querySelector('.tabata-mas-menos[data-campo="trabajo"][data-delta="1"]').click();
+comprobar(doc.getElementById("tv-trabajo").textContent !== antesTrabajo,
+  "el boton + de trabajo no cambia el valor");
+for (let i = 0; i < 40; i++) {
+  doc.querySelector('.tabata-mas-menos[data-campo="rondas"][data-delta="-1"]').click();
+}
+comprobar(doc.getElementById("tv-rondas").textContent.trim() === "1",
+  "las rondas no deberian bajar de 1");
+
+/* Con varios ciclos aparece el descanso largo */
+const dosCiclos = window.Tabata._construir({
+  preparacion: 0, trabajo: 20, descanso: 10, rondas: 4, ciclos: 2, descansoCiclo: 60
+});
+comprobar(dosCiclos.filter(t => t.fase === "descansoCiclo").length === 1,
+  "con 2 ciclos debe haber 1 descanso largo, y solo entre ellos");
+comprobar(dosCiclos[dosCiclos.length - 1].fase === "trabajo",
+  "la sesion debe terminar trabajando, no descansando");
 
 /* ---------- 8. Rutas invalidas ---------- */
 for (const mala of ["#/p/nadie", "#/p/anderson/d/99", "#/p/anderson/d/1/e/999", "#/basura/x/y",

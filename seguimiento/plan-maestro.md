@@ -1,6 +1,6 @@
 # Mi Entreno — Plan Maestro de Desarrollo
 
-## Estado General: Completado (v3, publicada)
+## Estado General: Completado (v7, publicada)
 ## Fecha inicio: 2026-08-04
 ## Fecha verificación: 2026-08-04
 ## Tecnologías: HTML5, CSS3, JavaScript ES5+, PWA (Service Worker, Web App Manifest), Web Speech API
@@ -214,3 +214,30 @@ vea como una app y no como un prototipo.
 ### Leccion
 Una foto que no corresponde es peor que ninguna foto. El campo `exacta` se
 renombro a `fotosOk` y solo se pone en true despues de mirar las imagenes.
+---
+
+## FASE 11: v5-v7 - fichas afinadas, Tabata y bug del carrusel
+
+**Objetivo:** Cerrar los puntos que fue encontrando el usuario al usarla de
+verdad, y anadir el temporizador por intervalos.
+
+### Entregables
+- [x] Recorte de la tarjeta ENTERA y lienzo 4:3 identico para las 55 fichas
+- [x] Las 40 fotos restauradas, etiquetadas como «parecida» cuando lo son
+- [x] Bloque «Tus datos: donde se guardan» con copia y borrado
+- [x] La app abre siempre en el selector, tambien al recargar
+- [x] Bug del carrusel: `disabled` sobre el boton enfocado cancelaba el scroll
+- [x] Puntos numerados fuera; las flechas hacen todo el trabajo
+- [x] Superresolucion neuronal EDSR x3 sobre las 55 fichas
+- [x] Enlace al video pegado al carrusel, con comprobacion de orden en el DOM
+- [x] Tabata: temporizador por intervalos con voz, pitido, vibracion y Wake Lock
+- [x] `herramientas/` con los scripts de produccion de imagenes
+- [x] `documentación/imagenes-fichas.md` con el proceso y el techo real
+
+### Lecciones
+1. **Nunca `disabled` en un boton que pueda tener el foco durante un scroll.**
+   Mueve el foco y cancela el desplazamiento. Se usa `aria-disabled`.
+2. **Medir antes de optimizar.** El techo de las fichas es la foto (457 px por
+   tarjeta): servir mas grande no aportaba nada; revelar y ampliar con red, si.
+3. **Las listas escritas a mano en las pruebas se desincronizan.** La de
+   scripts ahora se lee del propio `index.html`.

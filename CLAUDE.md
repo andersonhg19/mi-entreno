@@ -50,9 +50,17 @@ assets/img/ejercicios/<clave>-ficha.jpg  (ficha del tablero, SIEMPRE)
 pruebas/  documentación/  seguimiento/  recursos/
 ```
 
-`app.js` es lo único que toca el DOM de las vistas; `carrusel.js` se encarga
-solo del carrusel de imágenes (movimiento con scroll-snap de CSS, nunca
-capturando el táctil, para no romper el pellizco para ampliar).
+`app.js` es lo único que toca el DOM de las vistas, con dos excepciones que se
+gobiernan solas: `carrusel.js` (el carrusel de imágenes; movimiento con
+scroll-snap de CSS, nunca capturando el táctil, para no romper el pellizco
+para ampliar) y `tabata.js` (el temporizador por intervalos, que se pinta y se
+gestiona entero desde su módulo mediante `Tabata.montar(contenedor)`).
+
+`tabata.js` calcula la secuencia completa de tramos ANTES de empezar y sitúa
+la posición mirando el reloj real, no sumando intervalos: así no se desfasa si
+la pantalla se apaga. Mantiene la pantalla encendida con Wake Lock mientras
+corre y avisa por voz, pitido y vibración, porque en un gimnasio con uno solo
+no basta.
 `almacenamiento.js` es lo único que toca `localStorage` — si algún día se le
 pone backend, solo cambia ese archivo.
 
@@ -66,6 +74,7 @@ pone backend, solo cambia ese archivo.
 #/p/:persona/d/:dia             ejercicios de un día
 #/p/:persona/d/:dia/e/:indice   ejercicio en modo ENTRENO (con series y descanso)
 #/p/:persona/x/:clave           ejercicio en modo CONSULTA (desde la lista)
+#/tabata                        temporizador por intervalos
 ```
 
 El modo consulta reutiliza `cabeceraEjercicio()`, `carruselDe()` e
@@ -146,6 +155,14 @@ vea sin tener que borrar nada a mano.
 3. **Pero `appearance: none` deja las casillas y los radios INVISIBLES**, sin
    cuadro ni marca. Por eso el selector los excluye explícitamente. Ya pasó una
    vez con los interruptores de Voz; `prueba-visual.js` lo comprueba.
+4. **Nunca `disabled` en un botón que pueda tener el foco durante un
+   desplazamiento.** Al deshabilitarlo el navegador mueve el foco, y ese
+   cambio de foco **cancela el scroll suave en curso**. Eso dejó el carrusel
+   clavado en la segunda imagen. Se usa `aria-disabled`, que informa al lector
+   de pantalla y da el estilo, sin tocar el foco.
+5. **Ningún tamaño en `em` puro para cajas grandes.** A escala 1,8 sobre un
+   iPhone SE con zoom de pantalla (320 px), un anillo de `11em` mide más que
+   la pantalla. Se usa `min(11em, 62vw)`.
 
 ## Pruebas
 

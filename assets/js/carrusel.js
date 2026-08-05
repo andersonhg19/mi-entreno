@@ -2,15 +2,27 @@
    MI ENTRENO — Carrusel de láminas del ejercicio
 
    Sin librerías. El movimiento lo hace el CSS (scroll-snap);
-   este archivo solo:
-     · construye el HTML,
-     · pinta los controles (flechas, puntos, «Imagen 2 de 3»),
-     · añade teclado (← → Inicio Fin),
-     · reencuadra al girar el teléfono.
+   este archivo solo construye el HTML, pinta los controles,
+   añade teclado y reencuadra al girar el teléfono.
 
    NUNCA captura eventos táctiles: el deslizamiento y el pellizco
-   para ampliar son los nativos del navegador. Eso es innegociable
-   para quien usa la lupa del sistema.
+   para ampliar son los nativos del navegador. Innegociable para
+   quien usa la lupa del sistema.
+
+   ------------------------------------------------------------
+   POR QUÉ LAS FLECHAS NUNCA SE DESHABILITAN
+
+   Antes se deshabilitaban en los extremos. Eso rompía el carrusel:
+   al pulsar «Siguiente» se lanzaba el desplazamiento suave y, en la
+   misma vuelta, se deshabilitaba el botón que TENÍA EL FOCO. El
+   navegador mueve el foco fuera del botón deshabilitado, y ese
+   cambio de foco CANCELA el desplazamiento en curso. Después el
+   listener de scroll leía la posición vieja y devolvía el contador
+   a la lámina anterior: el carrusel se quedaba clavado.
+
+   Ahora las flechas siempre están activas; en los extremos
+   simplemente no hacen nada y se marcan con `aria-disabled`, que
+   informa al lector de pantalla sin tocar el foco.
    ============================================================ */
 
 window.Carrusel = (function () {
@@ -32,20 +44,18 @@ window.Carrusel = (function () {
   /* ---------------------------------------------------------
      Láminas de un ejercicio: siempre tres.
 
-     1. La ficha del gimnasio. Es el recorte del cartón que entregó el
+     1. La ficha del gimnasio: el recorte del cartón que entregó el
         entrenador, así que es EXACTA por definición. Siempre primero.
      2 y 3. Dos fotos reales del movimiento.
 
      `fotosOk` dice si esas fotos son exactamente ese ejercicio o solo
      un movimiento parecido. No se ocultan cuando son parecidas —
-     sirven igual como referencia— pero el rótulo lo dice sin rodeos,
-     debajo de cada foto, para que nadie se confunda.
+     sirven igual de referencia— pero el rótulo lo dice sin rodeos.
      --------------------------------------------------------- */
   function laminasDe(e) {
     var base = "assets/img/ejercicios/" + e.clave;
-    var exacta = !!e.fotosOk;
-    var marca = exacta ? "Foto" : "⚠ Foto parecida";
-    var aviso = exacta ? "" : " (movimiento parecido, no idéntico: manda la ficha)";
+    var marca = e.fotosOk ? "Foto" : "⚠ Foto parecida";
+    var aviso = e.fotosOk ? "" : " (movimiento parecido, no idéntico: manda la ficha)";
 
     return [
       {
@@ -69,11 +79,8 @@ window.Carrusel = (function () {
 
   /* ---------------------------------------------------------
      HTML del carrusel. Devuelve texto para concatenar.
-
-     El estado inicial ya viene pintado (número 1, flecha
-     «anterior» deshabilitada, punto 1 con aria-current), así la
-     región viva NO anuncia nada al cargar: solo habla cuando de
-     verdad cambias de imagen.
+     El estado inicial ya viene pintado, así la región viva no
+     anuncia nada al cargar: solo al cambiar de imagen de verdad.
      --------------------------------------------------------- */
   function html(laminas, nombre) {
     if (!laminas || !laminas.length) return "";
@@ -96,11 +103,10 @@ window.Carrusel = (function () {
            '. Desliza el dedo o usa las flechas del teclado"') + '>';
 
     laminas.forEach(function (l, i) {
-      var posicion = (i + 1) + " de " + n;
       s += '<li class="carrusel-lamina">' +
              '<figure class="foto-caja" role="group"' +
                ' aria-roledescription="lámina"' +
-               ' aria-label="' + esc(posicion + ": " + l.rotulo) + '">' +
+               ' aria-label="' + esc((i + 1) + " de " + n + ": " + l.rotulo) + '">' +
                '<img src="' + esc(l.src) + '" alt="' + esc(l.alt) + '"' +
                  ' decoding="async" loading="' + (i === 0 ? "eager" : "lazy") + '">' +
                '<figcaption class="foto-pie">' +
@@ -116,7 +122,7 @@ window.Carrusel = (function () {
       s += '<div class="carrusel-barra">' +
              '<button type="button" class="carrusel-flecha" data-paso="-1"' +
                ' aria-controls="' + id + '-pista"' +
-               ' aria-label="Imagen anterior" disabled>' +
+               ' aria-disabled="true" aria-label="Imagen anterior">' +
                '<span aria-hidden="true">←</span><span>Anterior</span>' +
              '</button>' +
              '<p class="carrusel-posicion" aria-live="polite" aria-atomic="true">' +
@@ -128,16 +134,6 @@ window.Carrusel = (function () {
                '<span>Siguiente</span><span aria-hidden="true">→</span>' +
              '</button>' +
            '</div>';
-
-      s += '<div class="carrusel-puntos" role="group" aria-label="Ir a una imagen">';
-      laminas.forEach(function (l, i) {
-        s += '<button type="button" class="carrusel-punto" data-indice="' + i + '"' +
-               (i === 0 ? ' aria-current="true"' : '') +
-               ' aria-label="' + esc("Ver imagen " + (i + 1) + " de " + n + ": " + l.rotulo) + '">' +
-               (i + 1) +
-             '</button>';
-      });
-      s += '</div>';
     }
 
     s += '</section>';
@@ -156,13 +152,12 @@ window.Carrusel = (function () {
     if (!pista || laminas.length < 2) return;    /* una sola imagen: nada que hacer */
 
     var flechas = [].slice.call(raiz.querySelectorAll(".carrusel-flecha"));
-    var puntos = [].slice.call(raiz.querySelectorAll(".carrusel-punto"));
     var numero = raiz.querySelector(".carrusel-num");
     var ultima = laminas.length - 1;
     var actual = 0;
 
-    /* Posición de scroll de la lámina i. Se calcula en el momento,
-       no se cachea: así sobrevive a rotaciones y a cambios de letra. */
+    /* Posición de scroll de la lámina i. Se calcula en el momento, no se
+       cachea: así sobrevive a rotaciones y a cambios de tamaño de letra. */
     function destinoDe(i) {
       return laminas[i].offsetLeft - laminas[0].offsetLeft;
     }
@@ -173,30 +168,28 @@ window.Carrusel = (function () {
       numero.textContent = String(i + 1);
       flechas.forEach(function (b) {
         var destino = actual + Number(b.getAttribute("data-paso"));
-        b.disabled = (destino < 0 || destino > ultima);
-      });
-      puntos.forEach(function (b, k) {
-        if (k === actual) b.setAttribute("aria-current", "true");
-        else b.removeAttribute("aria-current");
+        /* aria-disabled, NUNCA disabled: deshabilitar el botón enfocado
+           mueve el foco y eso cancela el desplazamiento en curso. */
+        b.setAttribute("aria-disabled", (destino < 0 || destino > ultima) ? "true" : "false");
       });
     }
 
-    function irA(i, suave) {
+    function irA(i) {
       i = Math.max(0, Math.min(ultima, i));
+      if (i === actual) return;
+      /* Primero el estado (no toca el foco), después el desplazamiento. */
+      pintar(i);
       var x = destinoDe(i);
-      if (suave && !movimientoReducido() && pista.scrollTo) {
-        /* Safari < 15.4 ignora behavior:smooth; el try/catch cubre
-           además navegadores que no aceptan el objeto. */
+      if (!movimientoReducido() && pista.scrollTo) {
         try { pista.scrollTo({ left: x, behavior: "smooth" }); }
         catch (err) { pista.scrollLeft = x; }
       } else {
         pista.scrollLeft = x;
       }
-      pintar(i);
     }
 
-    /* Qué lámina está más cerca. Más robusto que dividir por el
-       ancho: aguanta el `gap` entre láminas. */
+    /* Qué lámina está más cerca. Más robusto que dividir por el ancho:
+       aguanta el `gap` entre láminas. */
     function indiceCercano() {
       var x = pista.scrollLeft, mejor = 0, menor = Infinity;
       laminas.forEach(function (l, i) {
@@ -214,25 +207,16 @@ window.Carrusel = (function () {
       pista.addEventListener("scrollend", alDetenerse);
     } else {
       /* iOS todavía no dispara scrollend en todas las versiones:
-         rebote de 120 ms. Pasivo para no frenar el gesto. */
+         rebote de 140 ms. Pasivo para no frenar el gesto. */
       pista.addEventListener("scroll", function () {
         clearTimeout(espera);
-        espera = setTimeout(alDetenerse, 120);
+        espera = setTimeout(alDetenerse, 140);
       }, { passive: true });
     }
 
     flechas.forEach(function (b) {
       b.addEventListener("click", function () {
-        irA(actual + Number(b.getAttribute("data-paso")), true);
-        /* Si el botón que acabas de pulsar queda deshabilitado, el foco
-           se iría al <body> y el lector se quedaría mudo. */
-        if (b.disabled) pista.focus();
-      });
-    });
-
-    puntos.forEach(function (b) {
-      b.addEventListener("click", function () {
-        irA(Number(b.getAttribute("data-indice")), true);
+        irA(actual + Number(b.getAttribute("data-paso")));
       });
     });
 
@@ -244,7 +228,7 @@ window.Carrusel = (function () {
       else if (ev.key === "End") destino = ultima;
       if (destino === null) return;
       ev.preventDefault();
-      irA(destino, true);
+      irA(destino);
     });
 
     /* --- Girar el teléfono o cambiar el tamaño de letra ---

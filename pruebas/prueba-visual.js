@@ -279,52 +279,98 @@ async function abrir(page, base, hash, espera = 500) {
   if (await page.evaluate(() => getComputedStyle(document.getElementById("panelAjustes")).display !== "none"))
     fallo("10-ajustes", "el panel de ajustes no se cierra");
 
-  /* ====== 3. CARRUSEL: que de verdad funcione ====== */
-  await ir(page, "#/p/anderson/d/2/e/0", 400);   /* peck-deck: 3 laminas */
-  const c0 = await page.evaluate(() => ({
+  /* ====== 3. CARRUSEL: recorrido COMPLETO de ida y vuelta ======
+     Esta es la prueba que faltaba. El bug era que «Anterior» bajaba de la 3
+     a la 2 y ahí se quedaba clavado: deshabilitar el botón enfocado cancelaba
+     el desplazamiento. Solo se veía encadenando varios clics, así que aquí se
+     recorre 1→2→3→2→1 y se comprueba el contador Y la posición del scroll en
+     cada paso. */
+  await ir(page, "#/p/anderson/d/2/e/0", 500);   /* peck-deck: 3 laminas */
+
+  const estadoCarrusel = () => page.evaluate(() => ({
     laminas: document.querySelectorAll(".carrusel-lamina").length,
     num: document.querySelector(".carrusel-num").textContent,
-    prevOff: document.querySelector('.carrusel-flecha[data-paso="-1"]').disabled,
-    nextOff: document.querySelector('.carrusel-flecha[data-paso="1"]').disabled,
-    scroll: document.querySelector(".carrusel-pista").scrollLeft
+    scroll: Math.round(document.querySelector(".carrusel-pista").scrollLeft),
+    prevAria: document.querySelector('.carrusel-flecha[data-paso="-1"]').getAttribute("aria-disabled"),
+    nextAria: document.querySelector('.carrusel-flecha[data-paso="1"]').getAttribute("aria-disabled"),
+    algunoDisabled: !!document.querySelector(".carrusel-flecha[disabled]"),
+    puntos: document.querySelectorAll(".carrusel-punto").length
   }));
+
+  /* Los botones nunca llevan `disabled`, así que se pulsan con dispatchEvent:
+     Playwright se niega a hacer clic sobre algo con aria-disabled. */
+  const pulsar = paso => page.evaluate(p => {
+    document.querySelector(`.carrusel-flecha[data-paso="${p}"]`).click();
+  }, paso);
+
+  const c0 = await estadoCarrusel();
   if (c0.laminas !== 3) fallo("11-carrusel", `deberia haber 3 laminas, hay ${c0.laminas}`);
-  if (!c0.prevOff) fallo("11-carrusel", "la flecha anterior deberia empezar deshabilitada");
-  if (c0.nextOff) fallo("11-carrusel", "la flecha siguiente no deberia empezar deshabilitada");
+  if (c0.puntos !== 0) fallo("11-carrusel", "los puntos numerados deberian haberse quitado");
+  if (c0.algunoDisabled) fallo("11-carrusel", "ninguna flecha debe usar el atributo disabled");
+  if (c0.prevAria !== "true") fallo("11-carrusel", "en la lamina 1, Anterior debe ir con aria-disabled");
+  if (c0.nextAria === "true") fallo("11-carrusel", "en la lamina 1, Siguiente no puede ir deshabilitada");
 
-  await page.click('.carrusel-flecha[data-paso="1"]');
-  await page.waitForTimeout(700);
-  const c1 = await page.evaluate(() => ({
-    num: document.querySelector(".carrusel-num").textContent,
-    scroll: document.querySelector(".carrusel-pista").scrollLeft,
-    activo: document.querySelector('.carrusel-punto[aria-current="true"]').textContent,
-    prevOff: document.querySelector('.carrusel-flecha[data-paso="-1"]').disabled
-  }));
-  if (c1.num !== "2") fallo("11-carrusel", `tras Siguiente el contador dice "${c1.num}" y deberia decir 2`);
-  if (c1.scroll <= c0.scroll) fallo("11-carrusel", "la pista no se desplazo al pulsar Siguiente");
-  if (c1.activo !== "2") fallo("11-carrusel", `el punto activo es "${c1.activo}" y deberia ser 2`);
-  if (c1.prevOff) fallo("11-carrusel", "la flecha anterior deberia habilitarse en la lamina 2");
+  const recorrido = [
+    { paso: "1",  espera: "2", scrollSube: true },
+    { paso: "1",  espera: "3", scrollSube: true },
+    { paso: "-1", espera: "2", scrollSube: false },
+    { paso: "-1", espera: "1", scrollSube: false }
+  ];
+  let previo = c0;
+  for (const r of recorrido) {
+    await pulsar(r.paso);
+    await page.waitForTimeout(800);
+    const e = await estadoCarrusel();
+    if (e.num !== r.espera)
+      fallo("11-carrusel", `tras pulsar ${r.paso} el contador dice "${e.num}" y deberia decir ${r.espera}`);
+    if (r.scrollSube && e.scroll <= previo.scroll)
+      fallo("11-carrusel", `tras pulsar ${r.paso} la pista no avanzo (${previo.scroll} -> ${e.scroll})`);
+    if (!r.scrollSube && e.scroll >= previo.scroll)
+      fallo("11-carrusel", `tras pulsar ${r.paso} la pista no retrocedio (${previo.scroll} -> ${e.scroll})`);
+    previo = e;
+  }
+  if (previo.prevAria !== "true") fallo("11-carrusel", "de vuelta en la 1, Anterior debe ir con aria-disabled");
+  if (previo.scroll !== 0) fallo("11-carrusel", `de vuelta en la 1 el scroll deberia ser 0 y es ${previo.scroll}`);
 
-  await page.click('.carrusel-punto[data-indice="2"]');
-  await page.waitForTimeout(700);
-  const c2 = await page.evaluate(() => ({
-    num: document.querySelector(".carrusel-num").textContent,
-    nextOff: document.querySelector('.carrusel-flecha[data-paso="1"]').disabled
-  }));
-  if (c2.num !== "3") fallo("11-carrusel", `tras tocar el punto 3 el contador dice "${c2.num}"`);
-  if (!c2.nextOff) fallo("11-carrusel", "en la ultima lamina la flecha siguiente debe deshabilitarse");
+  /* En los extremos no pasa nada */
+  await pulsar("-1"); await page.waitForTimeout(500);
+  if ((await page.textContent(".carrusel-num")) !== "1")
+    fallo("11-carrusel", "pulsar Anterior en la primera lamina no debe hacer nada");
 
   /* teclado */
   await page.focus(".carrusel-pista");
+  await page.keyboard.press("End");
+  await page.waitForTimeout(800);
+  if ((await page.textContent(".carrusel-num")) !== "3")
+    fallo("11-carrusel", "la tecla Fin no lleva a la ultima lamina");
+  await page.keyboard.press("ArrowLeft");
+  await page.waitForTimeout(800);
+  if ((await page.textContent(".carrusel-num")) !== "2")
+    fallo("11-carrusel", "la flecha izquierda del teclado no retrocede");
   await page.keyboard.press("Home");
-  await page.waitForTimeout(700);
+  await page.waitForTimeout(800);
   if ((await page.textContent(".carrusel-num")) !== "1")
     fallo("11-carrusel", "la tecla Inicio no vuelve a la primera lamina");
-  await page.keyboard.press("ArrowRight");
-  await page.waitForTimeout(700);
-  if ((await page.textContent(".carrusel-num")) !== "2")
-    fallo("11-carrusel", "la flecha derecha del teclado no avanza");
   await auditar(page, "11-carrusel", { soloViewport: true });
+
+  /* El enlace al video va justo DEBAJO de las imagenes */
+  const orden = await page.evaluate(() => {
+    const c = document.querySelector(".carrusel");
+    const v = document.querySelector(".enlace-video");
+    const p = document.querySelector(".pasos");
+    if (!c || !v || !p) return null;
+    return {
+      videoTrasCarrusel: !!(c.compareDocumentPosition(v) & 4),
+      videoAntesDePasos: !!(v.compareDocumentPosition(p) & 4),
+      distancia: Math.round(v.getBoundingClientRect().top - c.getBoundingClientRect().bottom)
+    };
+  });
+  if (!orden) fallo("11-carrusel", "falta el carrusel, el video o los pasos");
+  else {
+    if (!orden.videoTrasCarrusel) fallo("11-carrusel", "el video no va despues del carrusel");
+    if (!orden.videoAntesDePasos) fallo("11-carrusel", "el video deberia ir antes de los pasos");
+    if (orden.distancia > 60) fallo("11-carrusel", `el video queda a ${orden.distancia}px del carrusel, muy lejos`);
+  }
 
   /* Un ejercicio cuya foto es solo parecida: 3 laminas igual, con el aviso */
   await ir(page, "#/p/anderson/d/1/e/0", 500);
@@ -452,6 +498,101 @@ async function abrir(page, base, hash, espera = 500) {
   await page.click("#btnAjustes");
   for (let i = 0; i < 9; i++) await page.click("#btnLetraMenos");
   await page.click("#btnAjustes");
+
+  /* ====== 8b. TABATA: configuración y cuenta atrás real ====== */
+  await ir(page, "#/tabata", 400);
+  const cfgTabata = await page.evaluate(() => ({
+    presets: document.querySelectorAll(".tabata-preset").length,
+    ajustes: document.querySelectorAll(".tabata-fila").length,
+    trabajo: document.getElementById("tv-trabajo").textContent.trim(),
+    descanso: document.getElementById("tv-descanso").textContent.trim(),
+    rondas: document.getElementById("tv-rondas").textContent.trim(),
+    resumen: document.getElementById("tabataResumen").textContent
+  }));
+  if (cfgTabata.presets < 3) fallo("21-tabata", "faltan preajustes");
+  if (cfgTabata.ajustes !== 6) fallo("21-tabata", `hay ${cfgTabata.ajustes} ajustes y deberian ser 6`);
+  if (cfgTabata.trabajo !== "20 s" || cfgTabata.descanso !== "10 s" || cfgTabata.rondas !== "8")
+    fallo("21-tabata", `por defecto deberia ser 20 s / 10 s / 8 rondas y es ${JSON.stringify(cfgTabata)}`);
+  /* 10 s de preparacion + 8 x 20 s de trabajo + 7 x 10 s de descanso = 240 s */
+  if (!/4:00/.test(cfgTabata.resumen))
+    fallo("21-tabata", `la duracion del Tabata clasico deberia ser 4:00 -> "${cfgTabata.resumen}"`);
+  await auditar(page, "21-tabata-config");
+
+  /* Los + y − mueven el valor */
+  await page.click('.tabata-mas-menos[data-campo="trabajo"][data-delta="1"]');
+  if ((await page.textContent("#tv-trabajo")).trim() !== "25 s")
+    fallo("21-tabata", "el boton + de trabajo no suma 5 s");
+  await page.click('.tabata-mas-menos[data-campo="trabajo"][data-delta="-1"]');
+
+  /* Sesión mínima para ver la cuenta atrás de verdad: sin preparación,
+     5 s de trabajo y 1 ronda. */
+  for (let i = 0; i < 3; i++) await page.click('.tabata-mas-menos[data-campo="preparacion"][data-delta="-1"]');
+  for (let i = 0; i < 5; i++) await page.click('.tabata-mas-menos[data-campo="trabajo"][data-delta="-1"]');
+  for (let i = 0; i < 10; i++) await page.click('.tabata-mas-menos[data-campo="rondas"][data-delta="-1"]');
+  const mini = await page.evaluate(() => ({
+    prep: document.getElementById("tv-preparacion").textContent.trim(),
+    trabajo: document.getElementById("tv-trabajo").textContent.trim(),
+    rondas: document.getElementById("tv-rondas").textContent.trim()
+  }));
+  if (mini.prep !== "0 s" || mini.trabajo !== "5 s" || mini.rondas !== "1")
+    fallo("21-tabata", `los limites no se respetan: ${JSON.stringify(mini)}`);
+
+  await page.click("#btnTabataEmpezar");
+  await page.waitForTimeout(600);
+  const tb1 = await page.evaluate(() => ({
+    fase: document.getElementById("tabataFase").textContent,
+    seg: Number(document.getElementById("tabataSegundos").textContent),
+    ronda: document.getElementById("tabataRonda").textContent,
+    faseAttr: document.getElementById("tabataPantalla").getAttribute("data-fase")
+  }));
+  if (!/Trabaja/.test(tb1.fase)) fallo("21-tabata", `sin preparacion deberia empezar trabajando, dice "${tb1.fase}"`);
+  if (tb1.faseAttr !== "trabajo") fallo("21-tabata", "el atributo data-fase no acompana");
+  if (!(tb1.seg >= 4 && tb1.seg <= 5)) fallo("21-tabata", `la cuenta arranca en ${tb1.seg} y deberia ir por 5`);
+  if (!/Ronda 1 de 1/.test(tb1.ronda)) fallo("21-tabata", `el contador de ronda dice "${tb1.ronda}"`);
+  await auditar(page, "21-tabata-marcha", { soloViewport: true });
+
+  /* Pausa: el numero deja de bajar */
+  await page.click("#btnTabataPausa");
+  const pausado = await page.evaluate(() => document.getElementById("tabataSegundos").textContent);
+  await page.waitForTimeout(1300);
+  if ((await page.textContent("#tabataSegundos")) !== pausado)
+    fallo("21-tabata", "en pausa la cuenta atras sigue bajando");
+  if (!/Reanudar/.test(await page.textContent("#btnTabataPausa")))
+    fallo("21-tabata", "el boton no cambia a Reanudar");
+  await page.click("#btnTabataPausa");
+  await page.waitForTimeout(1400);
+  const tb2 = await page.evaluate(() => Number(document.getElementById("tabataSegundos").textContent));
+  if (tb2 >= Number(pausado)) fallo("21-tabata", `tras reanudar no baja (${pausado} -> ${tb2})`);
+
+  /* Que llegue al final solo */
+  await page.waitForTimeout(6000);
+  const fin = await page.evaluate(() => ({
+    fase: document.getElementById("tabataFase").textContent,
+    ronda: document.getElementById("tabataRonda").textContent
+  }));
+  if (!/Terminado/.test(fin.fase)) fallo("21-tabata", `no llega al final solo: "${fin.fase}"`);
+  if (!/completa/.test(fin.ronda)) fallo("21-tabata", "no avisa de sesion completa");
+
+  await page.click("#btnTabataParar");
+  await page.waitForTimeout(300);
+  if (!await page.evaluate(() => !!document.getElementById("btnTabataEmpezar")))
+    fallo("21-tabata", "al terminar no vuelve a la configuracion");
+  info.push("Tabata: preajustes, limites, cuenta atras, pausa y final automatico");
+
+  /* Y a 320 px con la letra al 180 % tampoco se sale */
+  {
+    const c = await navegador.newContext({ viewport: { width: 320, height: 568 }, isMobile: true, hasTouch: true });
+    const pg = await c.newPage();
+    pg.on("pageerror", e => errores.push(`[tabata 320px] excepcion: ${e.message}`));
+    await pg.goto(base, { waitUntil: "networkidle" });
+    await pg.evaluate(() => document.documentElement.style.setProperty("--escala", 1.8));
+    await ir(pg, "#/tabata", 500);
+    await auditar(pg, "22-tabata-320px", { captura: false });
+    await pg.click("#btnTabataEmpezar");
+    await pg.waitForTimeout(600);
+    await auditar(pg, "22-tabata-320px-marcha", { soloViewport: true });
+    await c.close();
+  }
 
   /* ====== 9. Ningún enlace roto ====== */
   await ir(page, "#/p/anderson", 250);

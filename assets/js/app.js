@@ -199,6 +199,9 @@
               '</button>';
     });
 
+    html += '<button class="btn-grande btn-secundario" data-ir="#/tabata" ' +
+              'style="margin-top:var(--e4)">⏱ Tabata · temporizador por intervalos</button>';
+
     html += '<div class="tarjeta">' +
               '<h3>Cómo funciona</h3>' +
               '<p>Elige tu nombre y luego el día. Cada ejercicio trae la ficha del ' +
@@ -645,15 +648,27 @@
     else location.hash = ruta;
   }
 
+  /* ---------------------------------------------------------
+     Vista: Tabata (la pinta y la gobierna su propio módulo)
+     --------------------------------------------------------- */
+  function vistaTabata() {
+    tituloBarra.textContent = "Tabata";
+    btnVolver.hidden = false;
+    btnVolver.dataset.ir = "#/";
+    Tabata.montar(contenido);
+  }
+
   function enrutar() {
     Voz.callar();
     Cronometro.parar(true);
+    Tabata.desmontar();
     panel.hidden = true;
     btnAjustes.setAttribute("aria-expanded", "false");
 
     var t = (location.hash || "#/").replace(/^#\/?/, "").split("/").filter(Boolean);
 
-    if (t[0] !== "p")                            vistaInicio();
+    if (t[0] === "tabata")                       vistaTabata();
+    else if (t[0] !== "p")                       vistaInicio();
     else if (t.length === 2)                     vistaSemana(t[1]);
     else if (t.length === 3 && t[2] === "lista") vistaLista(t[1], "todos");
     else if (t.length === 4 && t[2] === "lista") vistaLista(t[1], t[3]);

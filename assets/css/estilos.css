@@ -175,7 +175,7 @@ body {
 .salto-contenido:focus { left: 0; top: 0; }
 
 /* Presupuesto de movimiento: realimentación al tocar y poco más */
-button, a.btn-grande, .filtro, .ejercicio, .dia, .persona, .carrusel-punto {
+button, a.btn-grande, .filtro, .ejercicio, .dia, .persona {
   transition: transform var(--t-rapida) var(--curva),
               background-color var(--t-rapida) linear,
               border-color var(--t-rapida) linear;
@@ -620,11 +620,14 @@ button:active, .ejercicio:active, .dia:active, .persona:active { transform: scal
 /* El estado deshabilitado se declara ENTERO (fondo incluido). Si solo se
    declara el color, Chrome aplica su propio gris al control y el contraste
    se desploma sin avisar. El borde punteado lo comunica sin depender del color. */
-.carrusel-flecha[disabled] {
+/* En los extremos el boton sigue activo (deshabilitarlo mientras tiene el
+   foco cancela el desplazamiento). Se marca con aria-disabled, que informa
+   al lector de pantalla y aqui da el estilo apagado. */
+.carrusel-flecha[aria-disabled="true"] {
   background-color: var(--superficie-3);
   color: var(--texto-suave);
   border-color: var(--borde-fuerte); border-style: dashed;
-  cursor: not-allowed;
+  cursor: default;
 }
 .carrusel-posicion {
   flex: 1 1 7em; margin: 0; text-align: center;
@@ -633,22 +636,7 @@ button:active, .ejercicio:active, .dia:active, .persona:active { transform: scal
 }
 .carrusel-num { font-size: 1.15em; font-weight: 800; }
 
-.carrusel-puntos { display: flex; justify-content: center; gap: var(--e1); flex-wrap: wrap; margin-top: var(--e2); }
-.carrusel-punto {
-  min-width: 44px; min-height: 44px; padding: 0;
-  font-family: inherit; font-size: var(--t-menor); font-weight: 700;
-  background: var(--superficie-1); color: var(--texto);
-  border: 1px solid var(--borde); border-radius: var(--radio-full);
-  cursor: pointer;
-}
-/* El activo se marca por tres vías: color, grosor y anillo interior */
-.carrusel-punto[aria-current="true"] {
-  background: var(--acento); color: var(--acento-texto);
-  border-color: var(--acento); border-width: 3px;
-  box-shadow: inset 0 0 0 2px var(--acento-texto);
-}
-.carrusel[data-unica="si"] .carrusel-barra,
-.carrusel[data-unica="si"] .carrusel-puntos { display: none; }
+.carrusel[data-unica="si"] .carrusel-barra { display: none; }
 
 /* ============================================================
    CONTADOR DE SERIES
@@ -700,7 +688,7 @@ button:active, .ejercicio:active, .dia:active, .persona:active { transform: scal
 }
 .temporizador-reloj {
   position: relative;
-  width: 9em; height: 9em;
+  width: min(9em, 58vw); height: min(9em, 58vw);
   margin: var(--e4) auto;
   display: grid; place-items: center;
 }
@@ -746,6 +734,61 @@ button:active, .ejercicio:active, .dia:active, .persona:active { transform: scal
   transition: width var(--t-media) var(--curva);
 }
 .pie-nota { color: var(--texto-suave); font-size: var(--t-etiqueta); text-align: center; margin-top: var(--e6); }
+
+/* ============================================================
+   TABATA — temporizador por intervalos
+   ============================================================ */
+.tabata-presets { margin-bottom: var(--e5); }
+.tabata-preset { text-align: left; }
+.tabata-preset-detalle { font-weight: 400; font-size: var(--t-menor); color: var(--texto-suave); }
+
+/* Envuelve: a 320 px con la letra al 180 % la etiqueta y los botones no
+   caben en una línea y se salían de la pantalla. */
+.tabata-fila {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--e2); flex-wrap: wrap;
+  padding: var(--e2) 0; border-bottom: 1px solid var(--borde);
+}
+.tabata-etiqueta { font-size: var(--t-menor); font-weight: 600; flex: 1 1 8em; min-width: 0; }
+.tabata-control { display: flex; align-items: center; gap: var(--e2); flex: none; }
+.tabata-mas-menos {
+  width: var(--toque); height: var(--toque);
+  font-family: var(--fuente-num); font-size: var(--t-seccion); font-weight: 800;
+  background: var(--superficie-2); color: var(--texto);
+  border: 1px solid var(--borde); border-radius: var(--radio-2);
+  cursor: pointer;
+}
+.tabata-valor {
+  min-width: 4.5ch; text-align: center;
+  font-family: var(--fuente-num); font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.tabata-pantalla {
+  text-align: center;
+  border: 2px solid var(--fase-color, var(--borde));
+  border-radius: var(--radio-3);
+  background: var(--superficie-1);
+  padding: var(--e5) var(--e4);
+  margin-bottom: var(--e3);
+}
+/* El color acompaña, pero el nombre de la fase SIEMPRE está escrito */
+.tabata-pantalla[data-fase="preparacion"]   { --fase-color: var(--alerta); }
+.tabata-pantalla[data-fase="trabajo"]       { --fase-color: var(--ok); }
+.tabata-pantalla[data-fase="descanso"]      { --fase-color: var(--acento); }
+.tabata-pantalla[data-fase="descansoCiclo"] { --fase-color: var(--acento); }
+.tabata-pantalla[data-fase="fin"]           { --fase-color: var(--ok); }
+
+.tabata-fase {
+  margin: 0; font-size: var(--t-titulo); font-weight: 800;
+  letter-spacing: .02em; color: var(--texto);
+}
+/* Tope en vw: en `em` puros, al 180 % de letra el anillo medía más que la
+   pantalla de un iPhone SE con el zoom de pantalla activado. */
+.tabata-reloj { width: min(11em, 62vw); height: min(11em, 62vw); }
+.tabata-reloj .anillo-progreso { stroke: var(--fase-color, var(--acento)); }
+.tabata-ronda { margin: 0; font-size: var(--t-cuerpo); font-weight: 600; }
+.tabata-total { margin: var(--e2) 0 0; font-size: var(--t-menor); color: var(--texto-suave); }
 
 .estado-final {
   text-align: center; padding: var(--e5) var(--e4);

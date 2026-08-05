@@ -7,7 +7,7 @@
    teléfonos se actualicen.
    ============================================================ */
 
-var VERSION = "mi-entreno-v6";
+var VERSION = "mi-entreno-v7";
 
 var ARCHIVOS = [
   "./",
@@ -20,6 +20,7 @@ var ARCHIVOS = [
   "assets/js/voz.js",
   "assets/js/carrusel.js",
   "assets/js/cronometro.js",
+  "assets/js/tabata.js",
   "assets/js/app.js",
   "assets/iconos/icono-180.png",
   "assets/iconos/icono-192.png",

@@ -78,6 +78,12 @@ window.Guardado = (function () {
       escribirTodo(d);
     },
 
+    /* -------- ajustes del temporizador Tabata -------- */
+    tabata: function () { return leerTodo().tabata || null; },
+    guardarTabata: function (c) {
+      var d = leerTodo(); d.tabata = c; escribirTodo(d);
+    },
+
     /* -------- transparencia: qué hay guardado y dónde -------- */
     resumen: function () {
       var d = leerTodo();

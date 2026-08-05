@@ -1,4 +1,4 @@
-﻿# Mi Entreno — Enunciado detallado
+# Mi Entreno — Enunciado detallado
 
 ## El problema
 
@@ -104,7 +104,7 @@ entreno/
 | `nombre` | texto | Como se dice en el gimnasio |
 | `grupo` | texto | Músculo principal |
 | `equipo` | texto | Máquina o implemento |
-| `exacta` | booleano | `false` → la foto es de un movimiento parecido, no idéntico |
+| `fotosOk` | booleano | `false` → las fotos reales son de un movimiento parecido; el rótulo lo avisa |
 | `donde` | texto | Cómo reconocer la máquina en el gimnasio |
 | `pasos` | lista | Una acción por paso, en imperativo |
 | `ojo` | texto | Advertencia de seguridad o adaptación personal |

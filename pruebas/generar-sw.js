@@ -24,6 +24,7 @@ const FIJOS = [
   "assets/js/voz.js",
   "assets/js/carrusel.js",
   "assets/js/cronometro.js",
+  "assets/js/tabata.js",
   "assets/js/app.js",
 ];
 

@@ -47,6 +47,8 @@ Imprime una dirección para el computador y otra para el celular en la misma WiF
   fotos más en un carrusel. Además: cómo reconocer la máquina, los pasos
   numerados, las advertencias y un enlace a video.
 - Abre siempre en el selector de persona, para que nadie entrene la rutina del otro.
+- **Tabata**: temporizador por intervalos aparte, con preajustes, cuenta atrás
+  grande, aviso por voz, pitido y vibración, y la pantalla que no se apaga.
 - Botón **«Léemelo en voz alta»** que dicta todo el ejercicio.
 - Contador de series con **descanso de 1 minuto** que se canta y vibra al acabar.
 - Guarda el peso que usaste y lo recuerda la semana siguiente.
@@ -100,6 +102,7 @@ Después de cambiar algo:
 |-----------|--------------|
 | [enunciado-detallado.md](documentación/enunciado-detallado.md) | Problema, alcance, stack, modelo de datos |
 | [extraccion-planillas.md](documentación/extraccion-planillas.md) | Todo lo que se leyó de las hojas físicas, ejercicio por ejercicio |
+| [imagenes-fichas.md](documentación/imagenes-fichas.md) | Cómo se producen las fichas: perspectiva, revelado y superresolución |
 | [accesibilidad-baja-vision.md](documentación/accesibilidad-baja-vision.md) | Las 12 decisiones de accesibilidad y por qué |
 | [despliegue-gratuito.md](documentación/despliegue-gratuito.md) | Cómo publicarla e instalarla, y qué se descartó |
 | [puntos-futuros.md](documentación/puntos-futuros.md) | Backlog, incluido cómo integrarla a Oh Churus |
@@ -112,5 +115,6 @@ Después de cambiar algo:
 
 - Rutinas: **Life Gym — Centro de Entrenamiento Físico**
 - Fichas de los ejercicios: recortadas de los tableros de **Life Gym**
+  (perspectiva corregida y ampliadas con EDSR; ver `documentación/imagenes-fichas.md`)
 - Fotos complementarias: [free-exercise-db](https://github.com/yuhonas/free-exercise-db)
   (dominio público), solo las 35 que se verificó que corresponden

@@ -499,3 +499,105 @@ sin cuadro y sin marca. El selector ahora excluye `checkbox` y `radio`, y
 
 **Resultado:** `npm run qa` en verde. 165 imagenes (55 fichas + 110 fotos),
 ninguna repetida, 180 archivos en el service worker.
+
+---
+
+### 2026-08-05 (noche) - v7: bug del carrusel, calidad de imagen y Tabata
+
+**Actividad:** Cinco encargos del usuario tras probar la v6.
+
+#### 1. BUG del carrusel: se quedaba clavado
+
+Reportado como «Anterior va de la 3 a la 2 pero no de la 2 a la 1». Al
+reproducirlo era peor: tras el primer clic **ningun boton volvia a funcionar**.
+
+Se instrumento el codigo real y el log lo dejo claro:
+
+```
+CLIC paso=1 actual=1
+IRA pedido=2 -> 2 x=732 scrollActual=366
+PINTAR pedido=2 actual=1     <- pasa a 2 y deshabilita el boton que tiene el foco
+PINTAR pedido=1 actual=2     <- el navegador cancela el scroll y el listener revierte
+```
+
+**Causa:** al pulsar «Siguiente» se lanzaba el desplazamiento suave y, en la
+misma vuelta, `pintar()` deshabilitaba con `disabled` el boton que TENIA EL
+FOCO. El navegador mueve el foco fuera de un boton deshabilitado, y ese cambio
+de foco **cancela el scroll suave en curso**. Despues el listener de scroll leia
+la posicion vieja y devolvia el contador a la lamina anterior.
+
+Se comprobo antes que `scrollTo` funcionaba bien en las ocho combinaciones de
+`scroll-snap` y `behavior`, para descartar al navegador.
+
+**Arreglo:** las flechas **nunca** llevan `disabled`. En los extremos se marcan
+con `aria-disabled`, que informa al lector de pantalla y da el estilo, sin
+tocar el foco. Ademas `irA()` pinta el estado ANTES de lanzar el scroll.
+
+**Por que no lo cazaron las pruebas:** solo encadenaban un clic de flecha y
+despues usaban los puntos y el teclado. La prueba nueva recorre 1-2-3-2-1
+comprobando contador Y posicion de scroll en cada paso.
+
+#### 2. Fuera los puntos numerados
+
+Pedido por el usuario: con las flechas y el contador «Imagen 2 de 3» sobran, y
+la pantalla estaba saturada. Se quitan el HTML, el CSS y sus comprobaciones.
+
+#### 3. Calidad de las imagenes
+
+Primero se midio el techo real: **457 px por tarjeta** en el tablero de
+gimnasio y 629 en el funcional. Se estaban sirviendo a 860-900 px, o sea que
+ya se estaba ampliando; el problema no era servir mas grande.
+
+Dos mejoras, en este orden:
+
+- **Revelado**: equilibrio de blancos sobre el papel (la luz del gimnasio lo
+  dejaba amarillento) y estirado de niveles (tinta al 8, papel al 250). Solo
+  con esto el texto pasa de gris a negro.
+- **Superresolucion neuronal**: se instalo `opencv-contrib-python` y se
+  compararon cuatro modelos sobre la misma ficha. **EDSR x3** gana con
+  claridad: bordes limpios y sin halos. Cuesta 33 s por ficha frente a 0,2 s
+  de FSRCNN/ESPCN, pero son 55 fichas una sola vez.
+
+El orden importa: revelar ANTES de ampliar (la red trabaja mejor con contraste
+real) y reducir DESPUES al lienzo final (consolida el detalle). Enfoque suave
+al final, mucho menor que sin red.
+
+Queda documentado en `documentación/imagenes-fichas.md`, y los scripts pasan a
+`herramientas/` para poder repetirlo.
+
+**Limite honesto:** el techo lo pone la foto. Para subirlo de verdad habria que
+volver a fotografiar el tablero por cuadrantes (4 fotos por cara en vez de 1).
+
+#### 4. El video, debajo de las imagenes
+
+Ya estaba, pero al quitar los puntos queda pegado al carrusel. La prueba visual
+comprueba ahora el orden en el DOM y que no haya mas de 60 px de separacion.
+
+#### 5. Tabata: temporizador por intervalos
+
+Funcionalidad nueva, accesible desde el inicio (`#/tabata`).
+
+- Preajustes: clasico (20/10 x8), suave, fuerza y doble ciclo.
+- Ajustable: preparacion, trabajo, descanso, rondas, ciclos y descanso entre
+  ciclos, con limites y resumen de duracion total en vivo.
+- Por defecto **8 rondas de 20 s de trabajo por 10 de descanso**.
+- Cuenta atras grande con anillo, nombre de fase ESCRITO (no solo color),
+  contador de ronda y tiempo total restante.
+- Avisa por **voz, pitido (WebAudio) y vibracion**: en un gimnasio ruidoso y
+  sin mirar el telefono, con uno solo no basta.
+- **Wake Lock**: la pantalla no se apaga mientras corre.
+- El tiempo se mide con el reloj real y la secuencia se calcula ANTES de
+  empezar, asi que no se desfasa aunque el navegador ralentice los timers.
+
+#### Fallos encontrados por las pruebas nuevas
+
+1. A 320 px con la letra al 180 %, las filas de ajuste del Tabata se salian de
+   la pantalla. Ahora envuelven.
+2. El anillo del Tabata media `11em`: a escala 1,8 son 336 px, mas que la
+   pantalla de un iPhone SE con zoom. Ahora `min(11em, 62vw)`. Igual para el
+   temporizador de descanso.
+3. La lista de scripts de la prueba de humo estaba escrita a mano y se
+   desincronizo al anadir `tabata.js`. Ahora se lee del propio `index.html`.
+
+**Resultado:** `npm run qa` en verde, con 146 pantallas y el recorrido completo
+del carrusel y del Tabata.

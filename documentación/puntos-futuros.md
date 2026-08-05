@@ -78,6 +78,31 @@ Opciones:
 
 ---
 
+## 0. Volver a fotografiar los tableros, por cuadrantes
+
+**Es la mejora de mayor impacto que queda, y la más barata.**
+
+Las fichas se ven todo lo bien que permite la foto original: cada tarjeta tiene
+**457 px reales** de ancho en el tablero de gimnasio (629 en el funcional).
+Sobre eso ya se aplica corrección de perspectiva, revelado y superresolución
+neuronal (ver `imagenes-fichas.md`), y ahí se acaba lo que se puede sacar.
+
+Con **4 fotos por cara** en vez de 1 —una por cuadrante del tablero, acercándose
+a cada una— cada tarjeta pasaría a tener **unos 900-1000 px reales**. Eso es el
+doble de detalle de verdad, no reconstruido.
+
+Cómo hacerlo bien:
+- Luz difusa, sin flash directo (el flash es lo que quemó dos tarjetas).
+- Lo más de frente posible; la corrección de perspectiva se encarga del resto.
+- Que cada foto solape un poco con la siguiente.
+- Las 8 fotos (4 por cara × 2 caras) por persona, o solo de un tablero: los
+  dibujos son idénticos en los dos.
+
+Después, `herramientas/1-rectificar.py` y `2-generar-fichas.py` habría que
+adaptarlos para trabajar por cuadrante, pero el resto del proceso es el mismo.
+
+---
+
 ## 5. Fotos exactas para los 14 ejercicios aproximados
 
 14 de los 55 usan una foto de un movimiento parecido, no idéntico. Son casi
