@@ -464,6 +464,20 @@ button:active, .ejercicio:active, .dia:active, .persona:active { transform: scal
   padding: 1px var(--e2); border-radius: var(--radio-full);
   vertical-align: middle;
 }
+/* Aviso de versión nueva: pegado bajo la barra, imposible de no ver */
+.aviso-nueva {
+  position: sticky; top: 0; z-index: 25;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--e3); flex-wrap: wrap;
+  padding: var(--e3) var(--e4);
+  background: var(--acento); color: var(--acento-texto);
+  font-size: var(--t-menor); font-weight: 700;
+}
+.aviso-nueva .btn-ajuste {
+  background: var(--acento-texto); color: var(--acento);
+  border-color: var(--acento-texto); flex: none;
+}
+
 .resumen-semana {
   margin: var(--e3) 0 0;
   font-size: var(--t-menor); color: var(--texto-suave);
@@ -478,6 +492,21 @@ button:active, .ejercicio:active, .dia:active, .persona:active { transform: scal
   margin: 0 0 var(--e3);
   font-size: var(--t-menor); color: var(--texto-suave);
 }
+/* Atajo a las alternativas, junto al nombre del ejercicio. El bloque vive
+   al final —que es donde tiene sentido leerlo— pero desde ahí no se
+   encontraba: había que bajar toda la pantalla. */
+.atajo-alternativas {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--e2);
+  width: 100%; min-height: var(--toque);
+  margin-bottom: var(--e3); padding: var(--e2) var(--e4);
+  font-family: inherit; font-size: var(--t-menor); font-weight: 700; text-align: left;
+  background: var(--superficie-2); color: var(--texto);
+  border: 1px dashed var(--borde-fuerte); border-radius: var(--radio-2);
+  cursor: pointer;
+}
+.atajo-flecha { font-size: 1.1em; flex: none; }
+.alternativas:focus { outline: 3px solid var(--acento); outline-offset: 3px; }
+
 .alternativas-nota-2 { margin-top: var(--e5); }
 .ejercicio-alterno { min-height: var(--toque); margin-bottom: var(--e2); }
 .ejercicio-alterno:last-child { margin-bottom: 0; }

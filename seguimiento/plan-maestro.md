@@ -1,6 +1,6 @@
 # Mi Entreno — Plan Maestro de Desarrollo
 
-## Estado General: Completado (v11, publicada)
+## Estado General: Completado (v12, publicada)
 ## Fecha inicio: 2026-08-04
 ## Fecha verificación: 2026-08-04
 ## Tecnologías: HTML5, CSS3, JavaScript ES5+, PWA (Service Worker, Web App Manifest), Web Speech API
@@ -378,3 +378,28 @@ las alternativas necesitaban un criterio real, no «tren superior».
    es fácil de calcular y no significa nada. El patron de movimiento cuesta
    escribirlo a mano para 55 ejercicios y es lo que hace que la alternativa
    sirva.
+
+
+---
+
+## FASE 16: v12 - que las funciones se encuentren
+
+**Objetivo:** los ejercicios alternativos llevaban dos versiones publicados y
+funcionando, y Anderson no los veia en ningun ejercicio.
+
+### Entregables
+- [x] Aviso de version nueva con boton, cuando la recarga automatica no puede
+- [x] Comprobar si hay version nueva al volver a la app desde segundo plano
+- [x] Atajo a las alternativas junto al nombre del ejercicio
+- [x] El atajo mueve el foco, no solo la vista (teclado y lector de pantalla)
+- [x] 24 casos de regresion (eran 22)
+
+### Lecciones
+1. **Una funcion que no se encuentra es como si no existiera.** Las pruebas
+   comprobaban que las alternativas estuvieran y funcionaran, y era verdad.
+   Ninguna comprobaba si se podia LLEGAR a ellas.
+2. **Nunca esperar en silencio.** La actualizacion se guardaba para «cuando
+   vuelvas al inicio» sin avisar, y si no volvias no pasaba nunca. Si algo
+   queda pendiente de una accion del usuario, hay que pedirsela.
+3. **En movil la app no se cierra, se queda en segundo plano.** Comprobar la
+   version solo al arrancar no basta.

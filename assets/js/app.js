@@ -529,10 +529,10 @@
      esconden: ofrecerte como recambio algo que vas a hacer igual dentro de
      un rato no resuelve nada. En modo consulta no hay día, así que salen
      todas. */
-  function alternativasDe(e, idPersona, yaEnElDia) {
+  /* Las alternativas que quedan tras quitar las que ya haces ese día. */
+  function alternativasVisibles(e, yaEnElDia) {
     var alt = (window.ALTERNATIVAS || {})[e.clave];
-    if (!alt) return "";
-
+    if (!alt) return { directas: [], otras: [], total: 0 };
     var fuera = {};
     (yaEnElDia || []).forEach(function (k) { fuera[k] = true; });
     var filtrar = function (lista) {
@@ -540,7 +540,29 @@
     };
     var directas = filtrar(alt.directas);
     var otras = filtrar(alt.mismoMusculo);
-    if (!directas.length && !otras.length) return "";
+    return { directas: directas, otras: otras, total: directas.length + otras.length };
+  }
+
+  /* Atajo arriba del todo.
+
+     El bloque de alternativas va al final, después de los pasos, que es
+     donde tiene sentido leerlo. El problema es que ahí no se encuentra: hay
+     que bajar toda la pantalla y Anderson estuvo buscándolo sin dar con él.
+     Esto es un botón pequeño junto al nombre que salta directo. */
+  function atajoAlternativas(e, yaEnElDia) {
+    var v = alternativasVisibles(e, yaEnElDia);
+    if (!v.total) return "";
+    return '<button class="atajo-alternativas" id="btnIrAlternativas">' +
+             '¿Ocupada la máquina? Ver ' + v.total +
+             (v.total === 1 ? ' alternativa' : ' alternativas') +
+             '<span class="atajo-flecha" aria-hidden="true">↓</span>' +
+           '</button>';
+  }
+
+  function alternativasDe(e, idPersona, yaEnElDia) {
+    var v = alternativasVisibles(e, yaEnElDia);
+    var directas = v.directas, otras = v.otras;
+    if (!v.total) return "";
 
     function fila(k) {
       var a = ejercicioDe(k);
@@ -556,7 +578,7 @@
              '</button>';
     }
 
-    return '<div class="tarjeta alternativas">' +
+    return '<div class="tarjeta alternativas" id="alternativas">' +
       '<h3>¿Ocupada la máquina?</h3>' +
       (directas.length
         ? '<p class="alternativas-nota"><strong>Cambio directo:</strong> hacen lo mismo ' +
@@ -639,7 +661,7 @@
     btnVolver.dataset.ir = "#/p/" + idPersona + "/lista";
 
     var dias = diasDeEjercicio(p, clave);
-    var html = cabeceraEjercicio(e) + avisoDe(e) + carruselDe(e) +
+    var html = cabeceraEjercicio(e) + atajoAlternativas(e, null) + avisoDe(e) + carruselDe(e) +
                '<button class="btn-grande btn-principal" id="btnLeer">Léemelo en voz alta</button>' +
                instrucciones(e) +
                /* En consulta no hay un día concreto, así que no se filtra nada */
@@ -684,6 +706,10 @@
     var pesoGuardado = Guardado.peso(idPersona, clave);
 
     var html = cabeceraEjercicio(e) +
+
+      /* Atajo a las alternativas: el bloque va al final, pero desde aquí
+         se llega de un toque cuando encuentras la máquina ocupada. */
+      atajoAlternativas(e, d.ejercicios) +
 
       /* La advertencia del entrenador, antes que las imágenes */
       avisoDe(e) +
@@ -850,6 +876,19 @@
     contenido.focus();
   }
 
+  /* Atajo a las alternativas. Delegado, para que valga igual en la vista de
+     entreno y en la de consulta sin repetir el enganche en cada una. */
+  document.addEventListener("click", function (ev) {
+    if (!ev.target.closest("#btnIrAlternativas")) return;
+    var caja = document.getElementById("alternativas");
+    if (!caja) return;
+    caja.scrollIntoView({ behavior: "smooth", block: "start" });
+    /* El foco va también, no solo la vista: si solo se desplaza, con teclado
+       o con lector de pantalla te quedas donde estabas. */
+    caja.setAttribute("tabindex", "-1");
+    caja.focus({ preventScroll: true });
+  });
+
   document.addEventListener("click", function (ev) {
     var el = ev.target.closest("[data-ir]");
     if (el && !el.hasAttribute("disabled")) { irA(el.dataset.ir); }
@@ -890,22 +929,53 @@
 
        Pero SOLO si estás en el selector de persona. Si estás a mitad de un
        ejercicio, recargar te sacaría de ahí sin avisar; en ese caso se deja
-       marcado y la recarga se hace en cuanto vuelvas al inicio. */
+       marcado y la recarga se hace en cuanto vuelvas al inicio.
+
+       PROBLEMA QUE ESTO TENÍA, Y QUE COSTÓ UNA FUNCIÓN ENTERA
+       -------------------------------------------------------
+       Si la actualización terminaba estando tú dentro de la rutina, se
+       quedaba esperando **en silencio**. Y si no volvías al selector, no
+       se aplicaba nunca: la app seguía funcionando con la versión vieja
+       sin decir nada. Anderson estuvo buscando los ejercicios alternativos
+       en una versión que todavía no los tenía.
+
+       Ahora, además de esperar, se AVISA con un botón. Y se comprueba si
+       hay versión nueva cada vez que vuelves a la app, porque en un móvil
+       la app casi nunca se cierra del todo: se queda en segundo plano. */
     var yaRecargado = false;
     var actualizacionLista = false;
+    var avisoNueva = document.getElementById("avisoNueva");
+
+    function enInicio() {
+      return !location.hash || location.hash === "#/" || location.hash === "#";
+    }
 
     function recargarSiProcede() {
       if (yaRecargado || !actualizacionLista) return;
-      var enInicio = !location.hash || location.hash === "#/" || location.hash === "#";
-      if (!enInicio) return;
+      if (!enInicio()) { avisoNueva.hidden = false; return; }
       yaRecargado = true;
       location.reload();
     }
+
+    document.getElementById("btnActualizar").addEventListener("click", function () {
+      yaRecargado = true;
+      location.reload();
+    });
 
     navigator.serviceWorker.addEventListener("controllerchange", function () {
       actualizacionLista = true;
       recargarSiProcede();
     });
     window.addEventListener("hashchange", recargarSiProcede);
+
+    /* Al volver a la app desde segundo plano, preguntar si hay versión
+       nueva. Sin esto, una app instalada puede pasar días sin enterarse. */
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) return;
+      recargarSiProcede();
+      navigator.serviceWorker.getRegistration().then(function (r) {
+        if (r) r.update();
+      }).catch(function () { /* sin conexión: se mira la próxima vez */ });
+    });
   }
 })();

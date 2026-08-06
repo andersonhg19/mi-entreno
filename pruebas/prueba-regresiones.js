@@ -807,6 +807,126 @@ async function casoColorDePersona(page) {
   else pasa("la barra toma el color de cada persona y lo suelta en el selector");
 }
 
+/* ------------------------------------------------------------------
+   20. Las alternativas se ENCUENTRAN, no solo existen.
+
+   Estaban puestas y funcionando desde la v10, y Anderson no las vio en
+   ningún ejercicio: el bloque va al final, después de los pasos, así que
+   había que bajar la pantalla entera. Que una función esté no sirve de
+   nada si no se llega a ella.
+
+   Ahora hay un atajo junto al nombre del ejercicio. Esta prueba comprueba
+   que está a la vista sin desplazarse y que lleva al bloque.
+   ------------------------------------------------------------------ */
+async function casoAtajoAlternativas(page) {
+  for (const ruta of ["#/p/anderson/d/2/e/0", "#/p/anderson/x/press-banca"]) {
+    await ir(page, ruta, 700);
+    await page.evaluate(() => window.scrollTo(0, 0));
+
+    const arriba = await page.evaluate(() => {
+      const b = document.getElementById("btnIrAlternativas");
+      if (!b) return { falta: true };
+      const r = b.getBoundingClientRect();
+      const caja = document.getElementById("alternativas");
+      return {
+        texto: b.textContent.replace(/\s+/g, " ").trim(),
+        visibleSinBajar: r.top >= 0 && r.bottom <= window.innerHeight,
+        alto: r.height,
+        /* Cuánto habría que bajar para ver el bloque de verdad */
+        bajarHasta: caja ? Math.round(caja.getBoundingClientRect().top) : null
+      };
+    });
+    if (arriba.falta) { fallo("atajo alternativas", `${ruta}: no hay atajo`); return; }
+    if (!arriba.visibleSinBajar) {
+      fallo("atajo alternativas", `${ruta}: el atajo no se ve sin desplazarse`);
+      return;
+    }
+    if (arriba.alto < 44) {
+      fallo("atajo alternativas", `${ruta}: el atajo mide ${Math.round(arriba.alto)}px de alto`);
+      return;
+    }
+    if (!/alternativa/i.test(arriba.texto)) {
+      fallo("atajo alternativas", `${ruta}: el atajo dice "${arriba.texto}"`);
+      return;
+    }
+
+    /* Y que de verdad lleve al bloque. Se comprueba que quede A LA VISTA,
+       no a una altura concreta: el bloque está al final de la página, así
+       que a veces no se puede subir más porque el desplazamiento se acaba
+       antes de que llegue arriba del todo. */
+    const antes = await page.evaluate(() =>
+      Math.round(document.getElementById("alternativas").getBoundingClientRect().top));
+    await page.evaluate(() => document.getElementById("btnIrAlternativas").click());
+    await page.waitForTimeout(700);
+    const tras = await page.evaluate(() => {
+      const caja = document.getElementById("alternativas");
+      const r = caja.getBoundingClientRect();
+      return {
+        top: Math.round(r.top),
+        aLaVista: r.top < window.innerHeight - 60 && r.bottom > 0,
+        enfocado: document.activeElement === caja
+      };
+    });
+    if (!tras.aLaVista) {
+      fallo("atajo alternativas", `${ruta}: tras pulsar, el bloque sigue fuera de pantalla (${tras.top}px)`);
+      return;
+    }
+    if (tras.top >= antes) {
+      fallo("atajo alternativas", `${ruta}: pulsar el atajo no desplazo nada (${antes} -> ${tras.top})`);
+      return;
+    }
+    if (!tras.enfocado) {
+      fallo("atajo alternativas", `${ruta}: el foco no va al bloque (con teclado no sirve)`);
+      return;
+    }
+  }
+  pasa("el atajo a las alternativas se ve sin bajar y lleva al bloque");
+}
+
+/* ------------------------------------------------------------------
+   21. Si hay versión nueva y no se puede recargar, se AVISA.
+
+   Antes la actualización esperaba en silencio a que volvieras al
+   selector. Si no volvías, no se aplicaba nunca y la app seguía con la
+   versión vieja sin decir nada — que es exactamente por lo que Anderson
+   no veía una función que llevaba días publicada.
+   ------------------------------------------------------------------ */
+async function casoAvisoVersionNueva(page) {
+  const existe = await page.evaluate(() => ({
+    aviso: !!document.getElementById("avisoNueva"),
+    boton: !!document.getElementById("btnActualizar"),
+    oculto: (document.getElementById("avisoNueva") || {}).hidden
+  }));
+  if (!existe.aviso || !existe.boton) {
+    fallo("aviso de version", "falta el aviso de version nueva o su boton");
+    return;
+  }
+  if (!existe.oculto) {
+    fallo("aviso de version", "el aviso se ve sin que haya version nueva");
+    return;
+  }
+
+  /* Se simula que la actualización llegó estando dentro de un ejercicio */
+  await ir(page, "#/p/anderson/d/2/e/0", 500);
+  await page.evaluate(() => { document.getElementById("avisoNueva").hidden = false; });
+  await page.waitForTimeout(200);
+  const visible = await page.evaluate(() => {
+    const a = document.getElementById("avisoNueva");
+    const r = a.getBoundingClientRect();
+    const cs = getComputedStyle(a);
+    return {
+      seVe: cs.display !== "none" && r.height > 0,
+      arriba: r.top < 200,
+      texto: a.textContent.replace(/\s+/g, " ").trim()
+    };
+  });
+  if (!visible.seVe) fallo("aviso de version", "el aviso no se dibuja al mostrarlo");
+  else if (!visible.arriba) fallo("aviso de version", `el aviso aparece a ${Math.round(visible.arriba)}px, muy abajo`);
+  else if (!/versión nueva/i.test(visible.texto)) fallo("aviso de version", `dice "${visible.texto}"`);
+  else pasa("si hay version nueva y no se puede recargar sola, se avisa arriba");
+  await page.evaluate(() => { document.getElementById("avisoNueva").hidden = true; });
+}
+
 /* ------------------------------------------------------------------ */
 async function main() {
   const servidor = await arrancarServidor();
@@ -837,6 +957,8 @@ async function main() {
     await casoAlternativas(page);
     await casoSoloFicha(page);
     await casoColorDePersona(page);
+    await casoAtajoAlternativas(page);
+    await casoAvisoVersionNueva(page);
     await casoArranque(page, base);
     await casoEstrecho(page, base);
   } finally {

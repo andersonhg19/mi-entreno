@@ -1,6 +1,6 @@
 ﻿# Mi Entreno — Bitácora de Desarrollo
 
-## Estado Actual: v11 publicada en GitHub Pages
+## Estado Actual: v12 publicada en GitHub Pages
 ## Última actualización: 2026-08-06
 
 ---
@@ -1004,3 +1004,54 @@ Como manda la regla 5, no es la única señal: el nombre ya va escrito al lado.
 los nueve sin foto muestran solo la ficha y explican por qué, que la barra
 toma y **suelta** el color de la persona, y —el que de verdad importa— que en
 **los 55** cada cambio directo comparte patrón de movimiento con su original.
+
+
+---
+
+### 2026-08-06 (noche) - v12: una función que no se encuentra es como si no estuviera
+
+> *«en ningún ejercicio veo esto que mencionas, la idea es que se viera»*
+
+Los ejercicios alternativos llevaban publicados desde la v10 y funcionaban.
+Se comprobó en producción: `window.ALTERNATIVAS` cargado, 55 ejercicios, el
+bloque renderizando en los tres que se probaron. **Y aun así él no los veía.**
+
+Dos causas, las dos mías, y las dos del mismo tipo: la función estaba, pero
+no llegaba al usuario.
+
+#### 1. La actualización esperaba en silencio
+
+El service worker nuevo tomaba el control, pero la página seguía siendo la
+vieja, y se recargaba **solo si estabas en el selector de persona** —para no
+sacarte de un ejercicio a medias, que fue un bug de la v6—. Si la
+actualización terminaba estando tú dentro de la rutina, se quedaba esperando.
+Sin decir nada. Y si no volvías al inicio, no se aplicaba **nunca**.
+
+Anderson estuvo buscando los alternativos en una versión que todavía no los
+tenía, y la app no tenía forma de decírselo.
+
+Ahora: si no se puede recargar sola, sale un **aviso arriba con un botón**
+«Actualizar ahora». Y se comprueba si hay versión nueva **al volver a la app
+desde segundo plano**, porque una app instalada casi nunca se cierra del todo
+y puede pasar días sin enterarse.
+
+#### 2. El bloque estaba al final de una pantalla muy larga
+
+Va después de los pasos y de «dónde está la máquina», que es donde tiene
+sentido leerlo. El problema es que para llegar hay que pasar el carrusel, el
+contador de series, el peso, el botón de voz y los cinco pasos. En el
+teléfono son varias pantallas de scroll.
+
+Ahora hay un **atajo justo debajo del nombre**: «¿Ocupada la máquina? Ver 2
+alternativas ↓». Lleva al bloque y **mueve también el foco**, no solo la
+vista, para que sirva con teclado y con lector de pantalla.
+
+**Pruebas:** 24 casos (eran 22). Los dos nuevos no comprueban que la función
+exista —eso ya estaba cubierto— sino que **se encuentre**: que el atajo esté
+a la vista sin desplazarse, que mida sus 44 px, que al pulsarlo el bloque
+quede en pantalla y con el foco; y que el aviso de versión nueva aparezca
+arriba cuando la recarga automática no puede hacerse.
+
+**La lección:** las pruebas decían que las alternativas estaban, y era verdad.
+Ninguna comprobaba si se podía **llegar** a ellas. Una función que el usuario
+no encuentra es exactamente igual de útil que una que no existe.

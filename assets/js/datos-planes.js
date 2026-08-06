@@ -16,7 +16,7 @@
 /* Debe coincidir con VERSION de sw.js (lo comprueba validar-datos.js).
    Se muestra en Ajustes para poder confirmar de un vistazo que el teléfono
    ya tiene la última versión. */
-window.VERSION_APP = "11";
+window.VERSION_APP = "12";
 
 window.PARAMETROS = {
   series: "3 a 4 series",
