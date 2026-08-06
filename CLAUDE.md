@@ -117,21 +117,52 @@ máquina abductora.
 Los tableros de Anderson y de Sharid son **la misma baraja de tarjetas** en dos
 ediciones (franjas azules y granates). Lo importante: el reflejo del flash cae
 en sitios distintos, así que la tarjeta quemada en uno está sana en el otro.
-`herramientas/2-alinear-sharid.py` los deja en el mismo lienzo y **tres** fichas
+`herramientas/2-alinear-sharid.py` los deja en el mismo lienzo y **seis** fichas
 se toman del de Sharid (`DESDE_SHARID` en `3-generar-fichas.py`).
 
-**Cómo se decide, si algún día hay que rehacerlo:** por **contraste**
-(p98 − p2 de la luminancia), no por porcentaje de blanco reventado ni por
-medidas de «detalle». Una tarjeta puede tener un 8 % de píxeles reventados y
-verse perfecta —lo quemado es el papel— y el borde de un reflejo cuenta como
-detalle, así que una tarjeta ilegible puntúa más alto que la buena. La primera
-lista automática señalaba 21 tarjetas dañadas; mirándolas una a una eran 3.
+**Cómo se decide, si algún día hay que rehacerlo: mirándolas.**
+`herramientas/cotejar-tableros.py todas` saca las 55 restauradas desde los dos
+tableros, una al lado de otra. Son once hojas de contacto y se revisan en un
+rato.
+
+Las métricas ayudan a ordenar candidatas pero **no deciden**, y aquí ya han
+fallado tres veces distintas:
+- El *porcentaje de blanco reventado* señalaba 21 tarjetas dañadas; mirándolas
+  eran 3. Lo quemado suele ser el papel, con el dibujo intacto.
+- El *detalle* miente donde hay reflejo: el borde del propio reflejo cuenta
+  como detalle, así que una tarjeta ilegible puntúa más alto que la buena.
+- El *contraste* global no ve la **franja de músculo** reventada cuando el
+  resto de la tarjeta está bien — que es el caso más común (peck-deck,
+  dominadas, jalon-delante-abierto).
+
 **Después de medir, hay que mirar.**
 
-El modelo (EDSR ×2), el aumento y el enfoque (1,4 · 55 %) están **medidos**
-contra una verdad de referencia en `herramientas/banco/`. Encadenar modelos se
-probó y **no funciona**: ninguna de las seis cadenas gana a su propio primer
-paso. No lo vuelvas a intentar sin pasar el banco antes.
+### Cómo se restauran las fichas (v9)
+
+**Real-ESRGAN `anime_6B`, en la GPU** (`herramientas/restaurador.py`). Es un
+modelo **generativo**, y esa es la diferencia que importa: EDSR —lo que había
+hasta la v8— es *fiel*, solo estira lo que hay, y por eso estiraba el grano
+igual que al dibujo. Medido: grano del papel de 1,98 a **0,30**, borde de
+0,425 a **0,266**, y de 39 minutos a 28 segundos las 55.
+
+**Cuidado con concluir de más.** Hasta la v8 la documentación decía que 457 px
+por tarjeta era «el techo» y que solo quedaba refotografiar. Esa conclusión
+valía para los modelos fieles —que era lo único medido— y se enunció como si
+valiera para todo. Anderson señaló que el problema era el grano, no el tamaño,
+y tenía razón.
+
+**Un modelo generativo puede inventar**, y estas imágenes le dicen a alguien
+con baja visión qué ejercicio hacer. Por eso hay guardia:
+`herramientas/comprobar-fichas.py` compara cada ficha con su original **por
+los bordes** (no por tonos: aplanar el papel cambia el tono y no el
+contenido), calibrada con un control de dos tarjetas distintas. Las 55 dan
+**0,992**; el control, **0,270**. `prueba-regresiones.js` comprueba además de
+qué tablero salió cada ficha, por el color de la franja.
+
+Encadenar modelos se probó y **no funciona**: ninguna de las seis cadenas gana
+a su propio primer paso (`herramientas/banco/`). Enfocar después de
+Real-ESRGAN solo devuelve el grano. No lo vuelvas a intentar sin pasar el
+banco antes.
 
 ## Al agregar un ejercicio
 

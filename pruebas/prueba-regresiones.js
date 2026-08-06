@@ -452,11 +452,15 @@ async function casoFoco(page) {
    músculo es AZUL MARINO en el de Anderson y GRANATE en el de Sharid.
    Eso es una firma que no se puede falsificar: basta mirar el color.
 
-   Solo tres fichas deben venir del tablero de Sharid, las que en el de
-   Anderson quemó el flash. Si un día se regeneran las imágenes y esa
-   lista cambia sin querer, aquí salta.
+   Seis fichas vienen del tablero de Sharid: las que en el de Anderson
+   estropeó el flash. La lista se decidió mirando las 55 una a una, no con
+   una métrica. Si un día se regeneran las imágenes y esa lista cambia sin
+   querer, aquí salta.
    ------------------------------------------------------------------ */
-const FICHAS_DE_SHARID = ["pantorrilla-sentado", "sentadilla-mancuerna", "prensa-atletica"];
+const FICHAS_DE_SHARID = [
+  "pantorrilla-sentado", "sentadilla-mancuerna", "prensa-atletica",
+  "peck-deck", "dominadas", "jalon-delante-abierto"
+];
 
 async function casoOrigenFichas(page, base) {
   await page.goto(base, { waitUntil: "networkidle" });

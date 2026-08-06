@@ -276,3 +276,36 @@ aprovechar— en vez de decidir a ojo. Y cerrar los bugs con pruebas propias.
 4. **La regla «toda imagen necesita alt con texto» es falsa.** Una miniatura
    dentro de un boton que ya dice el nombre debe llevar `alt=""`, o el lector
    de pantalla lo repite. Una prueba con la regla facil marca fallos que no lo son.
+
+---
+
+## FASE 13: v9 - quitar el grano con un modelo generativo
+
+**Objetivo:** Anderson corrigio la conclusion de la v8 —«no es solo tamaño, es
+la calidad de la imagen»— y tenia razon. Restaurar de verdad las fichas, en
+local, midiendo que la mejora existe.
+
+### Entregables
+- [x] Diagnostico del defecto: grano sigma 6,6 y 3.381 colores donde hay 8
+- [x] **Real-ESRGAN `anime_6B`** en la GPU (`herramientas/restaurador.py`)
+- [x] Grano de 1,98 a **0,30**; borde de 0,425 a **0,266**; 39 min -> 28 s
+- [x] Lienzo a 1400x1050 (antes 1000x750): se nota al ampliar con el pellizco
+- [x] Fuera el enfoque final: sobre esta salida solo devuelve grano
+- [x] **Guardia de fidelidad** calibrada con control (0,992 frente a 0,270)
+- [x] Las 55 revisadas a ojo desde los dos tableros; de 3 a **6** las de Sharid
+- [x] Vectorizar y buscar el original en internet: probados y descartados
+- [x] Pruebas al dia (tamaño de lienzo y lista de fichas de Sharid)
+
+### Lecciones
+1. **No enunciar una conclusion mas ancha que la medida que la sostiene.**
+   «457 px es el techo» valia para los modelos FIELES, que era lo unico
+   probado, y se escribio como si valiera para todo. El usuario vio el hueco
+   antes que nosotros.
+2. **Fiel y generativo no son lo mismo.** Un modelo fiel no puede quitar el
+   grano: el grano tambien «es lo que hay» y lo estira igual que al dibujo.
+3. **Si el modelo puede inventar, hace falta una guardia, y calibrada.** Un
+   parecido de 0,99 no dice nada hasta saber que «contenido distinto» puntua
+   0,27. El control es lo que le da sentido al numero.
+4. **Mejorar una etapa puede romper una decision de otra.** Al dejar de
+   emborronar, el destrozo del flash quedo a la vista y hubo que rehacer de
+   que tablero sale cada tarjeta.

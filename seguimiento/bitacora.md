@@ -1,6 +1,6 @@
 ﻿# Mi Entreno — Bitácora de Desarrollo
 
-## Estado Actual: v8 publicada en GitHub Pages
+## Estado Actual: v9 lista en local (v8 es la publicada)
 ## Última actualización: 2026-08-05
 
 ---
@@ -727,3 +727,102 @@ sigue siendo 7,68:1, por encima del listón.
 2. La prueba de arranque fallaba sin que hubiera nada roto: navegar a una URL
    que solo cambia en el `#` **no recarga la página**, así que el arranque de
    la app no llegaba a ejecutarse. Hay que recargar de verdad.
+
+---
+
+### 2026-08-05 (noche) - v9: el grano fuera, con un modelo generativo
+
+Anderson corrigió una conclusión de la v8, y tenía razón:
+
+> *«el problema de las imágenes es que se ven super pixeladas... de resto se ve
+> granulado, de mala calidad, no es solo tamaño, es la calidad propiamente de
+> la imagen, que con IA yo sé que podrías rellenar esos huecos».*
+
+#### Dónde estaba el error de razonamiento
+
+La v8 concluyó que 457 px por tarjeta era «el techo» y que solo quedaba volver
+a fotografiar. Esa conclusión era **más ancha que la medida que la sostenía**:
+el banco solo había probado modelos de superresolución **fieles** (EDSR,
+LapSRN, FSRCNN, ESPCN), que por diseño estiran lo que hay y no pueden inventar
+nada. Los modelos **generativos** son otra categoría y no se habían tocado.
+
+Y el defecto no era la cantidad de píxeles. Medido sobre las fichas de la v8:
+**grano de σ 6,6 en el papel y 3.381 colores distintos** donde la tarjeta
+impresa usa unos ocho. Casi todo lo que se veía encima del dibujo era ruido —y
+el enfoque final de la v8 lo amplificaba.
+
+#### Lo que se hizo
+
+**Real-ESRGAN, variante `anime_6B`, en la GPU** (RTX 4070). Está entrenada con
+dibujo de color plano y contorno limpio, que es exactamente una tarjeta
+impresa. Medido sobre 8 tarjetas:
+
+| | Grano | Borde | Fidelidad | Segundos |
+|---|-------|-------|-----------|----------|
+| v8: EDSR ×2 + enfoque | 1,98 | 0,425 | 0,9993 | 31 |
+| **suave + Real-ESRGAN anime** | **0,30** | **0,266** | **0,9910** | **0,3** |
+| Real-ESRGAN general | 0,58 | 0,286 | 0,9930 | 0,8 |
+| aplanado L0 + anime | 0,16 | 0,269 | 0,9492 | 0,9 |
+
+Grano **seis veces y media menor**, borde más definido, y las 55 fichas pasan
+de 39 minutos a **28 segundos**.
+
+Además: **lienzo de 1400 × 1050** en vez de 1000 × 750 (el modelo devuelve
+1760 px; guardando 940 se tiraba la mitad, y eso se nota al ampliar con el
+pellizco), y **fuera el enfoque final**, que sobre esta salida solo devolvía
+grano (0,30 → 0,62) sin ganar definición.
+
+#### La guardia contra inventos
+
+Un modelo generativo puede dejar la imagen preciosa y haber cambiado una
+mancuerna por una barra. Estas fichas le dicen a alguien con baja visión qué
+ejercicio hacer.
+
+`herramientas/comprobar-fichas.py` compara cada ficha con su original **por
+los bordes**, no por los tonos —aplanar el papel cambia el tono y no el
+contenido, y medir tonos suspendía justo a las tuberías buenas—. Y para que el
+número signifique algo, está **calibrado con un control**: la misma medida
+entre dos tarjetas distintas.
+
+| | Parecido de bordes |
+|---|---|
+| Las 55 restauradas frente a su original | **0,992** |
+| Control: dos tarjetas distintas | **0,270** |
+
+#### Efecto secundario que obligó a rehacer una decisión
+
+EDSR emborronaba el destrozo del flash y lo disimulaba. **Real-ESRGAN
+reconstruye el borde y lo deja a la vista**: una tarjeta con la tinta lavada
+sale con las letras nítidas por fuera y agujereadas por dentro.
+
+Así que hubo que volver a elegir de qué tablero sale cada tarjeta. Se sacaron
+las 55 restauradas desde los dos tableros (`cotejar-tableros.py todas`, once
+hojas de contacto) y se miraron una a una. Pasan de **3 a 6** las que vienen
+del tablero de Sharid: se suman *peck deck*, *dominadas* y *jalones delante
+abierto*, a las que el flash les reventó la **franja de músculo** mientras el
+resto de la tarjeta conservaba buen contraste.
+
+La métrica automática no las veía —ni el contraste global ni la irregularidad
+de la tinta—, y en cambio proponía cambiar *twist ruso*, que no está dañada.
+Tercera vez en este proyecto que una medida de imagen se equivoca y mirarlas
+lo resuelve.
+
+#### Lo que se probó y no entró
+
+- **Vectorizar** con `vtracer`: sobre dibujo de color plano tiene todo el
+  sentido y para la lupa sería ideal, pero el binding de Python **se cae con
+  Python 3.14** en cuanto se le pasan parámetros. Queda en `puntos-futuros.md`.
+- **Buscar el dibujo original en internet**, como sugirió Anderson. La
+  búsqueda inversa (Google Lens) confirma que **la baraja exacta no está
+  publicada**: cero coincidencias exactas. Sí circula arte parecido en redes,
+  pero son **dibujos distintos**, de terceros y con licencia incierta.
+  Cambiarlos sería repetir el error de las fotos que «se parecían».
+- **Aplanar con L0** antes del modelo: deja el papel aún más limpio pero se
+  lleva estructura por delante (fidelidad 0,949).
+
+#### Pruebas
+
+`prueba-completitud.js` comprueba ahora que las fichas midan 1400 × 1050 —el
+lienzo es lo que Anderson amplía, y no puede encoger sin querer—, y
+`prueba-regresiones.js` sabe que son seis las que vienen del tablero de
+Sharid. Las seis suites, en verde.

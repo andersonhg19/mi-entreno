@@ -91,14 +91,39 @@ Con **4 fotos por cara** en vez de 1 —una por cuadrante del tablero, acercánd
 a cada una— cada tarjeta pasaría a tener **unos 900-1000 px reales**. Eso es el
 doble de detalle de verdad, no reconstruido.
 
-**Lo demás ya está agotado.** Se midió (ver `imagenes-fichas.md`):
+**Ojo con dar esto por agotado** — ya se hizo una vez y estaba mal. En la v8
+este apartado decía que solo quedaba refotografiar, y en la v9 resultó que el
+problema no era la cantidad de píxeles sino que venían **sucios**: cambiar a
+un modelo generativo (Real-ESRGAN) bajó el grano del papel de 1,98 a 0,30 sin
+tocar la foto original.
+
+Lo que sí está medido y descartado (ver `imagenes-fichas.md`):
 
 - Encadenar modelos de superresolución: seis cadenas, ninguna mejora.
 - Combinar las dos fotos de cada tarjeta: +0,0045 de SSIM, al borde de lo
   medible, y con riesgo de fantasmear el texto.
-- El modelo, el aumento y el enfoque ya están en su óptimo medido.
+- Buscar el dibujo original en internet: la baraja exacta no está publicada.
 
-Volver a fotografiar es lo único que queda con recorrido de verdad.
+Volver a fotografiar sigue siendo lo único que aporta **información nueva**.
+
+---
+
+## 10. Vectorizar las fichas
+
+La tarjeta es dibujo impreso de color plano y contorno cerrado: material ideal
+para un trazador vectorial. Y para quien amplía con la lupa tiene una ventaja
+que ninguna imagen de píxeles da: **un vector no se pixela por mucho que se
+amplíe**.
+
+Se intentó en la v9 con `vtracer`, y el binding de Python **se cae con Python
+3.14** en cuanto se le pasan parámetros de configuración (funciona solo con
+los valores por defecto, que dejan las letras deformadas). No es que la idea
+no sirva: es que la herramienta no va en esta versión de Python.
+
+Caminos: esperar a que `vtracer` lo arregle, usar su binario de línea de
+órdenes en vez del binding, o probar `potrace` por capas de color. Habría que
+comprobar con cuidado que el texto no se deforma y cuánto pesa el SVG frente
+a los 164 KB del JPEG actual.
 
 Cómo hacerlo bien:
 - Luz difusa, sin flash directo (el flash es lo que quemó dos tarjetas).

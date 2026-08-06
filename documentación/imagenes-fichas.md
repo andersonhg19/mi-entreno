@@ -10,7 +10,7 @@ cuál es el techo real de calidad.
 
 ---
 
-## El techo: cuánto detalle hay de verdad
+## Cuánto detalle hay de verdad, y qué se puede hacer con él
 
 Medido sobre las fotos originales (5712 × 4284 px):
 
@@ -21,14 +21,29 @@ Medido sobre las fotos originales (5712 × 4284 px):
 | Funcional (Anderson) | 4784 px | **629** |
 | Funcional (Sharid) | 4792 px | 631 |
 
-Eso es todo el detalle que existe. Cualquier ampliación por encima de ahí es
-reconstrucción, no información nueva. Es importante tenerlo claro: se puede
-hacer que se vean **mucho mejor**, pero no se puede leer algo que la foto no
-capturó.
+> **Corrección importante (v9).** Hasta la v8 este documento decía que eso era
+> «el techo» y que la única forma de subirlo era volver a fotografiar. Esa
+> conclusión era **más ancha que la medida que la sostenía**: valía para los
+> modelos de superresolución *fieles* (EDSR y compañía), que por diseño solo
+> estiran lo que hay. Los modelos **generativos** son otra categoría, y no se
+> habían probado.
+>
+> Anderson lo señaló: *«se ven granuladas, de mala calidad; no es solo
+> tamaño»*. Tenía razón. El problema no era la cantidad de píxeles, era que
+> la señal venía **sucia**.
 
-**La forma de subir ese techo es volver a fotografiar**, no procesar mejor:
-una foto por cuadrante del tablero (4 fotos por cara en vez de 1) daría
-aproximadamente el doble de píxeles por tarjeta. Está en `puntos-futuros.md`.
+Medido sobre las fichas de la v8: un grano de σ 6,6 en el papel y **3.381
+colores distintos** donde la tarjeta impresa usa unos ocho. Casi todo lo que
+se veía encima del dibujo era ruido —grano del sensor, textura del cartón,
+artefactos de JPEG— y encima el enfoque final lo amplificaba.
+
+Los 457 px siguen siendo los que son. Pero **457 px limpios se leen mucho
+mejor que 457 px sucios**, y eso sí se podía arreglar. Ver «Ampliar» más
+abajo.
+
+Volver a fotografiar por cuadrantes sigue siendo la única forma de tener
+**más información** (está en `puntos-futuros.md`); lo que ya no es cierto es
+que fuera lo único que quedaba por hacer.
 
 ---
 
@@ -74,10 +89,72 @@ ampliar:
 Este paso va **antes** de la ampliación a propósito: la red de superresolución
 trabaja mucho mejor sobre una imagen con contraste real.
 
-### 4 · Ampliar con superresolución neuronal
+### 4 · Restaurar y ampliar: **Real-ESRGAN**
 
-Se usa **EDSR ×2**. La primera vez el modelo se eligió a ojo; ahora está
-medido, y la medida cambió dos decisiones.
+Se usa **Real-ESRGAN, variante `anime_6B`**, corriendo en la GPU.
+
+**Por qué se cambió EDSR.** EDSR es un modelo *fiel*: aprende a estirar lo
+que hay y no puede inventar nada. Por eso, medido contra una verdad de
+referencia, salía bien... y por eso dejaba el grano intacto: el grano
+también «es lo que hay» y lo estiraba igual que al dibujo.
+
+Real-ESRGAN es un GAN entrenado con degradaciones reales (ruido de sensor,
+JPEG, desenfoque), y esa variante está entrenada con **dibujo**: zonas de
+color plano y contorno limpio, que es exactamente una tarjeta impresa. No
+solo amplía, **reconstruye**.
+
+Medido sobre 8 tarjetas de gimnasio (457 px reales), llevadas al mismo
+tamaño de pantalla:
+
+| Tubería | Grano del papel | Dureza de borde | Fidelidad | Segundos |
+|---------|-----------------|-----------------|-----------|----------|
+| v8: EDSR ×2 + enfoque | 1,98 | 0,425 | 0,9993 | 31 |
+| **suave + Real-ESRGAN anime** | **0,30** | **0,266** | **0,9910** | **0,3** |
+| Real-ESRGAN general | 0,58 | 0,286 | 0,9930 | 0,8 |
+| aplanado L0 + anime | 0,16 | 0,269 | 0,9492 | 0,9 |
+
+Grano **seis veces y media menor**, borde más definido, y de paso cien veces
+más rápido: las 55 fichas pasan de 39 minutos a 28 segundos.
+
+- La variante `general` es peor en las dos cosas.
+- Aplanar antes con L0 (minimización de gradiente) deja el papel aún más
+  limpio, pero **se lleva estructura por delante**: la fidelidad cae a
+  0,949. No se usa.
+- El **pase suave previo** (filtro bilateral) es barato y evita que el
+  modelo convierta las cuatro motas reales del cartón en puntos negros bien
+  definidos. Cuesta 0,0003 de fidelidad.
+
+#### La guardia de fidelidad
+
+Un modelo generativo puede dejar la imagen preciosa y haber cambiado una
+mancuerna por una barra. Estas fichas le dicen a alguien con baja visión qué
+ejercicio hacer: eso sería peor que el grano.
+
+Por eso cada ficha se compara con su original **por los bordes** —dónde
+están las líneas— y no por los tonos. Comparar tonos no vale: cambiar un
+papel gris moteado por uno blanco liso es un cambio de tono enorme y de
+contenido ninguno, y suspendía justo a las tuberías buenas.
+
+Para que el número signifique algo está **calibrado con un control**: la
+misma medida entre dos tarjetas *distintas*. Ese es el suelo de «esto ya no
+es la misma imagen».
+
+| | Parecido de bordes |
+|---|---|
+| Las 55 fichas restauradas frente a su original | **0,992** |
+| La más justa (*remo al pecho*) | 0,979 |
+| **Control: dos tarjetas distintas** | **0,270** |
+
+`herramientas/comprobar-fichas.py` vuelve a pasar esa guardia cuando se
+quiera, y falla si alguna baja de 0,90.
+
+---
+
+### 4b · El banco de superresolución fiel (histórico, v8)
+
+Esto es lo que se midió antes de descubrir la vía generativa. Sigue siendo
+válido **dentro de su categoría**, y sostiene una conclusión que no ha
+cambiado: encadenar modelos no sirve.
 
 **Cómo se mide.** El tablero funcional tiene 629 px reales por tarjeta y el
 de gimnasio 457. Así que las tarjetas del funcional sirven de **verdad**: se
@@ -119,25 +196,29 @@ Tres conclusiones:
 
 - Se reduce al lienzo final. **Bajar después de ampliar** consolida el detalle
   y quita lo que la red haya podido inventar de más.
-- Lienzo **1000 × 750 (4:3) idéntico para todas**, con la tarjeta centrada y
+- Lienzo **1400 × 1050 (4:3) idéntico para todas**, con la tarjeta centrada y
   el resto relleno con el color del papel. Así todas las fichas salen del
   mismo tamaño y ninguna aparece recortada.
-- Enfoque de **radio 1,4 al 55 %**, también medido contra la verdad y no a
-  ojo. Con el 1,1 que se usaba antes el resultado se quedaba en 0,95 de la
-  nitidez del cartón real; con 1,4 llega a 0,99 y el SSIM sube de 0,9715 a
-  0,9762. Por encima de ahí el SSIM se desploma: son halos.
 
-  | Radio · % | SSIM | Nitidez vs. verdad |
-  |-----------|------|--------------------|
-  | sin enfoque | 0,9679 | 0,88 |
-  | 1,1 · 55 % (antes) | 0,9754 | 0,95 |
-  | **1,4 · 55 %** | **0,9762** | **0,99** |
-  | 1,4 · 80 % | 0,9739 | 1,04 |
-  | 1,8 · 110 % | 0,9568 | 1,15 |
+  Era 1000 × 750 hasta la v8. Real-ESRGAN devuelve 1760 px por tarjeta de
+  gimnasio, así que guardando 940 se tiraba casi la mitad. A 1400 se conserva
+  el detalle que se ve **al ampliar con el pellizco**, que es como mira
+  Anderson. Cuesta 2,7 MB más en total, y se descarga una sola vez.
+
+  | Lienzo | KB por ficha | Las 55 |
+  |--------|--------------|--------|
+  | 1000 × 750 (v8) | 102 | 5,5 MB |
+  | 1200 × 900 | 132 | 7,1 MB |
+  | **1400 × 1050** | **164** | **8,8 MB** |
+  | 1600 × 1200 | 196 | 10,5 MB |
+
+- **Sin enfoque final.** La v8 enfocaba a 1,4 · 55 % porque EDSR dejaba el
+  borde blando. Sobre la salida de Real-ESRGAN el enfoque solo devuelve
+  grano —de 0,30 a 0,62— sin ganar definición apreciable. Fuera.
 - JPEG calidad 88 **sin submuestreo de color** (`subsampling=0`). En texto e
   imagen de línea el submuestreo se nota más que la calidad.
 
-Resultado: ~115 KB por ficha, 6,3 MB las 55.
+Resultado: ~164 KB por ficha, 8,8 MB las 55.
 
 ---
 
@@ -170,18 +251,34 @@ medida que decide es el **contraste** (p98 − p2 de la luminancia):
 - El contraste separa limpio: las tarjetas destrozadas dan 71 y 100, y
   todas las sanas pasan de 150.
 
-Resultado: **tres** tarjetas se toman del tablero de Sharid.
+Resultado: **seis** tarjetas se toman del tablero de Sharid.
 
-| Tarjeta | Contraste en Anderson | En Sharid |
-|---------|----------------------|-----------|
-| Pantorrilla sentado | 71 (ilegible) | 184 |
-| Sentadilla con mancuernas | 100 (ilegible) | 173 |
-| Prensa atlética | 183 | 196 |
+| Tarjeta | Qué le pasa en el tablero de Anderson |
+|---------|--------------------------------------|
+| Pantorrilla sentado | título y dibujo ilegibles (contraste 71) |
+| Sentadilla con mancuernas | título y dibujo ilegibles (contraste 100) |
+| Prensa atlética | franja PIERNA reventada |
+| Peck deck | franja PECHO reventada y torso con vetas |
+| Dominadas | franja ESPALDA lavada y título gris |
+| Jalones delante abierto | franja ESPALDA lavada y título gris |
 
-Las otras 52 se quedan con el tablero de Anderson, que es la foto más
-nítida de las dos y donde las marcas son las suyas. Y **no** se cambian a
-la ligera: cada candidata se miró en pantalla al lado de su pareja antes de
-decidir.
+Las otras 49 se quedan con el tablero de Anderson, que es la foto más nítida
+de las dos y donde las marcas son las suyas.
+
+**Esta lista se decidió mirando las 55 una a una** (`cotejar-tableros.py
+todas`), no con una métrica. `elegir-tablero.py` ayuda a ordenar candidatas,
+pero se le escapa el caso más común: la **franja de músculo** reventada
+mientras el resto de la tarjeta conserva buen contraste. *Peck deck*,
+*Dominadas* y *Jalones delante abierto* son exactamente eso, y la métrica las
+daba por buenas.
+
+Con 55 tarjetas, mirarlas cuesta poco y es lo único que no se equivoca.
+
+Y ahora importa más que antes: **EDSR emborronaba el destrozo y lo
+disimulaba; Real-ESRGAN reconstruye el borde y lo deja a la vista.** Una
+tarjeta con la tinta lavada sale con las letras nítidas por fuera y
+agujereadas por dentro. Al mejorar la tubería hubo que rehacer esta
+elección.
 
 ### Combinar las dos fotos: probado y descartado
 
@@ -210,6 +307,27 @@ nada.)
   las propias marcas y se comía los títulos de dos líneas. La ficha se muestra
   tal cual está en el cartón.
 - **No se recorta para "cuadrar".** Antes que cortar contenido, se rellena.
+- **No se encadenan modelos.** Seis cadenas medidas, ninguna gana a su primer
+  paso (tabla del apartado 4b).
+- **No se enfoca después de Real-ESRGAN.** Solo devuelve el grano.
+
+## Lo que se probó en la v9 y no entró
+
+- **Vectorizar la ficha** (`vtracer`). Sobre dibujo de color plano tiene todo
+  el sentido —un vector no se pixela por mucho que se amplíe, que es justo lo
+  que le vendría bien a Anderson—, pero el binding de Python se cae con
+  Python 3.14 en cuanto se le pasan parámetros de configuración; solo funciona
+  con los valores por defecto, que dejan las letras deformadas. Queda como
+  mejora futura, no como algo bloqueado por la idea.
+
+- **Buscar el dibujo original en internet** (Google Lens, por sugerencia de
+  Anderson). La búsqueda inversa confirma que **la baraja exacta no está
+  publicada**: cero coincidencias exactas. Sí circula por redes arte de
+  gimnasio con un estilo parecido —muñeco de pantalón amarillo sobre blanco—,
+  pero son **dibujos distintos**, de terceros y con licencia incierta.
+  Cambiarlos por esos sería repetir el error que ya se cometió con las fotos
+  que «se parecían»: la ficha tiene que ser la tarjeta que entregó el
+  entrenador.
 
 ---
 

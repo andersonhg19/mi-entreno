@@ -203,6 +203,10 @@ for (const [k, e] of Object.entries(CAT)) {
     if (!dim) errores.push(`${a}: no se pudo leer el tamano (¿no es un JPEG?)`);
     else if (dim.ancho < 300 || dim.alto < 200)
       errores.push(`${a}: ${dim.ancho}x${dim.alto}, demasiado pequena para verse bien`);
+    /* La ficha es LA imagen que manda: es lo que Anderson amplia con el
+       pellizco, asi que su lienzo no puede encoger sin querer. */
+    else if (a.endsWith("-ficha.jpg") && (dim.ancho !== 1400 || dim.alto !== 1050))
+      errores.push(`${a}: ${dim.ancho}x${dim.alto}; las fichas van a 1400x1050`);
 
     /* Ninguna imagen puede estar repetida en dos ejercicios distintos:
        ese fue el error que hizo que TRX abductor mostrara la maquina. */

@@ -11,3 +11,6 @@ pruebas/capturas/
 # teléfono) y el archivo con peso, IMC y % de grasa de los dos.
 recursos/
 __pycache__/
+
+# Pesos de los modelos: se descargan solos, no van al repositorio
+herramientas/modelos/

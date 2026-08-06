@@ -116,8 +116,9 @@ Después de cambiar algo:
 
 - Rutinas: **Life Gym — Centro de Entrenamiento Físico**
 - Fichas de los ejercicios: recortadas de los tableros de **Life Gym**
-  (perspectiva corregida y ampliadas con EDSR ×2; el modelo, el aumento y el
-  enfoque están **medidos** contra una verdad de referencia, no elegidos a ojo
-  — ver `documentación/imagenes-fichas.md` y `herramientas/banco/`)
+  (perspectiva corregida y restauradas con **Real-ESRGAN** en local; cada
+  decisión está **medida** contra una verdad de referencia y cada ficha pasa
+  una guardia que comprueba que el modelo no se inventó nada — ver
+  `documentación/imagenes-fichas.md` y `herramientas/banco/`)
 - Fotos complementarias: [free-exercise-db](https://github.com/yuhonas/free-exercise-db)
   (dominio público), solo las 35 que se verificó que corresponden
