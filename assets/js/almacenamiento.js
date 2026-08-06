@@ -29,13 +29,39 @@ window.Guardado = (function () {
     return persona + "|" + nDia + "|" + hoy();
   }
 
+  /* Lunes de la semana en curso, en formato AAAA-MM-DD.
+
+     Los días marcados como terminados se guardan con esta clave, así que
+     se renuevan solos: el domingo sigue siendo la misma semana y el lunes
+     ya es otra. Sin borrados programados ni tareas de fondo — que en una
+     app sin servidor no existen— y sin depender de que la abras ese día. */
+  function semana(fecha) {
+    var d = fecha ? new Date(fecha) : new Date();
+    var dia = d.getDay();                     /* 0 domingo … 6 sábado */
+    var haceLunes = (dia === 0) ? 6 : dia - 1;
+    d.setDate(d.getDate() - haceLunes);
+    return d.getFullYear() + "-" +
+           String(d.getMonth() + 1).padStart(2, "0") + "-" +
+           String(d.getDate()).padStart(2, "0");
+  }
+
   return {
     hoy: hoy,
+    semana: semana,
 
     /* -------- preferencias de visualización -------- */
     prefs: function () {
       var d = leerTodo();
-      return d.prefs || { escala: 1, tema: "oscuro", vozAuto: false, vibrar: true };
+      var p = d.prefs || {};
+      return {
+        escala: p.escala || 1,
+        tema: p.tema || "oscuro",
+        vozAuto: !!p.vozAuto,
+        vibrar: p.vibrar !== false,
+        /* El descanso entre series lo fija el entrenador en 60 s, pero en la
+           práctica depende del ejercicio y del día. Se puede cambiar. */
+        descanso: p.descanso || (window.PARAMETROS && window.PARAMETROS.descanso) || 60
+      };
     },
     guardarPrefs: function (p) {
       var d = leerTodo(); d.prefs = p; escribirTodo(d);
@@ -61,6 +87,30 @@ window.Guardado = (function () {
       if (claves.length > 60) {
         claves.sort();
         claves.slice(0, claves.length - 60).forEach(function (k) { delete d.sesiones[k]; });
+      }
+      escribirTodo(d);
+    },
+
+    /* -------- días dados por terminados, semana a semana --------
+       Se puede cerrar un día sin haber hecho todos los ejercicios: a veces
+       la máquina está ocupada, a veces se acaba el tiempo. Lo que importa
+       es saber si ya fuiste. */
+    diasTerminados: function (persona) {
+      var d = leerTodo();
+      return (d.semanas || {})[persona + "|" + semana()] || {};
+    },
+    marcarDia: function (persona, nDia, terminado) {
+      var d = leerTodo();
+      d.semanas = d.semanas || {};
+      var k = persona + "|" + semana();
+      d.semanas[k] = d.semanas[k] || {};
+      if (terminado) d.semanas[k][nDia] = true;
+      else delete d.semanas[k][nDia];
+      /* Solo se conservan las 8 semanas más recientes */
+      var claves = Object.keys(d.semanas);
+      if (claves.length > 16) {
+        claves.sort();
+        claves.slice(0, claves.length - 16).forEach(function (x) { delete d.semanas[x]; });
       }
       escribirTodo(d);
     },

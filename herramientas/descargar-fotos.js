@@ -1,9 +1,28 @@
-/* Devuelve al proyecto las 40 fotos reales que se habian borrado.
+/* Las dos fotos reales que acompanan a cada ficha, desde free-exercise-db.
 
-   El usuario las quiere: le servian como referencia aunque no sean el
-   ejercicio exacto. Ahora conviven con la ficha del gimnasio (que si es
-   exacta y va primero) y llevan un rotulo que dice claramente cuando el
-   movimiento es solo parecido.                                          */
+   La ficha del gimnasio es la que manda —es el carton del entrenador— y va
+   primera en el carrusel. Estas dos son la referencia de como se ve el
+   movimiento, y llevan rotulo cuando solo son parecidas.
+
+   REVISION DE 2026-08-06 (Anderson: «me ha pasado mucho que no tienen nada
+   que ver»). Se miraron las 55 con `herramientas/revisar-fotos.py`. Cuatro
+   estaban sencillamente mal y se cambiaron:
+
+     aductor-banda            Band_Hip_Adductions -> Side_Leg_Raises
+       la foto era un senor DE PIE sin hacer nada; la banda no se veia.
+     apertura-trx             Bodyweight_Flyes -> Dumbbell_Flyes
+       la foto eran flexiones con mancuernas en el suelo, no una apertura.
+     trx-abductor             Lunge_Pass_Through -> Thigh_Abductor
+       la foto era una zancada caminando con pesa rusa, nada de abduccion.
+     trx-sentadilla-profunda  Suspended_Split_Squat -> Chair_Squat
+       la foto era sentadilla a UNA pierna; la ficha es a dos, con apoyo.
+
+   Se dejaron a proposito, aunque parezcan chocantes:
+
+     salto-cajon y sentadilla-dinamica ensenan el SALTO. La tarjeta tambien
+     lo ensena: el salto es el ejercicio. Lo que cambia es la adaptacion que
+     escribio el entrenador a mano («SIN SALTO»), y eso se resuelve poniendo
+     ese aviso ANTES del carrusel, no falseando la foto.                   */
 const fs = require("fs");
 const path = require("path");
 const https = require("https");
@@ -24,15 +43,15 @@ const MAPEO = {
   "plancha-bosu": "Plank",
   "levantamiento-atras-polea": "Glute_Kickback",
   "sentadilla-patada-lateral": "Squats_-_With_Bands",
-  "trx-sentadilla-profunda": "Suspended_Split_Squat",
-  "trx-abductor": "Lunge_Pass_Through",
+  "trx-sentadilla-profunda": "Chair_Squat",
+  "trx-abductor": "Thigh_Abductor",
   "sentadilla-iso": "Bodyweight_Squat",
   "elevacion-rodilla": "Step-up_with_Knee_Raise",
-  "aductor-banda": "Band_Hip_Adductions",
+  "aductor-banda": "Side_Leg_Raises",
   "sentadilla-dinamica": "Freehand_Jump_Squat",
   "peso-muerto-saco": "Stiff-Legged_Dumbbell_Deadlift",
   "trx-espalda": "Suspended_Row",
-  "apertura-trx": "Bodyweight_Flyes",
+  "apertura-trx": "Dumbbell_Flyes",
 };
 
 function bajar(url, destino) {

@@ -435,6 +435,43 @@ button:active, .ejercicio:active, .dia:active, .persona:active { transform: scal
   vertical-align: middle;
 }
 
+/* Día ya entrenado esta semana. El color va SIEMPRE acompañado de la
+   palabra ENTRENADO y del ✓ en la marca: nada depende solo del color. */
+.dia[data-listo="si"] { border-color: var(--ok); }
+.dia[data-listo="si"] .dia-marca { background: var(--ok); color: var(--ok-texto); }
+.etiqueta-listo {
+  display: inline-block; margin-left: var(--e2);
+  background: var(--ok); color: var(--ok-texto);
+  font-size: var(--t-etiqueta); font-weight: 800;
+  padding: 1px var(--e2); border-radius: var(--radio-full);
+  vertical-align: middle;
+}
+.resumen-semana {
+  margin: var(--e3) 0 0;
+  font-size: var(--t-menor); color: var(--texto-suave);
+}
+.nota-dia-listo {
+  margin: calc(var(--e2) * -1) 0 var(--e4);
+  font-size: var(--t-etiqueta); color: var(--texto-suave);
+}
+
+/* Alternativas cuando la máquina está ocupada */
+.alternativas-nota {
+  margin: 0 0 var(--e3);
+  font-size: var(--t-menor); color: var(--texto-suave);
+}
+.ejercicio-alterno { min-height: var(--toque); margin-bottom: var(--e2); }
+.ejercicio-alterno:last-child { margin-bottom: 0; }
+
+/* Separador entre «lo que te falta» y «lo que ya hiciste» */
+.titulo-grupo-lista {
+  margin: var(--e5) 0 var(--e2);
+  font-size: var(--t-menor); font-weight: 800;
+  text-transform: uppercase; letter-spacing: .06em;
+  color: var(--texto);
+}
+.titulo-grupo-lista.titulo-hechos { color: var(--texto-suave); }
+
 /* ============================================================
    FILA DE EJERCICIO
    ============================================================ */

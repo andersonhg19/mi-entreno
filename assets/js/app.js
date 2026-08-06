@@ -110,6 +110,10 @@
     document.documentElement.style.setProperty("--escala", prefs.escala);
     document.documentElement.setAttribute("data-tema", prefs.tema);
     document.getElementById("valorLetra").textContent = Math.round(prefs.escala * 100) + "%";
+    document.getElementById("valorDescanso").textContent = prefs.descanso + " s";
+    document.getElementById("notaDescanso").textContent =
+      "Es el tiempo que arranca solo al tocar «Serie hecha». El entrenador puso " +
+      window.PARAMETROS.descanso + " s.";
     document.getElementById("chkVozAuto").checked = !!prefs.vozAuto;
     document.getElementById("chkVibrar").checked  = !!prefs.vibrar;
     panel.querySelectorAll("button[data-tema]").forEach(function (b) {
@@ -134,6 +138,21 @@
   document.getElementById("btnLetraMenos").addEventListener("click", function () {
     prefs.escala = Math.max(0.9, Math.round((prefs.escala - 0.1) * 100) / 100); guardarPrefs();
   });
+  /* Descanso: de 15 en 15 s, entre 15 s y 5 minutos. Si estás en una
+     pantalla de ejercicio, se vuelve a pintar para que el botón diga el
+     tiempo nuevo. */
+  function cambiarDescanso(delta) {
+    prefs.descanso = Math.max(15, Math.min(300, prefs.descanso + delta));
+    guardarPrefs();
+    if (/\/e\/\d+$/.test(location.hash)) enrutar();
+  }
+  document.getElementById("btnDescansoMas").addEventListener("click", function () {
+    cambiarDescanso(15);
+  });
+  document.getElementById("btnDescansoMenos").addEventListener("click", function () {
+    cambiarDescanso(-15);
+  });
+
   panel.querySelectorAll("button[data-tema]").forEach(function (b) {
     b.addEventListener("click", function () { prefs.tema = b.dataset.tema; guardarPrefs(); });
   });
@@ -236,29 +255,47 @@
               '<strong>Ojo con esto</strong>' + esc(p.notaImportante) + '</span></div>';
     }
 
+    var terminados = Guardado.diasTerminados(idPersona);
+    var cerrados = 0;
+
     p.dias.forEach(function (d) {
       var color = window.COLORES_DIA[d.color];
       var sesion = Guardado.sesion(idPersona, d.n);
       var hechos = Object.keys(sesion.hechos || {}).length;
       var total = d.ejercicios.length;
       var descanso = total === 0;
+      var listo = !!terminados[d.n];
+      if (listo) cerrados++;
+
       var conteo = descanso ? "Sin ejercicios"
-        : (hechos > 0 ? hechos + " de " + total + " hechos hoy" : total + " ejercicios");
+        : (listo ? "Entrenado esta semana"
+                 : (hechos > 0 ? hechos + " de " + total + " hechos hoy"
+                               : total + " ejercicios"));
 
       html += '<button class="dia" data-ir="#/p/' + idPersona + '/d/' + d.n + '"' +
                 (d.n === hoy ? ' data-hoy="si"' : '') +
-                (descanso ? ' data-descanso="si"' : '') + '>' +
+                (descanso ? ' data-descanso="si"' : '') +
+                (listo ? ' data-listo="si"' : '') + '>' +
                 '<span class="dia-marca" aria-hidden="true" style="--color-dia:' + color.hex + '">' +
-                  esc(d.dia.charAt(0)) + '</span>' +
+                  esc(listo ? "✓" : d.dia.charAt(0)) + '</span>' +
                 '<span class="dia-info">' +
                   '<span class="dia-nombre">' + esc(d.dia) +
-                    (d.n === hoy ? '<span class="etiqueta-hoy">HOY</span>' : '') + '</span>' +
+                    (d.n === hoy ? '<span class="etiqueta-hoy">HOY</span>' : '') +
+                    /* El estado no puede depender solo del color ni del icono */
+                    (listo ? '<span class="etiqueta-listo">ENTRENADO</span>' : '') + '</span>' +
                   '<span class="dia-titulo">' + esc(d.titulo) + '</span>' +
                   '<span class="dia-conteo">' + esc(conteo) + '</span>' +
                 '</span>' +
                 '<span class="dia-flecha" aria-hidden="true">›</span>' +
               '</button>';
     });
+
+    var conEjercicios = p.dias.filter(function (d) { return d.ejercicios.length; }).length;
+    html += '<p class="resumen-semana">' +
+              (cerrados
+                ? '<strong>' + cerrados + ' de ' + conEjercicios + '</strong> días entrenados esta semana.'
+                : 'Todavía no has cerrado ningún día esta semana.') +
+              ' La cuenta vuelve a cero cada lunes.</p>';
 
     html += '<button class="btn-grande btn-secundario" data-ir="#/p/' + idPersona + '/lista" ' +
               'style="margin-top:var(--e4)">Ver la lista completa de ejercicios</button>' +
@@ -407,31 +444,121 @@
                 (hechos ? 'Seguir con el entreno' : 'Empezar el entreno') + '</button>';
     }
 
-    d.ejercicios.forEach(function (clave, i) {
+    /* La lista va partida en dos: lo que falta y lo que ya está.
+
+       Con 17 ejercicios el lunes, buscar los que faltan entre los hechos
+       obliga a repasar la lista entera cada vez. Separados, lo pendiente
+       está siempre arriba y no hay que buscar nada. */
+    function botonEjercicio(clave, i, hecho) {
       var e = ejercicioDe(clave);
-      if (!e) return;
-      var hecho = sesion.hechos && sesion.hechos[clave];
-      html += '<button class="ejercicio" data-grupo="' + esc(claveGrupo(e.grupo)) + '" ' +
-                'data-ir="#/p/' + idPersona + '/d/' + d.n + '/e/' + i + '"' +
-                (hecho ? ' data-hecho="si"' : '') + '>' +
-                '<span class="ejercicio-numero" aria-hidden="true">' + (hecho ? '✓' : (i + 1)) + '</span>' +
-                '<img class="ejercicio-miniatura" src="' + esc(e.ficha) + '" alt="" loading="lazy">' +
-                '<span class="ejercicio-texto">' +
-                  '<span class="ejercicio-nombre">' + esc(e.nombre) + '</span>' +
-                  '<span class="ejercicio-grupo">' + esc(e.grupo) + ' · ' + esc(e.equipo) +
-                  (hecho ? ' · HECHO' : '') + '</span>' +
-                '</span>' +
-              '</button>';
+      if (!e) return "";
+      return '<button class="ejercicio" data-grupo="' + esc(claveGrupo(e.grupo)) + '" ' +
+               'data-ir="#/p/' + idPersona + '/d/' + d.n + '/e/' + i + '"' +
+               (hecho ? ' data-hecho="si"' : '') + '>' +
+               '<span class="ejercicio-numero" aria-hidden="true">' + (hecho ? '✓' : (i + 1)) + '</span>' +
+               '<img class="ejercicio-miniatura" src="' + esc(e.ficha) + '" alt="" loading="lazy">' +
+               '<span class="ejercicio-texto">' +
+                 '<span class="ejercicio-nombre">' + esc(e.nombre) + '</span>' +
+                 '<span class="ejercicio-grupo">' + esc(e.grupo) + ' · ' + esc(e.equipo) +
+                 (hecho ? ' · HECHO' : '') + '</span>' +
+               '</span>' +
+             '</button>';
+    }
+
+    var pendientes = [], realizados = [];
+    d.ejercicios.forEach(function (clave, i) {
+      var hecho = !!(sesion.hechos && sesion.hechos[clave]);
+      (hecho ? realizados : pendientes).push(botonEjercicio(clave, i, hecho));
     });
+
+    if (pendientes.length) {
+      html += '<h3 class="titulo-grupo-lista">Te faltan ' + pendientes.length +
+              (pendientes.length === 1 ? ' ejercicio' : ' ejercicios') + '</h3>' +
+              pendientes.join("");
+    }
+    if (realizados.length) {
+      html += '<h3 class="titulo-grupo-lista titulo-hechos">Ya hiciste ' + realizados.length +
+              (realizados.length === 1 ? ' ejercicio' : ' ejercicios') + '</h3>' +
+              realizados.join("");
+    }
 
     html += '<div class="tarjeta"><h3>Para cerrar</h3><p>' + esc(window.PARAMETROS.cardio) + '.</p></div>';
 
+    /* Cerrar el día aunque falten ejercicios: en el gimnasio pasa
+       constantemente que una máquina está ocupada o se acaba el tiempo. */
+    var listo = !!Guardado.diasTerminados(idPersona)[d.n];
+    html += '<button class="btn-grande ' + (listo ? 'btn-secundario' : 'btn-principal') +
+              '" id="btnDiaListo">' +
+              (listo ? 'Quitar «entrenado» de este día'
+                     : '✓ Dar por terminado el ' + esc(d.dia)) +
+            '</button>' +
+            '<p class="nota-dia-listo">' +
+              (listo
+                ? 'Este día cuenta como entrenado esta semana.'
+                : 'Puedes cerrarlo aunque falten ejercicios. Se reinicia solo cada lunes.') +
+            '</p>';
+
     contenido.innerHTML = html;
+
+    document.getElementById("btnDiaListo").addEventListener("click", function () {
+      Guardado.marcarDia(idPersona, d.n, !listo);
+      if (!listo) Voz.decir(d.dia + " terminado. Buen trabajo.");
+      vistaDia(idPersona, nDia);
+    });
   }
 
   /* ---------------------------------------------------------
      Piezas comunes del detalle de un ejercicio
      --------------------------------------------------------- */
+  /* La advertencia del entrenador va ANTES del carrusel.
+
+     Motivo: hay dos ejercicios donde la ficha —y la foto— enseñan un SALTO,
+     y el entrenador escribió a mano «SIN SALTO» en la planilla de cada uno.
+     La foto no está mal (el ejercicio es ese), pero si el aviso aparece
+     después de las imágenes se lee tarde. Lo que manda para ellos es la
+     adaptación, así que se lee primero. */
+  function avisoDe(e) {
+    if (!e.ojo) return "";
+    return '<div class="aviso"><span class="icono" aria-hidden="true">!</span><span>' +
+           '<strong>Ojo con esto</strong>' + esc(e.ojo) + '</span></div>';
+  }
+
+  /* «Si la máquina está ocupada»: otros ejercicios que trabajan lo mismo.
+
+     `yaEnElDia` son las claves que esa persona hace ese mismo día. Se
+     esconden: ofrecerte como recambio algo que vas a hacer igual dentro de
+     un rato no resuelve nada. En modo consulta no hay día, así que salen
+     todas. */
+  function alternativasDe(e, idPersona, yaEnElDia) {
+    var lista = (window.ALTERNATIVAS || {})[e.clave] || [];
+    var fuera = {};
+    (yaEnElDia || []).forEach(function (k) { fuera[k] = true; });
+
+    var utiles = lista.filter(function (k) {
+      return !fuera[k] && window.CATALOGO[k];
+    });
+    if (!utiles.length) return "";
+
+    return '<div class="tarjeta alternativas">' +
+      '<h3>¿Ocupada la máquina?</h3>' +
+      '<p class="alternativas-nota">Estos trabajan lo mismo con otro aparato. ' +
+      'Toca uno para ver cómo se hace.</p>' +
+      utiles.map(function (k) {
+        var a = ejercicioDe(k);
+        return '<button class="ejercicio ejercicio-alterno" ' +
+                 'data-grupo="' + esc(claveGrupo(a.grupo)) + '" ' +
+                 'data-ir="#/p/' + idPersona + '/x/' + k + '">' +
+                 '<img class="ejercicio-miniatura" src="' + esc(a.ficha) + '" alt="" loading="lazy">' +
+                 '<span class="ejercicio-texto">' +
+                   '<span class="ejercicio-nombre">' + esc(a.nombre) + '</span>' +
+                   '<span class="ejercicio-grupo">' + esc(a.equipo) + '</span>' +
+                 '</span>' +
+                 '<span class="dia-flecha" aria-hidden="true">›</span>' +
+               '</button>';
+      }).join("") +
+    '</div>';
+  }
+
   function cabeceraEjercicio(e) {
     return '<div class="detalle-cabecera">' +
              '<h2 class="detalle-nombre">' + esc(e.nombre) + '</h2>' +
@@ -465,10 +592,7 @@
         '<h3>Dónde está / qué necesitas</h3>' +
         '<p>' + esc(e.donde) + '</p>' +
       '</div>';
-    if (e.ojo) {
-      html += '<div class="aviso"><span class="icono" aria-hidden="true">!</span><span>' +
-              '<strong>Ojo con esto</strong>' + esc(e.ojo) + '</span></div>';
-    }
+    /* El aviso ya se pintó arriba, antes del carrusel: aquí no se repite. */
     return html;
   }
 
@@ -498,9 +622,11 @@
     btnVolver.dataset.ir = "#/p/" + idPersona + "/lista";
 
     var dias = diasDeEjercicio(p, clave);
-    var html = cabeceraEjercicio(e) + carruselDe(e) +
+    var html = cabeceraEjercicio(e) + avisoDe(e) + carruselDe(e) +
                '<button class="btn-grande btn-principal" id="btnLeer">Léemelo en voz alta</button>' +
-               instrucciones(e);
+               instrucciones(e) +
+               /* En consulta no hay un día concreto, así que no se filtra nada */
+               alternativasDe(e, idPersona, null);
 
     if (dias.length) {
       html += '<div class="tarjeta"><h3>Cuándo te toca</h3><p>' +
@@ -542,13 +668,16 @@
 
     var html = cabeceraEjercicio(e) +
 
+      /* La advertencia del entrenador, antes que las imágenes */
+      avisoDe(e) +
+
       /* Lo que hay que hacer, antes que nada */
       '<div class="receta">' +
         '<div class="receta-celda"><span class="receta-valor">3-4</span>' +
           '<span class="receta-etiqueta">Series</span></div>' +
         '<div class="receta-celda"><span class="receta-valor">10-15</span>' +
           '<span class="receta-etiqueta">Repes</span></div>' +
-        '<div class="receta-celda"><span class="receta-valor">' + window.PARAMETROS.descanso + ' s</span>' +
+        '<div class="receta-celda"><span class="receta-valor">' + prefs.descanso + ' s</span>' +
           '<span class="receta-etiqueta">Descanso</span></div>' +
       '</div>' +
 
@@ -563,7 +692,7 @@
           '<button class="btn-grande btn-secundario" id="btnMasSerie" aria-label="Sumar una serie">+</button>' +
         '</div>' +
         '<button class="btn-grande btn-principal" id="btnSerieHecha" style="margin-top:var(--e3)">' +
-          'Serie hecha · descansar ' + window.PARAMETROS.descanso + ' s</button>' +
+          'Serie hecha · descansar ' + prefs.descanso + ' s</button>' +
         '<label class="etiqueta-peso">' +
           '<span>Peso que usaste</span>' +
           '<input type="text" id="campoPeso" class="campo-peso" inputmode="decimal" ' +
@@ -579,6 +708,10 @@
       '<button class="btn-grande btn-secundario" id="btnLeer">Léemelo en voz alta</button>' +
 
       instrucciones(e) +
+
+      /* Aquí sí se filtran: no se ofrece como recambio algo que ya está
+         en la rutina de hoy. */
+      alternativasDe(e, idPersona, d.ejercicios) +
 
       '<button class="btn-grande" id="btnHecho">' +
         (sesion.hechos && sesion.hechos[clave] ? 'Marcar como NO hecho' : '✓ Terminé este ejercicio') +
@@ -617,8 +750,8 @@
 
     document.getElementById("btnSerieHecha").addEventListener("click", function () {
       seriesHechas++; refrescarSeries();
-      Voz.decir("Serie " + seriesHechas + " hecha. Descansa " + window.PARAMETROS.descanso + " segundos.");
-      Cronometro.iniciar(window.PARAMETROS.descanso, function () {
+      Voz.decir("Serie " + seriesHechas + " hecha. Descansa " + prefs.descanso + " segundos.");
+      Cronometro.iniciar(prefs.descanso, function () {
         var b = document.getElementById("btnSerieHecha");
         if (b) b.focus();
       }, loQueViene);

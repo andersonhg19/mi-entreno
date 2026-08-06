@@ -31,7 +31,7 @@ for (const f of ["sw.js", "servidor.js"]) {
 const ctx = { window: {}, navigator: {}, document: {} };
 ctx.window = ctx;
 vm.createContext(ctx);
-for (const f of ["datos-catalogo.js", "datos-planes.js"]) {
+for (const f of ["datos-catalogo.js", "datos-planes.js", "datos-alternativas.js"]) {
   vm.runInContext(fs.readFileSync(path.join(ROOT, "assets/js", f), "utf8"), ctx, { filename: f });
 }
 const CAT = ctx.CATALOGO, PLANES = ctx.PLANES, COLORES = ctx.COLORES_DIA;
@@ -142,6 +142,61 @@ for (const m of app.matchAll(/getElementById\("([^"]+)"\)/g)) {
 const cron = fs.readFileSync(path.join(ROOT, "assets/js/cronometro.js"), "utf8");
 for (const m of cron.matchAll(/getElementById\("([^"]+)"\)/g)) {
   if (!idsHtml.has(m[1])) errores.push(`cronometro.js busca #${m[1]} y no existe en el HTML`);
+}
+
+/* --- 7a. La tabla de alternativas ---
+   Cada alternativa tiene que ser un ejercicio del catálogo: así ya trae su
+   ficha, sus fotos revisadas y sus pasos, y se puede abrir de un toque.
+   Una clave mal escrita aquí dejaría un botón que no lleva a ninguna parte. */
+{
+  const ALT = ctx.ALTERNATIVAS || {};
+  const claves = Object.keys(CAT);
+  const ZONAS = {
+    "Pierna": "tren inferior", "Pantorrilla": "tren inferior", "Glúteos": "tren inferior",
+    "Lumbar": "tren inferior",
+    "Pecho": "tren superior", "Espalda": "tren superior", "Hombros": "tren superior",
+    "Tríceps": "tren superior", "Bíceps": "tren superior", "Antebrazos": "tren superior",
+    "Abdomen": "core"
+  };
+  const zona = g => ZONAS[g] || g;
+  for (const [clave, lista] of Object.entries(ALT)) {
+    if (!CAT[clave]) {
+      errores.push(`ALTERNATIVAS: "${clave}" no existe en el catalogo`);
+      continue;
+    }
+    if (!Array.isArray(lista) || !lista.length) {
+      errores.push(`ALTERNATIVAS de ${clave}: la lista esta vacia`);
+      continue;
+    }
+    const vistas = new Set();
+    for (const alt of lista) {
+      if (!CAT[alt]) { errores.push(`ALTERNATIVAS de ${clave}: "${alt}" no existe en el catalogo`); continue; }
+      if (alt === clave) errores.push(`ALTERNATIVAS de ${clave}: se ofrece a si mismo`);
+      if (vistas.has(alt)) errores.push(`ALTERNATIVAS de ${clave}: "${alt}" esta repetido`);
+      vistas.add(alt);
+      /* Que no cruce de zona del cuerpo. Comparar el grupo exacto daría
+         quince avisos legítimos —ofrecer peso muerto para el lumbar, o
+         patada de glúteo para el abductor, es correcto—, y un aviso que
+         siempre salta deja de leerse. Lo que sí sería un error de verdad
+         es mandar a hacer pecho cuando toca pierna. */
+      if (zona(CAT[alt].grupo) !== zona(CAT[clave].grupo)) {
+        errores.push(`ALTERNATIVAS de ${clave} (${CAT[clave].grupo}, ${zona(CAT[clave].grupo)}): ` +
+                     `"${alt}" es de ${CAT[alt].grupo} (${zona(CAT[alt].grupo)}) — otra zona del cuerpo`);
+      }
+      /* La gracia es cambiar de aparato. Solo importa cuando el original
+         ocupa un puesto fijo: una máquina o una torre de poleas. Que dos
+         ejercicios compartan mancuernas o colchoneta no es problema,
+         porque de eso hay varios. */
+      if (CAT[alt].equipo === CAT[clave].equipo && /máquina|prensa|polea/i.test(CAT[clave].equipo)) {
+        avisos.push(`ALTERNATIVAS de ${clave}: "${alt}" usa el mismo puesto ` +
+                    `(${CAT[alt].equipo}); no sirve si está ocupado`);
+      }
+    }
+  }
+  const sinAlternativas = claves.filter(k => !ALT[k]);
+  if (sinAlternativas.length) {
+    errores.push(`Sin alternativas (${sinAlternativas.length}): ${sinAlternativas.join(", ")}`);
+  }
 }
 
 /* --- 7b. La cuenta del Tabata tiene que cuadrar ---

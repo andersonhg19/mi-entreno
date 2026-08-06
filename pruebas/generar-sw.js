@@ -13,19 +13,25 @@ const path = require("path");
 const RAIZ = path.resolve(__dirname, "..");
 const SW = path.join(RAIZ, "sw.js");
 
+/* Los scripts se leen del propio index.html, EN SU ORDEN.
+
+   Estaban escritos a mano aquí y se desincronizó dos veces: al añadir
+   `tabata.js` y al añadir `datos-alternativas.js`. Un script que falte en
+   esta lista no se precarga, así que la app se rompe sin conexión — y
+   justo sin conexión es cuando no hay forma de arreglarlo. */
+const html = fs.readFileSync(path.join(RAIZ, "index.html"), "utf8");
+const scripts = [...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map(m => m[1]);
+if (!scripts.length) {
+  console.error("ERROR: no se encontró ningún <script src> en index.html");
+  process.exit(1);
+}
+
 const FIJOS = [
   "./",
   "index.html",
   "manifest.webmanifest",
   "assets/css/estilos.css",
-  "assets/js/datos-catalogo.js",
-  "assets/js/datos-planes.js",
-  "assets/js/almacenamiento.js",
-  "assets/js/voz.js",
-  "assets/js/carrusel.js",
-  "assets/js/cronometro.js",
-  "assets/js/tabata.js",
-  "assets/js/app.js",
+  ...scripts,
 ];
 
 const iconos = fs.readdirSync(path.join(RAIZ, "assets/iconos"))

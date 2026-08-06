@@ -309,3 +309,34 @@ local, midiendo que la mejora existe.
 4. **Mejorar una etapa puede romper una decision de otra.** Al dejar de
    emborronar, el destrozo del flash quedo a la vista y hubo que rehacer de
    que tablero sale cada tarjeta.
+
+---
+
+## FASE 14: v10 - lo que salio de entrenar de verdad
+
+**Objetivo:** las cinco cosas que Anderson trajo despues de usar la app en el
+gimnasio. Ninguna se ve programando.
+
+### Entregables
+- [x] Las 55 fotos revisadas una a una (`herramientas/revisar-fotos.py`)
+- [x] Cuatro fotos cambiadas por no corresponder; dos `fotosOk` corregidos
+- [x] El aviso del entrenador va ANTES del carrusel (caso «SIN SALTO»)
+- [x] Descanso entre series configurable (15 s a 5 min, de 15 en 15)
+- [x] Cerrar un dia aunque falten ejercicios, con reinicio semanal automatico
+- [x] La lista del dia partida en «te faltan» y «ya hiciste»
+- [x] `datos-alternativas.js` — alternativas para cuando la maquina esta ocupada
+- [x] `generar-sw.js` lee los scripts del propio index.html
+- [x] 19 casos de regresion (eran 14)
+
+### Lecciones
+1. **Hay fallos que solo aparecen usando la cosa.** Ninguna de las cinco sale
+   de leer el codigo: salen de estar en el gimnasio con la maquina ocupada y
+   17 ejercicios en la lista.
+2. **Una foto puede corresponder a la tarjeta y aun asi enseñar lo que no
+   debes hacer.** Con `SIN SALTO` la respuesta no era cambiar la foto: era
+   poner el aviso donde se lee a tiempo.
+3. **Las listas escritas a mano se desincronizan, y esta ya iba por la
+   segunda vez.** La de scripts de `generar-sw.js` ahora se lee del HTML.
+4. **Una funcionalidad nueva no debe traer datos sin verificar.** Las
+   alternativas se limitaron al catalogo existente: cero imagenes nuevas que
+   revisar, y cada alternativa ya venia con su ficha comprobada.

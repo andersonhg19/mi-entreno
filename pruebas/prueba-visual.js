@@ -156,7 +156,13 @@ async function abrir(page, base, hash, espera = 500) {
 (async () => {
   const D = datos();
   fs.mkdirSync(CAPTURAS, { recursive: true });
-  for (const f of fs.readdirSync(CAPTURAS)) fs.unlinkSync(path.join(CAPTURAS, f));
+  /* Solo se borran las capturas de esta prueba. Aquí dentro también deja
+     hojas `herramientas/revisar-fotos.py`, en su propia carpeta, y borrar
+     una carpeta con unlink revienta. */
+  for (const f of fs.readdirSync(CAPTURAS)) {
+    const p = path.join(CAPTURAS, f);
+    if (fs.statSync(p).isFile()) fs.unlinkSync(p);
+  }
 
   const servidor = await arrancarServidor();
   const navegador = await chromium.launch();

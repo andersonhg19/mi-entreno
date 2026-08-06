@@ -1,7 +1,7 @@
 ﻿# Mi Entreno — Bitácora de Desarrollo
 
-## Estado Actual: v9 lista en local (v8 es la publicada)
-## Última actualización: 2026-08-05
+## Estado Actual: v10 publicada en GitHub Pages
+## Última actualización: 2026-08-06
 
 ---
 
@@ -826,3 +826,97 @@ lo resuelve.
 lienzo es lo que Anderson amplía, y no puede encoger sin querer—, y
 `prueba-regresiones.js` sabe que son seis las que vienen del tablero de
 Sharid. Las seis suites, en verde.
+
+---
+
+### 2026-08-06 - v10: lo que salió de entrenar de verdad
+
+Anderson estrenó la app en el gimnasio y volvió con cinco cosas. Todas son
+del tipo que no se ve programando: solo aparecen entrenando.
+
+#### 1. Las fotos que no corresponden — revisadas una a una
+
+*«me ha pasado mucho que no tienen nada que ver»*. Se montó
+`herramientas/revisar-fotos.py`, que pone la ficha del gimnasio al lado de
+sus dos fotos, y se revisaron **las 55**. No hay medida automática que valga
+aquí: saber si una foto es ese ejercicio es entender la imagen.
+
+Cuatro estaban sencillamente mal y se cambiaron:
+
+| Ejercicio | Qué mostraba | Ahora |
+|-----------|--------------|-------|
+| `aductor-banda` | un señor **de pie sin hacer nada** | elevación lateral de pierna |
+| `apertura-trx` | flexiones con mancuernas en el suelo | aperturas con mancuerna |
+| `trx-abductor` | zancada caminando con pesa rusa | máquina abductora |
+| `trx-sentadilla-profunda` | sentadilla a **una** pierna | sentadilla con apoyo |
+
+Y dos que **no** se tocaron, aunque chocan: `salto-cajon` y
+`sentadilla-dinamica` enseñan el salto. La tarjeta también lo enseña —el
+salto es el ejercicio— y lo que cambia es la adaptación que escribió el
+entrenador a mano: **SIN SALTO**. Falsear la foto habría sido peor. Lo que
+se hizo es mover ese aviso **antes del carrusel**: si se lee después de las
+imágenes, se lee tarde.
+
+De paso, dos que estaban marcadas como «parecidas» y en realidad son el
+ejercicio exacto (`predicador-maquina`, `sentadilla-mancuerna`) pasan a
+`fotosOk: true`. Quedan 18 con rótulo de «parecida», antes eran 20.
+
+#### 2. Descanso configurable
+
+Estaba fijo en los 60 s del entrenador. Ahora se ajusta de 15 en 15 s entre
+15 s y 5 minutos, y el ajuste manda en los tres sitios: el resumen de arriba,
+el texto del botón y el temporizador. La nota recuerda qué puso el entrenador.
+
+#### 3. Dar un día por terminado aunque falten ejercicios
+
+Pasa constantemente: una máquina ocupada, se acabó el tiempo. Botón para
+cerrar el día, y en la semana aparece con ✓, la etiqueta **ENTRENADO** y un
+resumen «2 de 5 días entrenados esta semana».
+
+**Se reinicia solo cada lunes** sin tareas de fondo —que en una app sin
+servidor no existen— ni depender de abrirla ese día: lo marcado se guarda
+bajo la clave de la semana en curso, así que el lunes la clave es otra y la
+cuenta empieza limpia.
+
+#### 4. La lista del día, partida en dos
+
+Con 17 ejercicios el lunes, buscar los que faltan entre los hechos obliga a
+repasar la lista entera. Ahora hay **«Te faltan 7 ejercicios»** arriba y
+**«Ya hiciste 1 ejercicio»** debajo.
+
+#### 5. Ejercicios alternativos
+
+*«un gran problema de los gym es la cantidad de gente y que ocupan las
+máquinas»*. Cada ejercicio ofrece ahora otros que trabajan lo mismo con otro
+implemento, y **esconde los que ya están en tu rutina de ese día** —ofrecerte
+como recambio algo que vas a hacer igual dentro de un rato no resuelve nada.
+
+Tres decisiones que hacen que esto no sea un adorno:
+
+- **Toda alternativa sale del propio catálogo.** Así ya trae su ficha del
+  gimnasio, sus fotos revisadas y sus pasos, y se abre de un toque. Inventar
+  ejercicios nuevos habría significado 40 imágenes más sin verificar, que es
+  exactamente el error que este proyecto ya cometió una vez.
+- **Otro implemento, no otra máquina.** Si la prensa está ocupada, mandar a
+  otra máquina de pierna no sirve.
+- **Escrita a mano y agrupada por función.** Generarla por grupo muscular
+  habría ofrecido curl femoral como alternativa a la prensa: mismo «Pierna»,
+  músculo contrario.
+
+#### Un fallo propio que cazaron las pruebas
+
+Al mover el aviso de seguridad antes del carrusel, se quitó de
+`instrucciones()` y solo se volvió a poner en la vista de consulta. La prueba
+de humo lo cantó en las 146 pantallas antes de que llegara a ninguna parte.
+
+Y `generar-sw.js` tenía la lista de scripts **escrita a mano**: se
+desincronizó por segunda vez (la primera con `tabata.js`, ahora con
+`datos-alternativas.js`). Un script fuera de esa lista no se precarga, así
+que la app se rompe **sin conexión**, que es justo cuando no se puede
+arreglar. Ahora la lee del propio `index.html`.
+
+**Pruebas nuevas:** 19 casos de regresión (eran 14). Los cuatro añadidos
+cubren el descanso ajustable de punta a punta, el cierre de día con su
+reinicio semanal —moviendo el registro a la semana anterior para comprobar
+que deja de contar—, la división pendientes/hechos, y que las alternativas
+ni lleven a ejercicios inexistentes ni ofrezcan lo que ya está en el día.

@@ -22,7 +22,7 @@ Funciona en cualquier navegador, del computador o del celular.
 - **Android:** abrir en **Chrome** → menú **⋮** → *Instalar aplicación*.
 
 Después de instalarla, ábrela **una vez con WiFi** y navega medio minuto: ahí
-descarga las 125 imágenes. A partir de ahí funciona en el gimnasio sin señal.
+descarga las 165 imágenes. A partir de ahí funciona en el gimnasio sin señal.
 
 Guía completa con capturas de cada paso en
 **[documentación/despliegue-gratuito.md](documentación/despliegue-gratuito.md)**.
@@ -47,10 +47,18 @@ Imprime una dirección para el computador y otra para el celular en la misma WiF
   fotos más en un carrusel. Además: cómo reconocer la máquina, los pasos
   numerados, las advertencias y un enlace a video.
 - Abre siempre en el selector de persona, para que nadie entrene la rutina del otro.
+- **Ejercicios alternativos** en cada ficha, para cuando la máquina está ocupada:
+  trabajan lo mismo con otro implemento, y se esconden los que ya están en tu
+  rutina de ese día.
+- El día se puede **dar por terminado aunque falten ejercicios**; se ve en la
+  semana y la cuenta vuelve a cero cada lunes.
+- La lista del día separa **lo que te falta** de **lo que ya hiciste**.
+- El **descanso entre series** se ajusta desde Ajustes (15 s a 5 minutos).
 - **Tabata**: temporizador por intervalos aparte, con preajustes, cuenta atrás
   grande, aviso por voz, pitido y vibración, y la pantalla que no se apaga.
 - Botón **«Léemelo en voz alta»** que dicta todo el ejercicio.
-- Contador de series con **descanso de 1 minuto** que se canta y vibra al acabar.
+- Contador de series con **descanso** que se canta y vibra al acabar (1 minuto por
+  defecto, ajustable).
 - Guarda el peso que usaste y lo recuerda la semana siguiente.
 - Tamaños de texto **estándar**; **A− / A+** (90 %–180 %) y tres niveles de
   contraste para quien los quiera. La lupa del iPhone funciona encima.
@@ -74,9 +82,9 @@ npm run qa     # completo, abre Chromium de verdad
 |--------|---------------|
 | `validar-datos.js` | Datos, imágenes, referencias y precarga del service worker |
 | `prueba-completitud.js` | Compara la rutina ejercicio a ejercicio contra las planillas; valida imágenes, avisos y arranque |
-| `prueba-humo.js` | Renderiza las 145 pantallas de ambas rutinas (jsdom) |
+| `prueba-humo.js` | Renderiza las 146 pantallas de ambas rutinas (jsdom) |
 | `prueba-visual.js` | Navegador real: qué se ve, desbordes, carrusel, temporizador, filtros, temas, letra al máximo. Capturas en `pruebas/capturas/` |
-| `prueba-regresiones.js` | Un caso por cada bug que ya se coló alguna vez: `hidden`, casillas, carrusel, ids, persistencia, temporizador, foco, arranque, 320 px al 180 % |
+| `prueba-regresiones.js` | 19 casos: un bug ya visto cada uno (`hidden`, casillas, carrusel, ids, foco, arranque, 320 px al 180 %) más lo que se añadió después (descanso ajustable, cierre de día con reinicio semanal, pendientes/hechos, alternativas, de qué tablero salió cada ficha) |
 | `prueba-pwa.js` | Manifest, **modo sin conexión**, contraste **por barrido** (todo texto, 7 pantallas × 3 temas, AAA), accesibilidad, persistencia, y los 114 ejercicios comprobando que cada imagen es la suya |
 
 ---
@@ -107,7 +115,7 @@ Después de cambiar algo:
 | [accesibilidad-baja-vision.md](documentación/accesibilidad-baja-vision.md) | Las 12 decisiones de accesibilidad y por qué |
 | [despliegue-gratuito.md](documentación/despliegue-gratuito.md) | Cómo publicarla e instalarla, y qué se descartó |
 | [puntos-futuros.md](documentación/puntos-futuros.md) | Backlog, incluido cómo integrarla a Oh Churus |
-| [seguimiento/plan-maestro.md](seguimiento/plan-maestro.md) | Las 11 fases con entregables |
+| [seguimiento/plan-maestro.md](seguimiento/plan-maestro.md) | Las 14 fases con entregables |
 | [seguimiento/bitacora.md](seguimiento/bitacora.md) | Registro cronológico y decisiones |
 
 ---
@@ -121,4 +129,5 @@ Después de cambiar algo:
   una guardia que comprueba que el modelo no se inventó nada — ver
   `documentación/imagenes-fichas.md` y `herramientas/banco/`)
 - Fotos complementarias: [free-exercise-db](https://github.com/yuhonas/free-exercise-db)
-  (dominio público), solo las 35 que se verificó que corresponden
+  (dominio público). Las 55 se revisaron una a una mirándolas al lado de su
+  ficha: 37 son el ejercicio exacto y 18 van rotuladas «⚠ Foto parecida»

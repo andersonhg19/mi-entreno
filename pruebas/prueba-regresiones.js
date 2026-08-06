@@ -510,6 +510,187 @@ async function casoOrigenFichas(page, base) {
             `(${FICHAS_DE_SHARID.length} del de Sharid, el resto del de Anderson)`);
 }
 
+/* ------------------------------------------------------------------
+   14. El descanso entre series se puede cambiar y manda el ajuste.
+   ------------------------------------------------------------------ */
+async function casoDescansoAjustable(page) {
+  await ir(page, "#/p/anderson/d/1/e/0", 600);
+  const antes = await page.evaluate(() =>
+    document.getElementById("btnSerieHecha").textContent.match(/(\d+) s/)[1]);
+
+  await page.evaluate(() => {
+    document.getElementById("btnAjustes").click();
+    document.getElementById("btnDescansoMas").click();
+    document.getElementById("btnDescansoMas").click();
+  });
+  await page.waitForTimeout(400);
+
+  const estado = await page.evaluate(() => ({
+    ajuste: document.getElementById("valorDescanso").textContent.trim(),
+    boton: (document.getElementById("btnSerieHecha") || {}).textContent || ""
+  }));
+  const esperado = Number(antes) + 30;
+  if (estado.ajuste !== esperado + " s") {
+    fallo("descanso ajustable", `el ajuste dice "${estado.ajuste}" y deberia decir "${esperado} s"`);
+  } else if (!estado.boton.includes(esperado + " s")) {
+    fallo("descanso ajustable", `el boton sigue diciendo "${estado.boton.trim()}"`);
+  } else {
+    /* Y que el temporizador arranque de verdad con ese tiempo */
+    await page.evaluate(() => {
+      document.getElementById("btnAjustes").click();
+      document.getElementById("btnSerieHecha").click();
+    });
+    await page.waitForTimeout(400);
+    const n = await page.evaluate(() =>
+      Number(document.getElementById("temporizadorNumero").textContent));
+    if (Math.abs(n - esperado) > 2) {
+      fallo("descanso ajustable", `el temporizador arranca en ${n} s y deberia en ${esperado} s`);
+    } else {
+      pasa(`el descanso se ajusta (${antes} s -> ${esperado} s) y el temporizador lo usa`);
+    }
+    await page.evaluate(() => document.getElementById("btnPararTiempo").click());
+  }
+  await page.evaluate(() => localStorage.clear());
+}
+
+/* ------------------------------------------------------------------
+   15. Dar un día por terminado aunque falten ejercicios, y que se vea
+       en la semana. Se reinicia solo cada lunes.
+   ------------------------------------------------------------------ */
+async function casoDiaTerminado(page) {
+  await ir(page, "#/p/anderson/d/2", 500);
+  const hayBoton = await page.evaluate(() => !!document.getElementById("btnDiaListo"));
+  if (!hayBoton) { fallo("dia terminado", "no existe el boton para cerrar el dia"); return; }
+
+  await page.evaluate(() => document.getElementById("btnDiaListo").click());
+  await page.waitForTimeout(300);
+
+  /* Se ve en la semana, y no solo por color */
+  await ir(page, "#/p/anderson", 400);
+  const semana = await page.evaluate(() => {
+    const b = [...document.querySelectorAll(".dia")].find(x => /Martes/.test(x.textContent));
+    return {
+      marcado: b && b.getAttribute("data-listo") === "si",
+      texto: b ? b.textContent : "",
+      resumen: (document.querySelector(".resumen-semana") || {}).textContent || ""
+    };
+  });
+  if (!semana.marcado) fallo("dia terminado", "el dia cerrado no se marca en la semana");
+  else if (!/ENTRENADO/.test(semana.texto)) {
+    fallo("dia terminado", "en la semana solo se distingue por color, sin texto");
+  } else if (!/1 de \d+/.test(semana.resumen)) {
+    fallo("dia terminado", `el resumen de la semana dice "${semana.resumen.trim()}"`);
+  } else {
+    pasa("un dia se puede cerrar sin acabarlo y se ve en la semana, con texto");
+  }
+
+  /* Se guarda bajo la semana en curso: la de la semana pasada no cuenta */
+  const reinicio = await page.evaluate(() => {
+    const d = JSON.parse(localStorage.getItem("mi-entreno-v1") || "{}");
+    const claves = Object.keys(d.semanas || {});
+    if (claves.length !== 1) return { error: `hay ${claves.length} semanas guardadas` };
+    /* Se mueve el registro a la semana anterior y debe dejar de contar */
+    const vieja = claves[0].replace(/(\d{4})-(\d{2})-(\d{2})$/, (m, a, mes, dia) => {
+      const f = new Date(Number(a), Number(mes) - 1, Number(dia) - 7);
+      return f.getFullYear() + "-" + String(f.getMonth() + 1).padStart(2, "0") +
+             "-" + String(f.getDate()).padStart(2, "0");
+    });
+    d.semanas = { [vieja]: d.semanas[claves[0]] };
+    localStorage.setItem("mi-entreno-v1", JSON.stringify(d));
+    return { ok: true };
+  });
+  if (reinicio.error) { fallo("dia terminado", reinicio.error); }
+  else {
+    await ir(page, "#/", 200);
+    await ir(page, "#/p/anderson", 400);
+    const sigue = await page.evaluate(() => {
+      const b = [...document.querySelectorAll(".dia")].find(x => /Martes/.test(x.textContent));
+      return b && b.getAttribute("data-listo") === "si";
+    });
+    if (sigue) fallo("dia terminado", "lo de la semana pasada sigue contando; deberia reiniciarse");
+    else pasa("lo marcado la semana pasada ya no cuenta: se reinicia cada lunes");
+  }
+  await page.evaluate(() => localStorage.clear());
+}
+
+/* ------------------------------------------------------------------
+   16. La lista del día separa lo que falta de lo que ya se hizo.
+   ------------------------------------------------------------------ */
+async function casoPendientesYHechos(page) {
+  await ir(page, "#/p/anderson/d/2/e/0", 600);
+  await page.evaluate(() => document.getElementById("btnHecho").click());
+  await page.waitForTimeout(400);
+  await ir(page, "#/p/anderson/d/2", 500);
+
+  const r = await page.evaluate(() => {
+    const titulos = [...document.querySelectorAll(".titulo-grupo-lista")].map(t => t.textContent.trim());
+    /* El primer bloque tiene que ser el de pendientes */
+    const nodos = [...document.querySelectorAll("#contenido *")];
+    const iFaltan = nodos.findIndex(n => n.classList && n.classList.contains("titulo-grupo-lista"));
+    const primero = nodos[iFaltan] ? nodos[iFaltan].textContent : "";
+    return {
+      titulos,
+      primero,
+      hechos: document.querySelectorAll('.ejercicio[data-hecho="si"]').length
+    };
+  });
+  if (r.titulos.length !== 2) {
+    fallo("pendientes y hechos", `hay ${r.titulos.length} bloques y deberian ser 2: ${r.titulos.join(" / ")}`);
+  } else if (!/faltan/i.test(r.primero)) {
+    fallo("pendientes y hechos", `arriba va "${r.primero.trim()}"; lo pendiente tiene que ir primero`);
+  } else if (r.hechos !== 1) {
+    fallo("pendientes y hechos", `hay ${r.hechos} marcados como hechos y deberia haber 1`);
+  } else {
+    pasa("el dia separa lo que falta de lo que ya hiciste, y lo pendiente va arriba");
+  }
+  await page.evaluate(() => localStorage.clear());
+}
+
+/* ------------------------------------------------------------------
+   17. Alternativas cuando la máquina está ocupada, sin ofrecer
+       ejercicios que ya están en la rutina de ese mismo día.
+   ------------------------------------------------------------------ */
+async function casoAlternativas(page) {
+  await ir(page, "#/p/anderson/d/2/e/0", 600);   /* martes: peck-deck */
+
+  const r = await page.evaluate(() => {
+    const caja = document.querySelector(".alternativas");
+    if (!caja) return { falta: true };
+    const claves = [...caja.querySelectorAll("[data-ir]")]
+      .map(b => b.getAttribute("data-ir").split("/x/")[1]);
+    const dia = (window.PLANES.anderson.dias.find(d => d.n === 2) || {}).ejercicios || [];
+    return {
+      claves,
+      chocan: claves.filter(k => dia.indexOf(k) !== -1),
+      propuestas: (window.ALTERNATIVAS["peck-deck"] || []),
+      enElDia: dia
+    };
+  });
+
+  if (r.falta) { fallo("alternativas", "no aparece el bloque de alternativas"); }
+  else if (!r.claves.length) { fallo("alternativas", "el bloque esta vacio"); }
+  else if (r.chocan.length) {
+    fallo("alternativas", `ofrece ${r.chocan.join(", ")}, que ya estan en la rutina de ese dia`);
+  } else {
+    /* Y que el filtro no sea casualidad: alguna de las propuestas SÍ
+       estaba en el día y por eso no aparece. */
+    const filtradas = r.propuestas.filter(k => r.enElDia.indexOf(k) !== -1);
+    if (!filtradas.length) {
+      fallo("alternativas", "este caso no prueba el filtro: ninguna propuesta estaba en el dia");
+    } else {
+      pasa(`alternativas correctas: ${r.claves.length} ofrecidas, ` +
+           `${filtradas.length} escondidas por estar ya en la rutina del dia`);
+    }
+  }
+
+  /* Todas tienen que llevar a un ejercicio que existe */
+  const rotas = await page.evaluate(() =>
+    [...document.querySelectorAll(".alternativas [data-ir]")]
+      .map(b => b.getAttribute("data-ir").split("/x/")[1])
+      .filter(k => !window.CATALOGO[k]));
+  if (rotas.length) fallo("alternativas", `llevan a ejercicios inexistentes: ${rotas.join(", ")}`);
+}
+
 /* ------------------------------------------------------------------ */
 async function main() {
   const servidor = await arrancarServidor();
@@ -534,6 +715,10 @@ async function main() {
     await casoAlt(page);
     await casoFoco(page);
     await casoOrigenFichas(page, base);
+    await casoDescansoAjustable(page);
+    await casoDiaTerminado(page);
+    await casoPendientesYHechos(page);
+    await casoAlternativas(page);
     await casoArranque(page, base);
     await casoEstrecho(page, base);
   } finally {

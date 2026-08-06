@@ -42,7 +42,7 @@ sobre cualquier otra decisión de diseño.
 ```
 index.html · manifest.webmanifest · sw.js · servidor.js
 assets/css/estilos.css
-assets/js/  datos-catalogo.js  datos-planes.js
+assets/js/  datos-catalogo.js  datos-planes.js  datos-alternativas.js
             almacenamiento.js  voz.js  carrusel.js  cronometro.js  app.js
 assets/img/ejercicios/<clave>-ficha.jpg  (ficha del tablero, SIEMPRE)
                       <clave>-0.jpg      (foto real inicio, solo si fotosOk)
@@ -164,8 +164,34 @@ a su propio primer paso (`herramientas/banco/`). Enfocar después de
 Real-ESRGAN solo devuelve el grano. No lo vuelvas a intentar sin pasar el
 banco antes.
 
+## Ejercicios alternativos
+
+`datos-alternativas.js` da, para cada ejercicio, otros que trabajan lo mismo
+**con otro implemento**. Es para cuando la máquina está ocupada, que en el
+gimnasio pasa constantemente.
+
+Tres reglas, y `validar-datos.js` comprueba las tres:
+
+1. **Toda alternativa es una clave del propio catálogo.** Así ya trae ficha,
+   fotos revisadas y pasos, y se abre de un toque. Nada de inventar ejercicios
+   sin imágenes.
+2. **Otro implemento.** Si la prensa está ocupada no sirve mandar a otra
+   máquina. El aviso salta cuando dos comparten un puesto fijo (máquina,
+   prensa o polea).
+3. **Misma zona del cuerpo.** Cruzar de tren inferior a superior es error, no
+   aviso. Dentro de «Pierna» hay cuádriceps, femoral y abductores, que **no**
+   se sustituyen entre sí: por eso la tabla está escrita a mano y agrupada por
+   función, no generada por grupo muscular.
+
+La app esconde las alternativas que ya están en la rutina de ese día
+(`alternativasDe` recibe `d.ejercicios`). En modo consulta no hay día, así que
+salen todas.
+
 ## Al agregar un ejercicio
 
+0. Darle alternativas en `datos-alternativas.js` **y** añadirlo como
+   alternativa de los que ya existen y lo merezcan. Sin esto no pasa
+   `validar-datos.js`.
 1. Añadirlo a `datos-catalogo.js` con los 7 campos obligatorios:
    `nombre`, `grupo`, `equipo`, `fotosOk`, `donde`, `pasos`, `buscar`
    (más `ojo` si hay advertencia).

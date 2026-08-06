@@ -19,7 +19,7 @@ window.CATALOGO = {
 
   /* ---------- PIERNA ---------- */
   "sentadilla-mancuerna": {
-    nombre: "Sentadilla con mancuernas", grupo: "Pierna", equipo: "Dos mancuernas", fotosOk: false,
+    nombre: "Sentadilla con mancuernas", grupo: "Pierna", equipo: "Dos mancuernas", fotosOk: true,
     donde: "No necesitas máquina. Solo un espacio libre y dos mancuernas del mismo peso.",
     pasos: [
       "Párate con los pies separados al ancho de los hombros.",
@@ -471,7 +471,7 @@ window.CATALOGO = {
     buscar: "curl alternado con mancuernas"
   },
   "predicador-maquina": {
-    nombre: "Predicador en máquina (banco Scott)", grupo: "Bíceps", equipo: "Máquina o banco predicador", fotosOk: false,
+    nombre: "Predicador en máquina (banco Scott)", grupo: "Bíceps", equipo: "Máquina o banco predicador", fotosOk: true,
     donde: "Banco con una tabla inclinada donde se apoyan los brazos por encima del codo.",
     pasos: [
       "Siéntate y apoya la parte de atrás de los brazos en la tabla inclinada.",

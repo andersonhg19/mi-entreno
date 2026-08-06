@@ -53,6 +53,18 @@
   </div>
 
   <div class="grupo-ajuste">
+    <h2 class="titulo-ajuste">Descanso entre series</h2>
+    <div class="fila-botones">
+      <button class="btn-ajuste" id="btnDescansoMenos" aria-label="Menos tiempo de descanso">− 15 s</button>
+      <output class="valor-ajuste" id="valorDescanso" aria-live="polite">60 s</output>
+      <button class="btn-ajuste" id="btnDescansoMas" aria-label="Más tiempo de descanso">+ 15 s</button>
+    </div>
+    <p class="nota-ajuste" id="notaDescanso">
+      Es el tiempo que arranca solo al tocar «Serie hecha».
+    </p>
+  </div>
+
+  <div class="grupo-ajuste">
     <h2 class="titulo-ajuste">Voz</h2>
     <label class="interruptor">
       <input type="checkbox" id="chkVozAuto">
@@ -115,6 +127,7 @@
 
 <script src="assets/js/datos-catalogo.js"></script>
 <script src="assets/js/datos-planes.js"></script>
+<script src="assets/js/datos-alternativas.js"></script>
 <script src="assets/js/almacenamiento.js"></script>
 <script src="assets/js/voz.js"></script>
 <script src="assets/js/carrusel.js"></script>
