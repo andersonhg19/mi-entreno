@@ -1,6 +1,6 @@
 # Mi Entreno — Plan Maestro de Desarrollo
 
-## Estado General: Completado (v7, publicada)
+## Estado General: Completado (v11, publicada)
 ## Fecha inicio: 2026-08-04
 ## Fecha verificación: 2026-08-04
 ## Tecnologías: HTML5, CSS3, JavaScript ES5+, PWA (Service Worker, Web App Manifest), Web Speech API
@@ -340,3 +340,41 @@ gimnasio. Ninguna se ve programando.
 4. **Una funcionalidad nueva no debe traer datos sin verificar.** Las
    alternativas se limitaron al catalogo existente: cero imagenes nuevas que
    revisar, y cada alternativa ya venia con su ficha comprobada.
+
+---
+
+## FASE 15: v11 - fotos que corresponden de verdad, y alternativas compatibles
+
+**Objetivo:** Anderson revisó la v10 y las fotos «seguían estando pésimo», y
+las alternativas necesitaban un criterio real, no «tren superior».
+
+### Entregables
+- [x] Se comprobó que NO existe fuente libre con TRX, BOSU ni banda
+      (free-exercise-db 873 ejercicios, wger 360 imagenes)
+- [x] `fotosOk` (booleano) -> `fotos` con tres estados: 41 exactas,
+      5 parecidas, **9 solo-ficha**
+- [x] Tres emparejamientos corregidos a su ejercicio EXACTO (leg-curl,
+      extension-mancuerna, levantamiento-atras-polea)
+- [x] El carrusel admite 1 o 3 laminas; sin flechas cuando solo hay una
+- [x] `window.PATRONES` — patron de movimiento de los 55
+- [x] Alternativas en DOS niveles: `directas` (mismo patron) y `mismoMusculo`
+- [x] La barra toma el color del perfil (idea de Samy), con el nombre al lado
+- [x] 22 casos de regresion (eran 19)
+
+### Lecciones
+1. **Cambiar un dato malo por otro dato malo no es arreglarlo.** En la v10 se
+   sustituyeron cuatro fotos por otras que tampoco eran el ejercicio. El
+   usuario lo vio a la primera.
+2. **Si el modelo de datos no sabe expresar «no hay», el problema se repite.**
+   `fotosOk` era booleano: obligaba a elegir entre una foto mala y otra foto
+   mala. Con `solo-ficha` el problema desaparece.
+3. **Una etiqueta de advertencia no arregla un dato malo, solo lo documenta.**
+   Rotular «parecida» algo que no es el ejercicio es información falsa con
+   nota al pie.
+4. **Antes de elegir la menos mala, comprobar si existe la buena.** Bastaron
+   dos consultas para saber que no hay TRX en ninguna base libre; se llevaban
+   dos rondas eligiendo la menos mala.
+5. **Clasificar por lo que importa, no por lo que es fácil.** «Tren superior»
+   es fácil de calcular y no significa nada. El patron de movimiento cuesta
+   escribirlo a mano para 55 ejercicios y es lo que hace que la alternativa
+   sirva.

@@ -43,13 +43,18 @@ Imprime una dirección para el computador y otra para el celular en la misma WiF
 - **Lista completa** de todos tus ejercicios, agrupada por músculo y con
   **filtro por día**: para ver de un vistazo qué te asignaron y cuándo.
 - Cada ejercicio trae **la ficha original del tablero de Life Gym** (la misma
-  que te dieron en papel), y cuando la foto real corresponde de verdad, dos
-  fotos más en un carrusel. Además: cómo reconocer la máquina, los pasos
-  numerados, las advertencias y un enlace a video.
+  que te dieron en papel) y, **solo si corresponden de verdad**, dos fotos más
+  en un carrusel. Los nueve de TRX, BOSU y banda se quedan solo con la ficha:
+  no existe foto libre que sea ese movimiento, y una que no lo es confunde más
+  que ayuda. Además: cómo reconocer la máquina, los pasos numerados, las
+  advertencias y un enlace a video.
 - Abre siempre en el selector de persona, para que nadie entrene la rutina del otro.
-- **Ejercicios alternativos** en cada ficha, para cuando la máquina está ocupada:
-  trabajan lo mismo con otro implemento, y se esconden los que ya están en tu
-  rutina de ese día.
+- **Ejercicios alternativos** en cada ficha, para cuando la máquina está
+  ocupada. En dos niveles: *cambio directo* (mismo patrón de movimiento, otro
+  aparato) y *trabaja el mismo músculo* (movimiento distinto). Se esconden los
+  que ya están en tu rutina de ese día.
+- La barra de arriba lleva **el color de quien entrena**, para saber de un
+  vistazo en qué rutina estás.
 - El día se puede **dar por terminado aunque falten ejercicios**; se ve en la
   semana y la cuenta vuelve a cero cada lunes.
 - La lista del día separa **lo que te falta** de **lo que ya hiciste**.
@@ -129,5 +134,6 @@ Después de cambiar algo:
   una guardia que comprueba que el modelo no se inventó nada — ver
   `documentación/imagenes-fichas.md` y `herramientas/banco/`)
 - Fotos complementarias: [free-exercise-db](https://github.com/yuhonas/free-exercise-db)
-  (dominio público). Las 55 se revisaron una a una mirándolas al lado de su
-  ficha: 37 son el ejercicio exacto y 18 van rotuladas «⚠ Foto parecida»
+  (dominio público). Las 55 se revisaron una a una al lado de su ficha:
+  41 son el ejercicio exacto, 5 van rotuladas «⚠ Foto parecida» y 9 se quedan
+  **solo con la ficha** porque no existe foto libre de ese movimiento

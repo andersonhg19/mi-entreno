@@ -38,7 +38,8 @@ const CAT = ctx.CATALOGO, PLANES = ctx.PLANES, COLORES = ctx.COLORES_DIA;
 
 /* --- 3. Integridad del catálogo --- */
 const DIR_IMG = path.join(ROOT, "assets/img/ejercicios");
-const campos = ["nombre", "grupo", "equipo", "fotosOk", "donde", "pasos", "buscar"];
+const campos = ["nombre", "grupo", "equipo", "fotos", "donde", "pasos", "buscar"];
+const FOTOS_VALIDOS = ["exactas", "parecidas", "solo-ficha"];
 const GRUPOS = ["Pierna", "Pantorrilla", "Espalda", "Lumbar", "Pecho", "Tríceps",
                 "Hombros", "Bíceps", "Antebrazos", "Abdomen", "Glúteos"];
 const esperadas = new Set();
@@ -54,12 +55,22 @@ for (const [k, e] of Object.entries(CAT)) {
   esperadas.add(ficha);
   if (!fs.existsSync(path.join(DIR_IMG, ficha))) errores.push(`FALTA la ficha: ${ficha}`);
 
-  /* Todas las fotos reales existen. `fotosOk` solo dice si son el ejercicio
-     exacto o un movimiento parecido; el rótulo de la lámina lo avisa. */
+  if (!FOTOS_VALIDOS.includes(e.fotos)) {
+    errores.push(`CATALOGO ${k}: fotos="${e.fotos}" no es uno de ${FOTOS_VALIDOS.join(", ")}`);
+  }
+
+  /* Las fotos existen SI el ejercicio dice tenerlas. Y si dice que no las
+     tiene, no pueden estar en la carpeta: si sobran, alguien las repuso sin
+     querer y volverían a mostrarse fotos que no son el ejercicio. */
   for (const n of [0, 1]) {
     const foto = `${k}-${n}.jpg`;
-    esperadas.add(foto);
-    if (!fs.existsSync(path.join(DIR_IMG, foto))) errores.push(`FALTA la foto: ${foto}`);
+    const hay = fs.existsSync(path.join(DIR_IMG, foto));
+    if (e.fotos === "solo-ficha") {
+      if (hay) errores.push(`${k} dice "solo-ficha" pero ${foto} sigue en la carpeta`);
+    } else {
+      esperadas.add(foto);
+      if (!hay) errores.push(`FALTA la foto: ${foto}`);
+    }
   }
 }
 
@@ -150,48 +161,68 @@ for (const m of cron.matchAll(/getElementById\("([^"]+)"\)/g)) {
    Una clave mal escrita aquí dejaría un botón que no lleva a ninguna parte. */
 {
   const ALT = ctx.ALTERNATIVAS || {};
+  const PAT = ctx.PATRONES || {};
   const claves = Object.keys(CAT);
-  const ZONAS = {
-    "Pierna": "tren inferior", "Pantorrilla": "tren inferior", "Glúteos": "tren inferior",
-    "Lumbar": "tren inferior",
-    "Pecho": "tren superior", "Espalda": "tren superior", "Hombros": "tren superior",
-    "Tríceps": "tren superior", "Bíceps": "tren superior", "Antebrazos": "tren superior",
-    "Abdomen": "core"
-  };
-  const zona = g => ZONAS[g] || g;
-  for (const [clave, lista] of Object.entries(ALT)) {
+
+  /* Todo ejercicio necesita patrón: es lo que decide qué sustituye a qué */
+  for (const k of claves) {
+    if (!PAT[k]) errores.push(`PATRONES: falta el patron de movimiento de "${k}"`);
+  }
+  for (const k of Object.keys(PAT)) {
+    if (!CAT[k]) errores.push(`PATRONES: "${k}" no existe en el catalogo`);
+  }
+  for (const [clave, alt] of Object.entries(ALT)) {
     if (!CAT[clave]) {
       errores.push(`ALTERNATIVAS: "${clave}" no existe en el catalogo`);
       continue;
     }
-    if (!Array.isArray(lista) || !lista.length) {
-      errores.push(`ALTERNATIVAS de ${clave}: la lista esta vacia`);
+    if (!alt || !Array.isArray(alt.directas) || !Array.isArray(alt.mismoMusculo)) {
+      errores.push(`ALTERNATIVAS de ${clave}: faltan las listas "directas" y "mismoMusculo"`);
       continue;
     }
-    const vistas = new Set();
-    for (const alt of lista) {
-      if (!CAT[alt]) { errores.push(`ALTERNATIVAS de ${clave}: "${alt}" no existe en el catalogo`); continue; }
-      if (alt === clave) errores.push(`ALTERNATIVAS de ${clave}: se ofrece a si mismo`);
-      if (vistas.has(alt)) errores.push(`ALTERNATIVAS de ${clave}: "${alt}" esta repetido`);
-      vistas.add(alt);
-      /* Que no cruce de zona del cuerpo. Comparar el grupo exacto daría
-         quince avisos legítimos —ofrecer peso muerto para el lumbar, o
-         patada de glúteo para el abductor, es correcto—, y un aviso que
-         siempre salta deja de leerse. Lo que sí sería un error de verdad
-         es mandar a hacer pecho cuando toca pierna. */
-      if (zona(CAT[alt].grupo) !== zona(CAT[clave].grupo)) {
-        errores.push(`ALTERNATIVAS de ${clave} (${CAT[clave].grupo}, ${zona(CAT[clave].grupo)}): ` +
-                     `"${alt}" es de ${CAT[alt].grupo} (${zona(CAT[alt].grupo)}) — otra zona del cuerpo`);
-      }
-      /* La gracia es cambiar de aparato. Solo importa cuando el original
-         ocupa un puesto fijo: una máquina o una torre de poleas. Que dos
-         ejercicios compartan mancuernas o colchoneta no es problema,
-         porque de eso hay varios. */
-      if (CAT[alt].equipo === CAT[clave].equipo && /máquina|prensa|polea/i.test(CAT[clave].equipo)) {
-        avisos.push(`ALTERNATIVAS de ${clave}: "${alt}" usa el mismo puesto ` +
-                    `(${CAT[alt].equipo}); no sirve si está ocupado`);
-      }
+    if (!alt.directas.length && !alt.mismoMusculo.length) {
+      errores.push(`ALTERNATIVAS de ${clave}: no ofrece ninguna alternativa`);
     }
+
+    const vistas = new Set();
+    const revisar = (nivel, lista) => {
+      for (const a of lista) {
+        if (!CAT[a]) { errores.push(`ALTERNATIVAS de ${clave}: "${a}" no existe en el catalogo`); continue; }
+        if (a === clave) errores.push(`ALTERNATIVAS de ${clave}: se ofrece a si mismo`);
+        if (vistas.has(a)) errores.push(`ALTERNATIVAS de ${clave}: "${a}" esta repetido`);
+        vistas.add(a);
+
+        if (nivel === "directas") {
+          /* Una directa tiene que ser el MISMO patrón de movimiento. Es lo
+             que hace que sea un cambio de verdad y no «algo del mismo
+             músculo»: un curl femoral no sustituye a una prensa aunque los
+             dos sean «Pierna». */
+          if (PAT[a] !== PAT[clave]) {
+            errores.push(`ALTERNATIVAS de ${clave}: "${a}" es patron "${PAT[a]}" ` +
+                         `y el original es "${PAT[clave]}"; eso no es un cambio directo`);
+          }
+          /* Y tiene que cambiar de aparato: si comparten puesto fijo, no
+             resuelve el problema de que esté ocupado. */
+          if (CAT[a].equipo === CAT[clave].equipo && /máquina|prensa|polea/i.test(CAT[clave].equipo)) {
+            errores.push(`ALTERNATIVAS de ${clave}: "${a}" usa el mismo puesto ` +
+                         `(${CAT[a].equipo}); como cambio directo no sirve`);
+          }
+        } else {
+          /* Las de segundo nivel comparten músculo pero NO patrón: si
+             coinciden en los dos, es una directa mal colocada. */
+          if (CAT[a].grupo !== CAT[clave].grupo) {
+            errores.push(`ALTERNATIVAS de ${clave} (${CAT[clave].grupo}): ` +
+                         `"${a}" es de ${CAT[a].grupo}; en "mismoMusculo" tienen que coincidir`);
+          }
+          if (PAT[a] === PAT[clave]) {
+            avisos.push(`ALTERNATIVAS de ${clave}: "${a}" comparte patron; ` +
+                        `deberia ir en "directas"`);
+          }
+        }
+      }
+    };
+    revisar("directas", alt.directas);
+    revisar("mismoMusculo", alt.mismoMusculo);
   }
   const sinAlternativas = claves.filter(k => !ALT[k]);
   if (sinAlternativas.length) {
@@ -263,8 +294,10 @@ for (const m of cron.matchAll(/getElementById\("([^"]+)"\)/g)) {
 /* --- 8. Resumen --- */
 console.log(`Ejercicios en catalogo : ${Object.keys(CAT).length}`);
 console.log(`Ejercicios usados      : ${usados.size}`);
-console.log(`Con fotos reales       : ${Object.values(CAT).filter(e => e.fotosOk).length}`);
-console.log(`Solo ficha del gimnasio: ${Object.values(CAT).filter(e => !e.fotosOk).length}`);
+const porFotos = v => Object.values(CAT).filter(e => e.fotos === v).length;
+console.log(`Fotos exactas          : ${porFotos("exactas")}`);
+console.log(`Fotos parecidas        : ${porFotos("parecidas")}`);
+console.log(`Solo ficha del gimnasio: ${porFotos("solo-ficha")}`);
 for (const [, p] of Object.entries(PLANES)) {
   const tot = p.dias.reduce((a, d) => a + d.ejercicios.length, 0);
   console.log(`  ${p.nombre.padEnd(10)} ${tot} ejercicios/semana  ->  ` +

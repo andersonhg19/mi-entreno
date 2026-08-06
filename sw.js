@@ -7,7 +7,7 @@
    teléfonos se actualicen.
    ============================================================ */
 
-var VERSION = "mi-entreno-v10";
+var VERSION = "mi-entreno-v11";
 
 var ARCHIVOS = [
   "./",
@@ -33,17 +33,11 @@ var ARCHIVOS = [
   "assets/img/ejercicios/abductor-0.jpg",
   "assets/img/ejercicios/abductor-1.jpg",
   "assets/img/ejercicios/abductor-ficha.jpg",
-  "assets/img/ejercicios/aductor-banda-0.jpg",
-  "assets/img/ejercicios/aductor-banda-1.jpg",
   "assets/img/ejercicios/aductor-banda-ficha.jpg",
-  "assets/img/ejercicios/apertura-trx-0.jpg",
-  "assets/img/ejercicios/apertura-trx-1.jpg",
   "assets/img/ejercicios/apertura-trx-ficha.jpg",
   "assets/img/ejercicios/banco-triceps-0.jpg",
   "assets/img/ejercicios/banco-triceps-1.jpg",
   "assets/img/ejercicios/banco-triceps-ficha.jpg",
-  "assets/img/ejercicios/biceps-trx-0.jpg",
-  "assets/img/ejercicios/biceps-trx-1.jpg",
   "assets/img/ejercicios/biceps-trx-ficha.jpg",
   "assets/img/ejercicios/curl-barra-0.jpg",
   "assets/img/ejercicios/curl-barra-1.jpg",
@@ -117,8 +111,6 @@ var ARCHIVOS = [
   "assets/img/ejercicios/peso-muerto-saco-0.jpg",
   "assets/img/ejercicios/peso-muerto-saco-1.jpg",
   "assets/img/ejercicios/peso-muerto-saco-ficha.jpg",
-  "assets/img/ejercicios/plancha-bosu-0.jpg",
-  "assets/img/ejercicios/plancha-bosu-1.jpg",
   "assets/img/ejercicios/plancha-bosu-ficha.jpg",
   "assets/img/ejercicios/predicador-maquina-0.jpg",
   "assets/img/ejercicios/predicador-maquina-1.jpg",
@@ -162,14 +154,10 @@ var ARCHIVOS = [
   "assets/img/ejercicios/sentadilla-dinamica-0.jpg",
   "assets/img/ejercicios/sentadilla-dinamica-1.jpg",
   "assets/img/ejercicios/sentadilla-dinamica-ficha.jpg",
-  "assets/img/ejercicios/sentadilla-iso-0.jpg",
-  "assets/img/ejercicios/sentadilla-iso-1.jpg",
   "assets/img/ejercicios/sentadilla-iso-ficha.jpg",
   "assets/img/ejercicios/sentadilla-mancuerna-0.jpg",
   "assets/img/ejercicios/sentadilla-mancuerna-1.jpg",
   "assets/img/ejercicios/sentadilla-mancuerna-ficha.jpg",
-  "assets/img/ejercicios/sentadilla-patada-lateral-0.jpg",
-  "assets/img/ejercicios/sentadilla-patada-lateral-1.jpg",
   "assets/img/ejercicios/sentadilla-patada-lateral-ficha.jpg",
   "assets/img/ejercicios/tijeras-barra-0.jpg",
   "assets/img/ejercicios/tijeras-barra-1.jpg",
@@ -177,20 +165,14 @@ var ARCHIVOS = [
   "assets/img/ejercicios/triceps-copa-0.jpg",
   "assets/img/ejercicios/triceps-copa-1.jpg",
   "assets/img/ejercicios/triceps-copa-ficha.jpg",
-  "assets/img/ejercicios/trx-abductor-0.jpg",
-  "assets/img/ejercicios/trx-abductor-1.jpg",
   "assets/img/ejercicios/trx-abductor-ficha.jpg",
   "assets/img/ejercicios/trx-espalda-0.jpg",
   "assets/img/ejercicios/trx-espalda-1.jpg",
   "assets/img/ejercicios/trx-espalda-ficha.jpg",
-  "assets/img/ejercicios/trx-sentadilla-profunda-0.jpg",
-  "assets/img/ejercicios/trx-sentadilla-profunda-1.jpg",
   "assets/img/ejercicios/trx-sentadilla-profunda-ficha.jpg",
   "assets/img/ejercicios/twist-ruso-0.jpg",
   "assets/img/ejercicios/twist-ruso-1.jpg",
   "assets/img/ejercicios/twist-ruso-ficha.jpg",
-  "assets/img/ejercicios/vuelo-trx-0.jpg",
-  "assets/img/ejercicios/vuelo-trx-1.jpg",
   "assets/img/ejercicios/vuelo-trx-ficha.jpg"
 ];
 

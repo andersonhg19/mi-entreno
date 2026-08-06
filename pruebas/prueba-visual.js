@@ -378,8 +378,9 @@ async function abrir(page, base, hash, espera = 500) {
     if (orden.distancia > 60) fallo("11-carrusel", `el video queda a ${orden.distancia}px del carrusel, muy lejos`);
   }
 
-  /* Un ejercicio cuya foto es solo parecida: 3 laminas igual, con el aviso */
-  await ir(page, "#/p/anderson/d/1/e/0", 500);
+  /* Un ejercicio cuya foto es solo parecida: 3 laminas igual, con el aviso.
+     (Elevacion de rodilla: la foto es un step-up sin BOSU.) */
+  await ir(page, "#/p/anderson/d/1/e/3", 500);
   const parecida = await page.evaluate(() => ({
     laminas: document.querySelectorAll(".carrusel-lamina").length,
     flechas: document.querySelectorAll(".carrusel-flecha").length,
@@ -388,6 +389,17 @@ async function abrir(page, base, hash, espera = 500) {
   }));
   if (parecida.laminas !== 3 || parecida.flechas !== 2 || !parecida.aviso)
     fallo("11-carrusel", `ejercicio con foto parecida: ${JSON.stringify(parecida)}`);
+
+  /* Y uno sin foto honesta (TRX): solo la ficha, sin flechas que no llevan
+     a ninguna parte, y con la explicacion escrita. */
+  await ir(page, "#/p/anderson/d/1/e/0", 500);
+  const soloFicha = await page.evaluate(() => ({
+    laminas: document.querySelectorAll(".carrusel-lamina").length,
+    flechas: document.querySelectorAll(".carrusel-flecha").length,
+    explica: /Solo está la ficha/.test(document.getElementById("contenido").textContent)
+  }));
+  if (soloFicha.laminas !== 1 || soloFicha.flechas !== 0 || !soloFicha.explica)
+    fallo("11-carrusel", `ejercicio sin fotos honestas: ${JSON.stringify(soloFicha)}`);
 
   /* ====== 4. TEMPORIZADOR ====== */
   await ir(page, "#/p/anderson/d/2/e/0", 350);

@@ -1,28 +1,31 @@
-/* Las dos fotos reales que acompanan a cada ficha, desde free-exercise-db.
+/* Las dos fotos reales que acompañan a la ficha, desde free-exercise-db.
 
-   La ficha del gimnasio es la que manda —es el carton del entrenador— y va
-   primera en el carrusel. Estas dos son la referencia de como se ve el
-   movimiento, y llevan rotulo cuando solo son parecidas.
+   La ficha del gimnasio es la que manda —es el cartón del entrenador— y va
+   primera en el carrusel. Estas dos son la referencia de cómo se ve el
+   movimiento en una persona.
 
-   REVISION DE 2026-08-06 (Anderson: «me ha pasado mucho que no tienen nada
-   que ver»). Se miraron las 55 con `herramientas/revisar-fotos.py`. Cuatro
-   estaban sencillamente mal y se cambiaron:
+   REGLA, después de que Anderson lo señalara DOS veces
+   ----------------------------------------------------
+   Una foto solo se muestra si es **el mismo movimiento con el mismo tipo de
+   implemento**. Si no lo es, el ejercicio se queda **solo con la ficha**.
 
-     aductor-banda            Band_Hip_Adductions -> Side_Leg_Raises
-       la foto era un senor DE PIE sin hacer nada; la banda no se veia.
-     apertura-trx             Bodyweight_Flyes -> Dumbbell_Flyes
-       la foto eran flexiones con mancuernas en el suelo, no una apertura.
-     trx-abductor             Lunge_Pass_Through -> Thigh_Abductor
-       la foto era una zancada caminando con pesa rusa, nada de abduccion.
-     trx-sentadilla-profunda  Suspended_Split_Squat -> Chair_Squat
-       la foto era sentadilla a UNA pierna; la ficha es a dos, con apoyo.
+   Rotularla como «parecida» no arregla un dato malo, solo lo documenta: para
+   quien tiene baja visión y mira la foto para saber qué hacer, una apertura
+   en TRX ilustrada con unas aperturas tumbado en banco es información falsa.
 
-   Se dejaron a proposito, aunque parezcan chocantes:
+   POR QUÉ NUEVE EJERCICIOS SE QUEDAN SIN FOTO
+   -------------------------------------------
+   Son los de TRX, BOSU y banda elástica. Se buscó de verdad:
+   free-exercise-db (873 ejercicios) no tiene ni uno de suspensión, BOSU o
+   banda con ese movimiento, y wger —la otra base con licencia libre— tiene
+   360 imágenes en total y tampoco. No es que no se haya mirado: es que no
+   existe con una licencia que se pueda publicar.
 
-     salto-cajon y sentadilla-dinamica ensenan el SALTO. La tarjeta tambien
-     lo ensena: el salto es el ejercicio. Lo que cambia es la adaptacion que
-     escribio el entrenador a mano («SIN SALTO»), y eso se resuelve poniendo
-     ese aviso ANTES del carrusel, no falseando la foto.                   */
+   Para esos, la ficha del tablero **ya enseña el TRX o el BOSU**, así que se
+   pierde menos de lo que parece.
+
+   Excepción razonada: `trx-espalda` sí lleva foto, porque `Suspended_Row` es
+   un remo en anillas — suspensión de verdad, el mismo gesto.               */
 const fs = require("fs");
 const path = require("path");
 const https = require("https");
@@ -33,25 +36,16 @@ const BASE = "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/ex
 
 const MAPEO = {
   "sentadilla-mancuerna": "Dumbbell_Squat",
-  "leg-curl": "Seated_Leg_Curl",
-  "elevacion-talones-hack": "Calf_Press",
-  "extension-mancuerna": "Seated_Triceps_Press",
+  "leg-curl": "Lying_Leg_Curls",
+  "elevacion-talones-hack": "Calf_Press_On_The_Leg_Press_Machine",
+  "extension-mancuerna": "Dumbbell_One-Arm_Triceps_Extension",
   "predicador-maquina": "Machine_Preacher_Curls",
-  "vuelo-trx": "Reverse_Flyes",
-  "biceps-trx": "Dumbbell_Bicep_Curl",
   "levantamiento-pierna-piso": "Flat_Bench_Lying_Leg_Raise",
-  "plancha-bosu": "Plank",
-  "levantamiento-atras-polea": "Glute_Kickback",
-  "sentadilla-patada-lateral": "Squats_-_With_Bands",
-  "trx-sentadilla-profunda": "Chair_Squat",
-  "trx-abductor": "Thigh_Abductor",
-  "sentadilla-iso": "Bodyweight_Squat",
+  "levantamiento-atras-polea": "One-Legged_Cable_Kickback",
   "elevacion-rodilla": "Step-up_with_Knee_Raise",
-  "aductor-banda": "Side_Leg_Raises",
   "sentadilla-dinamica": "Freehand_Jump_Squat",
   "peso-muerto-saco": "Stiff-Legged_Dumbbell_Deadlift",
   "trx-espalda": "Suspended_Row",
-  "apertura-trx": "Dumbbell_Flyes",
 };
 
 function bajar(url, destino) {

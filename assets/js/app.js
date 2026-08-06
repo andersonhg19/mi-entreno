@@ -530,32 +530,44 @@
      un rato no resuelve nada. En modo consulta no hay día, así que salen
      todas. */
   function alternativasDe(e, idPersona, yaEnElDia) {
-    var lista = (window.ALTERNATIVAS || {})[e.clave] || [];
+    var alt = (window.ALTERNATIVAS || {})[e.clave];
+    if (!alt) return "";
+
     var fuera = {};
     (yaEnElDia || []).forEach(function (k) { fuera[k] = true; });
+    var filtrar = function (lista) {
+      return (lista || []).filter(function (k) { return !fuera[k] && window.CATALOGO[k]; });
+    };
+    var directas = filtrar(alt.directas);
+    var otras = filtrar(alt.mismoMusculo);
+    if (!directas.length && !otras.length) return "";
 
-    var utiles = lista.filter(function (k) {
-      return !fuera[k] && window.CATALOGO[k];
-    });
-    if (!utiles.length) return "";
+    function fila(k) {
+      var a = ejercicioDe(k);
+      return '<button class="ejercicio ejercicio-alterno" ' +
+               'data-grupo="' + esc(claveGrupo(a.grupo)) + '" ' +
+               'data-ir="#/p/' + idPersona + '/x/' + k + '">' +
+               '<img class="ejercicio-miniatura" src="' + esc(a.ficha) + '" alt="" loading="lazy">' +
+               '<span class="ejercicio-texto">' +
+                 '<span class="ejercicio-nombre">' + esc(a.nombre) + '</span>' +
+                 '<span class="ejercicio-grupo">' + esc(a.equipo) + '</span>' +
+               '</span>' +
+               '<span class="dia-flecha" aria-hidden="true">›</span>' +
+             '</button>';
+    }
 
     return '<div class="tarjeta alternativas">' +
       '<h3>¿Ocupada la máquina?</h3>' +
-      '<p class="alternativas-nota">Estos trabajan lo mismo con otro aparato. ' +
-      'Toca uno para ver cómo se hace.</p>' +
-      utiles.map(function (k) {
-        var a = ejercicioDe(k);
-        return '<button class="ejercicio ejercicio-alterno" ' +
-                 'data-grupo="' + esc(claveGrupo(a.grupo)) + '" ' +
-                 'data-ir="#/p/' + idPersona + '/x/' + k + '">' +
-                 '<img class="ejercicio-miniatura" src="' + esc(a.ficha) + '" alt="" loading="lazy">' +
-                 '<span class="ejercicio-texto">' +
-                   '<span class="ejercicio-nombre">' + esc(a.nombre) + '</span>' +
-                   '<span class="ejercicio-grupo">' + esc(a.equipo) + '</span>' +
-                 '</span>' +
-                 '<span class="dia-flecha" aria-hidden="true">›</span>' +
-               '</button>';
-      }).join("") +
+      (directas.length
+        ? '<p class="alternativas-nota"><strong>Cambio directo:</strong> hacen lo mismo ' +
+          'que este ejercicio, con otro aparato.</p>' + directas.map(fila).join("")
+        : '') +
+      (otras.length
+        ? '<p class="alternativas-nota alternativas-nota-2">' +
+          (directas.length ? 'Y si tampoco puedes, estos ' : 'Estos ') +
+          '<strong>trabajan el mismo músculo</strong>, aunque el movimiento no ' +
+          'sea el mismo.</p>' + otras.map(fila).join("")
+        : '') +
     '</div>';
   }
 
@@ -575,9 +587,14 @@
         '▶ Ver video de este ejercicio' +
         '<span class="enlace-nota">necesita internet</span>' +
       '</a>' +
-      (e.fotosOk ? '' :
-        '<p class="nota-foto">Las dos fotos son de un movimiento <strong>parecido</strong>, ' +
-        'no idéntico. La que manda es la ficha del gimnasio.</p>');
+      (e.fotos === "parecidas"
+        ? '<p class="nota-foto">Las dos fotos son del <strong>mismo movimiento con otro ' +
+          'implemento</strong>, no exactamente esto. La que manda es la ficha del gimnasio.</p>'
+        : e.fotos === "solo-ficha"
+        ? '<p class="nota-foto">Solo está la ficha del gimnasio, y es la buena: ' +
+          'de este ejercicio no hay ninguna foto libre que sea de verdad este ' +
+          'movimiento, y poner una que no lo es confunde más que ayuda.</p>'
+        : '');
   }
 
   function instrucciones(e) {
@@ -810,6 +827,14 @@
     btnAjustes.setAttribute("aria-expanded", "false");
 
     var t = (location.hash || "#/").replace(/^#\/?/, "").split("/").filter(Boolean);
+
+    /* La barra de arriba toma el color de la persona mientras estás dentro
+       de su rutina. Idea de Samy: desde dentro no había forma de saber de
+       quién era sin volver atrás. En el selector no lleva ninguno. */
+    var pBarra = (t[0] === "p" && t[1]) ? persona(t[1]) : null;
+    var barra = document.querySelector(".barra-superior");
+    if (pBarra) barra.setAttribute("data-persona", pBarra.tema);
+    else barra.removeAttribute("data-persona");
 
     if (t[0] === "tabata")                       vistaTabata();
     else if (t[0] !== "p")                       vistaInicio();

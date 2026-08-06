@@ -30,9 +30,11 @@ sobre cualquier otra decisión de diseño.
 6. **Los tres temas mantienen contraste ≥ 7:1.** `npm run pwa` lo mide de verdad
    en el navegador; no fiarse del ojo.
 
-7. **Honestidad sobre las imágenes.** La ficha del gimnasio siempre; las fotos
-   reales solo si `fotosOk: true`, y eso solo tras mirarlas. Ver la sección
-   «Imágenes» más abajo: es la regla que más veces se ha roto.
+7. **Honestidad sobre las imágenes.** La ficha del gimnasio siempre. Una foto
+   solo se muestra si es el **mismo movimiento con el mismo implemento**, y
+   eso solo tras mirarla. Si no la hay, no se pone ninguna: rotular «parecida»
+   algo que no es el ejercicio documenta el problema, no lo arregla. Ver la
+   sección «Imágenes»: es la regla que más veces se ha roto.
 
 8. **Todo en español**, incluidos nombres de variables, funciones, comentarios y
    claves de datos. Es el idioma del usuario y de las planillas.
@@ -45,8 +47,8 @@ assets/css/estilos.css
 assets/js/  datos-catalogo.js  datos-planes.js  datos-alternativas.js
             almacenamiento.js  voz.js  carrusel.js  cronometro.js  app.js
 assets/img/ejercicios/<clave>-ficha.jpg  (ficha del tablero, SIEMPRE)
-                      <clave>-0.jpg      (foto real inicio, solo si fotosOk)
-                      <clave>-1.jpg      (foto real final,  solo si fotosOk)
+                      <clave>-0.jpg      (foto real inicio, si fotos != "solo-ficha")
+                      <clave>-1.jpg      (foto real final,  si fotos != "solo-ficha")
 pruebas/  documentación/  seguimiento/  recursos/
 ```
 
@@ -93,20 +95,31 @@ Cada ejercicio muestra **la ficha del tablero de Life Gym** (`<clave>-ficha.jpg`
 Esa imagen es el recorte del cartón que entregó el entrenador, así que es
 **exacta por definición**. Siempre va primero en el carrusel.
 
-Después van **siempre** dos fotos reales del movimiento
-(`<clave>-0.jpg` y `<clave>-1.jpg`, de free-exercise-db). El carrusel tiene
-por tanto **3 láminas en todos los ejercicios**, sin excepción.
+Detrás pueden ir dos fotos reales del movimiento (`<clave>-0.jpg` y
+`<clave>-1.jpg`, de free-exercise-db), pero **no siempre**.
 
-`fotosOk` NO decide si se muestran, decide **qué dice el rótulo**:
-- `true`  -> «Foto · posición de inicio»
-- `false` -> «⚠ Foto parecida · posición de inicio», más un aviso escrito bajo
-  el carrusel: *«Las dos fotos son de un movimiento parecido, no idéntico.
-  La que manda es la ficha del gimnasio.»*
+El campo **`fotos`** del catálogo tiene tres estados, y decide qué se muestra:
 
-En 20 de los 55 las fotos son solo parecidas (la ficha es de TRX y la foto de
-peso libre, la ficha tumbado y la foto sentado…). Se probó a ocultarlas y el
-usuario pidió que volvieran: le sirven de referencia. La solución no es
-esconderlas, es **etiquetarlas sin rodeos**.
+| Valor | Cuántos | Qué hace |
+|-------|---------|----------|
+| `"exactas"` | 41 | Ficha + 2 fotos. Rótulo normal. |
+| `"parecidas"` | 5 | Ficha + 2 fotos, rótulo «⚠ Foto parecida» y aviso escrito bajo el carrusel. |
+| `"solo-ficha"` | 9 | **Solo la ficha**, con una nota que explica por qué. |
+
+**Por qué existe `solo-ficha`.** Era un booleano y no sabía decir «no hay
+foto», así que nueve ejercicios de TRX, BOSU y banda acababan ilustrados con
+otra cosa y rotulados «parecida». Eso **documenta el problema en vez de
+arreglarlo**: para alguien con baja visión que mira la foto para saber qué
+hacer, una apertura en TRX ilustrada con aperturas tumbado en banco es
+información falsa. Anderson lo señaló dos veces.
+
+Se buscó de verdad antes de rendirse: free-exercise-db (873 ejercicios) no
+tiene ni uno de suspensión, BOSU o banda con ese movimiento, y wger tiene 360
+imágenes en total y tampoco. **No existe con licencia publicable.** La ficha
+del tablero ya enseña el TRX, así que se pierde poco.
+
+La regla, en una línea: **una foto solo se muestra si es el mismo movimiento
+con el mismo tipo de implemento.**
 
 `prueba-completitud.js` comprueba además que ninguna imagen esté repetida entre
 dos ejercicios: ese fue el error que hacía que «TRX abductor» enseñara la
@@ -170,18 +183,28 @@ banco antes.
 **con otro implemento**. Es para cuando la máquina está ocupada, que en el
 gimnasio pasa constantemente.
 
-Tres reglas, y `validar-datos.js` comprueba las tres:
+**El criterio es el PATRÓN DE MOVIMIENTO, no la zona del cuerpo.** «Tren
+superior» es demasiado grueso: así clasifican los entrenadores y las apps de
+gimnasio serias —empuje y tracción, horizontal y vertical; bisagra de cadera;
+dominante de rodilla; y los aislamientos por su acción articular—. Un empuje
+horizontal se sustituye por otro empuje horizontal.
 
-1. **Toda alternativa es una clave del propio catálogo.** Así ya trae ficha,
-   fotos revisadas y pasos, y se abre de un toque. Nada de inventar ejercicios
-   sin imágenes.
-2. **Otro implemento.** Si la prensa está ocupada no sirve mandar a otra
-   máquina. El aviso salta cuando dos comparten un puesto fijo (máquina,
-   prensa o polea).
-3. **Misma zona del cuerpo.** Cruzar de tren inferior a superior es error, no
-   aviso. Dentro de «Pierna» hay cuádriceps, femoral y abductores, que **no**
-   se sustituyen entre sí: por eso la tabla está escrita a mano y agrupada por
-   función, no generada por grupo muscular.
+`window.PATRONES` da el patrón de cada uno de los 55. Y las alternativas van
+en **dos niveles**, porque ser estricto deja huecos (`leg-extension` es la
+única extensión de rodilla de la rutina):
+
+- **`directas`** — mismo patrón. Es el cambio de verdad.
+- **`mismoMusculo`** — mismo músculo, movimiento distinto. Sirve, y la app lo
+  dice con esas palabras.
+
+`validar-datos.js` comprueba cuatro cosas:
+
+1. **Toda alternativa es una clave del catálogo**, así que ya trae ficha,
+   fotos revisadas y pasos, y se abre de un toque.
+2. Las `directas` **comparten patrón**; las `mismoMusculo`, **grupo**.
+3. Ninguna `directa` **comparte puesto fijo** con el original: si la torre de
+   poleas está ocupada, la otra polea no resuelve nada.
+4. Todo ejercicio tiene patrón declarado.
 
 La app esconde las alternativas que ya están en la rutina de ese día
 (`alternativasDe` recibe `d.ejercicios`). En modo consulta no hay día, así que

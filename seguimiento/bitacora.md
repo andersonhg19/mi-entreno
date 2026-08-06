@@ -1,6 +1,6 @@
 ﻿# Mi Entreno — Bitácora de Desarrollo
 
-## Estado Actual: v10 publicada en GitHub Pages
+## Estado Actual: v11 publicada en GitHub Pages
 ## Última actualización: 2026-08-06
 
 ---
@@ -920,3 +920,87 @@ cubren el descanso ajustable de punta a punta, el cierre de día con su
 reinicio semanal —moviendo el registro a la semana anterior para comprobar
 que deja de contar—, la división pendientes/hechos, y que las alternativas
 ni lleven a ejercicios inexistentes ni ofrezcan lo que ya está en el día.
+
+
+---
+
+### 2026-08-06 (tarde) - v11: fotos que corresponden de verdad, y alternativas compatibles
+
+Anderson revisó lo de la v10 y no coló:
+
+> *«lo que describes aquí como si estuviera bien sigue estando pésimo»*
+
+Tenía razón. En la v10 cambié cuatro fotos por otras que **seguían sin ser el
+ejercicio**: una apertura en TRX ilustrada con aperturas tumbado en banco, un
+TRX abductor con la máquina abductora. Cambiar una foto mala por otra mala no
+es arreglarlo.
+
+#### La raíz: no existe la foto
+
+El fallo de fondo no era elegir mal, era insistir. Los ejercicios que fallaban
+son **todos de TRX, BOSU y banda elástica**, y ahí no hay nada que elegir:
+
+- **free-exercise-db**: 873 ejercicios, ni uno de suspensión, BOSU o banda con
+  ese movimiento.
+- **wger**, la otra base con licencia libre: 360 imágenes en total, tampoco.
+
+No es que no se hubiera buscado bien. Es que **no existe con una licencia que
+se pueda publicar**, y yo seguía sacando la menos mala.
+
+#### La regla nueva
+
+> Una foto solo se muestra si es **el mismo movimiento con el mismo tipo de
+> implemento**. Si no la hay, el ejercicio se queda **solo con la ficha**.
+
+Rotular «⚠ parecida» algo que no es el ejercicio **documenta el problema en
+vez de arreglarlo**. Para quien mira la foto para saber qué hacer, es
+información falsa con una nota al pie.
+
+El campo `fotosOk` era un booleano y **no sabía decir «no hay foto»** — por eso
+el problema se repetía. Ahora es `fotos`, con tres estados:
+
+| Valor | Cuántos | Qué muestra |
+|-------|---------|-------------|
+| `"exactas"` | 41 | ficha + 2 fotos |
+| `"parecidas"` | 5 | ficha + 2 fotos, rotuladas sin rodeos |
+| `"solo-ficha"` | 9 | solo la ficha, y explica por qué |
+
+De paso, tres que sí tenían su foto exacta en la base y estaban mal
+emparejadas: `leg-curl` (era femoral **sentado**, la ficha es tumbado),
+`extension-mancuerna` (era a dos manos, la ficha es a una) y
+`levantamiento-atras-polea` (era una patada en el suelo, la ficha es en polea
+de pie). Las tres pasan a `"exactas"`.
+
+#### Alternativas: por patrón de movimiento, no por zona
+
+> *«no simplemente sirve que pongas tren superior, debe ser realmente
+> compatible en cambio a ese ejercicio»*
+
+También tenía razón. «Tren superior» es demasiado grueso. Se consultó cómo lo
+hacen los entrenadores y las apps de gimnasio, y el criterio es el **patrón de
+movimiento**: empuje y tracción, horizontal y vertical; bisagra de cadera;
+dominante de rodilla; y los aislamientos por su acción articular.
+
+`window.PATRONES` clasifica los 55. Y las alternativas van en **dos niveles**,
+porque con el patrón como única regla `leg-extension` se quedaba sin ninguna:
+
+- **Cambio directo** — mismo patrón. Hace lo mismo con otro aparato.
+- **Trabaja el mismo músculo** — movimiento distinto, y la app lo dice así.
+
+Detalles que cambian de verdad la tabla: las tres cabezas del hombro dejan de
+sustituirse entre sí (una elevación lateral no hace lo que una frontal),
+flexionar el tronco / sostener la plancha / rotar pasan a ser tres patrones
+distintos, y `gluteo-polea` y `levantamiento-atras-polea` dejan de ofrecerse
+como cambio directo: comparten la torre de poleas, así que si está ocupada no
+resuelven nada.
+
+#### Idea de Samy
+
+La barra de arriba toma el color del perfil mientras estás dentro. Desde
+dentro de la rutina no había forma de saber de quién era sin volver atrás.
+Como manda la regla 5, no es la única señal: el nombre ya va escrito al lado.
+
+**Pruebas:** 22 casos de regresión (eran 19). Los tres nuevos comprueban que
+los nueve sin foto muestran solo la ficha y explican por qué, que la barra
+toma y **suelta** el color de la persona, y —el que de verdad importa— que en
+**los 55** cada cambio directo comparte patrón de movimiento con su original.

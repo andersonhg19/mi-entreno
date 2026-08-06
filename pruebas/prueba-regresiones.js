@@ -117,7 +117,10 @@ async function casoCasillas(page) {
       clics de ida y vuelta terminando donde debe.
    ------------------------------------------------------------------ */
 async function casoCarrusel(page) {
-  await ir(page, "#/p/anderson/d/1/e/0", 700);
+  /* Martes e0 (peck deck) a propósito: tiene las tres láminas. El lunes e0
+     es TRX y ahora se queda solo con la ficha, así que no hay nada que
+     recorrer y este caso no probaría nada. */
+  await ir(page, "#/p/anderson/d/2/e/0", 700);
 
   const conDisabled = await page.evaluate(() =>
     [...document.querySelectorAll(".carrusel-flecha[disabled]")].length);
@@ -659,11 +662,13 @@ async function casoAlternativas(page) {
     const claves = [...caja.querySelectorAll("[data-ir]")]
       .map(b => b.getAttribute("data-ir").split("/x/")[1]);
     const dia = (window.PLANES.anderson.dias.find(d => d.n === 2) || {}).ejercicios || [];
+    const alt = window.ALTERNATIVAS["peck-deck"];
     return {
       claves,
       chocan: claves.filter(k => dia.indexOf(k) !== -1),
-      propuestas: (window.ALTERNATIVAS["peck-deck"] || []),
-      enElDia: dia
+      propuestas: alt.directas.concat(alt.mismoMusculo),
+      enElDia: dia,
+      texto: caja.textContent
     };
   });
 
@@ -671,14 +676,14 @@ async function casoAlternativas(page) {
   else if (!r.claves.length) { fallo("alternativas", "el bloque esta vacio"); }
   else if (r.chocan.length) {
     fallo("alternativas", `ofrece ${r.chocan.join(", ")}, que ya estan en la rutina de ese dia`);
+  } else if (!/Cambio directo|mismo músculo/.test(r.texto)) {
+    fallo("alternativas", "no distingue el cambio directo de «trabaja el mismo musculo»");
   } else {
-    /* Y que el filtro no sea casualidad: alguna de las propuestas SÍ
-       estaba en el día y por eso no aparece. */
     const filtradas = r.propuestas.filter(k => r.enElDia.indexOf(k) !== -1);
     if (!filtradas.length) {
       fallo("alternativas", "este caso no prueba el filtro: ninguna propuesta estaba en el dia");
     } else {
-      pasa(`alternativas correctas: ${r.claves.length} ofrecidas, ` +
+      pasa(`alternativas correctas: ${r.claves.length} ofrecidas en dos niveles, ` +
            `${filtradas.length} escondidas por estar ya en la rutina del dia`);
     }
   }
@@ -689,6 +694,117 @@ async function casoAlternativas(page) {
       .map(b => b.getAttribute("data-ir").split("/x/")[1])
       .filter(k => !window.CATALOGO[k]));
   if (rotas.length) fallo("alternativas", `llevan a ejercicios inexistentes: ${rotas.join(", ")}`);
+
+  /* Y lo que de verdad pidió Anderson: que sean COMPATIBLES. Un cambio
+     directo tiene que compartir patrón de movimiento con el original;
+     ofrecer «algo de tren superior» no vale. Se comprueban los 55. */
+  const incompatibles = await page.evaluate(() => {
+    const malas = [];
+    for (const [k, alt] of Object.entries(window.ALTERNATIVAS)) {
+      for (const a of alt.directas) {
+        if (window.PATRONES[a] !== window.PATRONES[k]) {
+          malas.push(`${k} -> ${a} (${window.PATRONES[k]} vs ${window.PATRONES[a]})`);
+        }
+      }
+      for (const a of alt.mismoMusculo) {
+        if (window.CATALOGO[a].grupo !== window.CATALOGO[k].grupo) {
+          malas.push(`${k} -> ${a} (${window.CATALOGO[k].grupo} vs ${window.CATALOGO[a].grupo})`);
+        }
+      }
+    }
+    return malas;
+  });
+  if (incompatibles.length) {
+    fallo("alternativas", `alternativas incompatibles: ${incompatibles.slice(0, 3).join(" | ")}`);
+  } else {
+    pasa("los 55 ejercicios: los cambios directos comparten patron de movimiento");
+  }
+}
+
+/* ------------------------------------------------------------------
+   18. Los que no tienen foto honesta enseñan SOLO la ficha, y lo dicen.
+
+   Nueve ejercicios (TRX, BOSU y banda) no tienen ninguna foto libre que
+   sea de verdad ese movimiento. Antes se ilustraban con otra cosa y se
+   rotulaba «parecida», que es documentar el problema en vez de
+   arreglarlo. Ahora no se pone ninguna. Esta prueba impide que
+   reaparezcan.
+   ------------------------------------------------------------------ */
+async function casoSoloFicha(page) {
+  const claves = await page.evaluate(() =>
+    Object.entries(window.CATALOGO).filter(([, e]) => e.fotos === "solo-ficha").map(([k]) => k));
+  if (claves.length !== 9) {
+    fallo("solo ficha", `hay ${claves.length} ejercicios sin fotos y deberian ser 9`);
+    return;
+  }
+
+  for (const clave of claves.slice(0, 4)) {
+    await ir(page, "#/p/anderson/x/" + clave, 500);
+    const r = await page.evaluate(() => ({
+      laminas: document.querySelectorAll(".carrusel-lamina").length,
+      srcs: [...document.querySelectorAll(".carrusel-lamina img")].map(i => i.getAttribute("src")),
+      texto: document.getElementById("contenido").textContent,
+      cargan: [...document.querySelectorAll(".carrusel-lamina img")]
+        .every(i => !i.complete || i.naturalWidth > 0)
+    }));
+    if (r.laminas !== 1) {
+      fallo("solo ficha", `${clave} muestra ${r.laminas} laminas y deberia mostrar solo la ficha`);
+      return;
+    }
+    if (!r.srcs[0] || !r.srcs[0].endsWith(clave + "-ficha.jpg")) {
+      fallo("solo ficha", `${clave}: la unica lamina no es su ficha (${r.srcs[0]})`);
+      return;
+    }
+    if (!r.cargan) { fallo("solo ficha", `${clave}: la ficha no carga`); return; }
+    if (!/Solo está la ficha/.test(r.texto)) {
+      fallo("solo ficha", `${clave}: no explica por que no hay fotos`);
+      return;
+    }
+    if (/parecida/.test(r.texto)) {
+      fallo("solo ficha", `${clave}: no hay fotos, no puede hablar de fotos parecidas`);
+      return;
+    }
+  }
+  pasa(`los ${claves.length} de TRX/BOSU/banda muestran solo la ficha y explican por que`);
+}
+
+/* ------------------------------------------------------------------
+   19. La barra de arriba lleva el color de la persona (idea de Samy).
+       Nunca como única señal: el nombre va escrito al lado.
+   ------------------------------------------------------------------ */
+async function casoColorDePersona(page) {
+  const casos = [
+    { ruta: "#/p/anderson/d/1", tema: "azul", nombre: "Lunes" },
+    { ruta: "#/p/sharid/d/2", tema: "fucsia", nombre: "Martes" }
+  ];
+  const vistos = [];
+  for (const c of casos) {
+    await ir(page, c.ruta, 400);
+    const r = await page.evaluate(() => {
+      const b = document.querySelector(".barra-superior");
+      return {
+        persona: b.getAttribute("data-persona"),
+        color: getComputedStyle(b).borderTopColor,
+        titulo: document.getElementById("tituloBarra").textContent.trim()
+      };
+    });
+    if (r.persona !== c.tema) {
+      fallo("color de persona", `${c.ruta}: la barra dice "${r.persona}" y deberia decir "${c.tema}"`);
+      return;
+    }
+    if (!r.titulo) { fallo("color de persona", `${c.ruta}: la barra no dice de quien es`); return; }
+    vistos.push(r.color);
+  }
+  if (vistos[0] === vistos[1]) {
+    fallo("color de persona", `las dos personas pintan el mismo color (${vistos[0]})`);
+    return;
+  }
+  /* En el selector no hay persona: la barra no puede quedarse marcada */
+  await ir(page, "#/", 300);
+  const suelta = await page.evaluate(() =>
+    document.querySelector(".barra-superior").hasAttribute("data-persona"));
+  if (suelta) fallo("color de persona", "al volver al selector la barra sigue con el color de la persona");
+  else pasa("la barra toma el color de cada persona y lo suelta en el selector");
 }
 
 /* ------------------------------------------------------------------ */
@@ -719,6 +835,8 @@ async function main() {
     await casoDiaTerminado(page);
     await casoPendientesYHechos(page);
     await casoAlternativas(page);
+    await casoSoloFicha(page);
+    await casoColorDePersona(page);
     await casoArranque(page, base);
     await casoEstrecho(page, base);
   } finally {

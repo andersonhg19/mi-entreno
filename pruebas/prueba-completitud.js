@@ -142,7 +142,8 @@ for (const [k, e] of Object.entries(CAT)) {
     `la descripcion de donde esta la maquina es demasiado corta (${(e.donde || "").length} caracteres)`);
   q("buscar", typeof e.buscar === "string" && e.buscar.split(" ").length >= 2,
     "el termino de busqueda del video es demasiado pobre");
-  q("fotosOk", typeof e.fotosOk === "boolean", "falta el campo fotosOk");
+  q("fotos", ["exactas", "parecidas", "solo-ficha"].includes(e.fotos),
+    `fotos="${e.fotos}" no es exactas/parecidas/solo-ficha`);
 
   q("pasos", Array.isArray(e.pasos) && e.pasos.length >= 3, "necesita al menos 3 pasos");
   (e.pasos || []).forEach((t, i) => {
@@ -191,7 +192,9 @@ function dimensionesJPG(buf) {
 const huellas = new Map();
 let nFichas = 0, nFotos = 0;
 for (const [k, e] of Object.entries(CAT)) {
-  const archivos = [`${k}-ficha.jpg`, `${k}-0.jpg`, `${k}-1.jpg`];
+  const archivos = e.fotos === "solo-ficha"
+    ? [`${k}-ficha.jpg`]
+    : [`${k}-ficha.jpg`, `${k}-0.jpg`, `${k}-1.jpg`];
 
   for (const a of archivos) {
     const p = path.join(IMG, a);

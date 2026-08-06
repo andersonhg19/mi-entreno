@@ -42,39 +42,55 @@ window.Carrusel = (function () {
   }
 
   /* ---------------------------------------------------------
-     Láminas de un ejercicio: siempre tres.
+     Láminas de un ejercicio: tres, o una.
 
      1. La ficha del gimnasio: el recorte del cartón que entregó el
-        entrenador, así que es EXACTA por definición. Siempre primero.
-     2 y 3. Dos fotos reales del movimiento.
+        entrenador, así que es EXACTA por definición. Siempre primero,
+        y siempre está.
+     2 y 3. Dos fotos reales del movimiento, si las hay.
 
-     `fotosOk` dice si esas fotos son exactamente ese ejercicio o solo
-     un movimiento parecido. No se ocultan cuando son parecidas —
-     sirven igual de referencia— pero el rótulo lo dice sin rodeos.
+     El campo `fotos` del catálogo decide, con tres estados:
+       "exactas"    las fotos SON este ejercicio
+       "parecidas"  mismo movimiento con otro implemento; se muestran,
+                    porque sirven de referencia, pero el rótulo lo dice
+                    sin rodeos
+       "solo-ficha" no hay foto honesta de esto y no se pone ninguna
+
+     Antes esto era un booleano y no sabía decir «no hay foto», así que
+     nueve ejercicios de TRX, BOSU y banda acababan ilustrados con algo
+     que no era el ejercicio. Rotularlo como «parecido» no arreglaba el
+     dato, solo lo documentaba.
      --------------------------------------------------------- */
   function laminasDe(e) {
     var base = "assets/img/ejercicios/" + e.clave;
-    var marca = e.fotosOk ? "Foto" : "⚠ Foto parecida";
-    var aviso = e.fotosOk ? "" : " (movimiento parecido, no idéntico: manda la ficha)";
+    var laminas = [{
+      src: base + "-ficha.jpg",
+      rotulo: "Ficha del gimnasio",
+      alt: "Ficha del tablero de Life Gym para " + e.nombre +
+           ": dibujo del movimiento con el nombre impreso."
+    }];
 
-    return [
-      {
-        src: base + "-ficha.jpg",
-        rotulo: "Ficha del gimnasio",
-        alt: "Ficha del tablero de Life Gym para " + e.nombre +
-             ": dibujo del movimiento con el nombre impreso."
-      },
-      {
-        src: base + "-0.jpg",
-        rotulo: marca + " · posición de inicio",
-        alt: "Foto: posición de inicio de " + e.nombre + aviso
-      },
-      {
-        src: base + "-1.jpg",
-        rotulo: marca + " · posición final",
-        alt: "Foto: posición final de " + e.nombre + aviso
-      }
-    ];
+    /* Nueve ejercicios se quedan SOLO con la ficha. Son los de TRX, BOSU y
+       banda: no existen en ninguna base de fotos con licencia libre, y una
+       foto que no es el ejercicio engaña más de lo que ayuda. La ficha del
+       tablero ya enseña el TRX o el BOSU, así que se pierde poco. */
+    if (e.fotos === "solo-ficha") return laminas;
+
+    var parecidas = e.fotos === "parecidas";
+    var marca = parecidas ? "⚠ Foto parecida" : "Foto";
+    var aviso = parecidas ? " (mismo movimiento con otro implemento: manda la ficha)" : "";
+
+    laminas.push({
+      src: base + "-0.jpg",
+      rotulo: marca + " · posición de inicio",
+      alt: "Foto: posición de inicio de " + e.nombre + aviso
+    });
+    laminas.push({
+      src: base + "-1.jpg",
+      rotulo: marca + " · posición final",
+      alt: "Foto: posición final de " + e.nombre + aviso
+    });
+    return laminas;
   }
 
   /* ---------------------------------------------------------

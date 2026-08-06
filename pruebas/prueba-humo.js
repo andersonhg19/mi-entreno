@@ -110,43 +110,62 @@ for (const pid of ["anderson", "sharid"]) {
       const cat = window.CATALOGO[d.ejercicios[i]];
       comprobar(doc.querySelector(".detalle-nombre").textContent === cat.nombre,
         `${pid} d${d.n} e${i}: el nombre no coincide`);
-      /* Carrusel: SIEMPRE 3 laminas — la ficha del gimnasio primero (exacta
-         por definicion) y las dos fotos del movimiento. */
+      /* Carrusel: la ficha del gimnasio SIEMPRE va primera y siempre está
+         —es exacta por definición—. Detrás van las dos fotos del
+         movimiento, salvo en los nueve de TRX, BOSU y banda, que se quedan
+         solo con la ficha porque no existe foto libre que sea de verdad
+         ese ejercicio. */
+      const soloFicha = cat.fotos === "solo-ficha";
+      const esperadas = soloFicha ? 1 : 3;
       const nLaminas = doc.querySelectorAll(".carrusel-lamina").length;
-      comprobar(nLaminas === 3, `${pid} d${d.n} e${i}: ${nLaminas} laminas y deberian ser 3`);
+      comprobar(nLaminas === esperadas,
+        `${pid} d${d.n} e${i}: ${nLaminas} laminas y deberian ser ${esperadas}`);
       const srcs = [...doc.querySelectorAll(".carrusel-lamina img")].map(x => x.getAttribute("src"));
       comprobar(srcs[0] && srcs[0].endsWith(`${d.ejercicios[i]}-ficha.jpg`),
         `${pid} d${d.n} e${i}: la primera lamina debe ser SU ficha del gimnasio`);
-      comprobar(srcs[1] && srcs[1].endsWith(`${d.ejercicios[i]}-0.jpg`),
-        `${pid} d${d.n} e${i}: la segunda lamina no es su foto de inicio`);
-      comprobar(srcs[2] && srcs[2].endsWith(`${d.ejercicios[i]}-1.jpg`),
-        `${pid} d${d.n} e${i}: la tercera lamina no es su foto final`);
-      comprobar(doc.querySelectorAll(".carrusel-lamina .foto-pie").length === 3,
+      if (!soloFicha) {
+        comprobar(srcs[1] && srcs[1].endsWith(`${d.ejercicios[i]}-0.jpg`),
+          `${pid} d${d.n} e${i}: la segunda lamina no es su foto de inicio`);
+        comprobar(srcs[2] && srcs[2].endsWith(`${d.ejercicios[i]}-1.jpg`),
+          `${pid} d${d.n} e${i}: la tercera lamina no es su foto final`);
+      }
+      comprobar(doc.querySelectorAll(".carrusel-lamina .foto-pie").length === esperadas,
         `${pid} d${d.n} e${i}: cada lamina necesita su rotulo escrito`);
       doc.querySelectorAll(".carrusel-lamina img").forEach(im => {
         comprobar((im.getAttribute("alt") || "").length > 10,
           `${pid} d${d.n} e${i}: una lamina no tiene texto alternativo util`);
       });
-      comprobar(/Imagen/.test(doc.querySelector(".carrusel-posicion").textContent),
-        `${pid} d${d.n} e${i}: falta el contador escrito "Imagen X de Y"`);
       comprobar(!doc.querySelector(".carrusel-punto"),
         `${pid} d${d.n} e${i}: los puntos numerados se quitaron, sobran con las flechas`);
-      /* aria-disabled, nunca disabled: deshabilitar el boton enfocado
-         cancelaba el desplazamiento y dejaba el carrusel clavado */
-      const prev = doc.querySelector('.carrusel-flecha[data-paso="-1"]');
-      comprobar(prev.getAttribute("aria-disabled") === "true",
-        `${pid} d${d.n} e${i}: en la primera lamina Anterior debe marcarse aria-disabled`);
-      comprobar(!prev.disabled,
-        `${pid} d${d.n} e${i}: la flecha NO debe usar el atributo disabled`);
 
-      /* Cuando la foto no es el ejercicio exacto hay que decirlo */
+      /* Con una sola lámina no se dibujan controles: no hay nada que
+         recorrer y una barra con las dos flechas apagadas solo estorba. */
+      if (!soloFicha) {
+        comprobar(/Imagen/.test(doc.querySelector(".carrusel-posicion").textContent),
+          `${pid} d${d.n} e${i}: falta el contador escrito "Imagen X de Y"`);
+        /* aria-disabled, nunca disabled: deshabilitar el boton enfocado
+           cancelaba el desplazamiento y dejaba el carrusel clavado */
+        const prev = doc.querySelector('.carrusel-flecha[data-paso="-1"]');
+        comprobar(prev.getAttribute("aria-disabled") === "true",
+          `${pid} d${d.n} e${i}: en la primera lamina Anterior debe marcarse aria-disabled`);
+        comprobar(!prev.disabled,
+          `${pid} d${d.n} e${i}: la flecha NO debe usar el atributo disabled`);
+      }
+
+      /* Lo que no es el ejercicio exacto tiene que decirlo, y cada estado
+         con su texto: «parecida» y «solo la ficha» no son lo mismo. */
       const rotulos = [...doc.querySelectorAll(".carrusel-lamina .foto-pie")]
         .map(x => x.textContent).join(" ");
-      if (!cat.fotosOk) {
+      if (cat.fotos === "parecidas") {
         comprobar(/parecida/.test(rotulos),
           `${pid} d${d.n} e${i}: las fotos son parecidas y el rotulo no lo dice`);
-        comprobar(/parecido/.test(texto()),
-          `${pid} d${d.n} e${i}: falta el aviso de que la foto es parecida`);
+        comprobar(/otro implemento/.test(texto()),
+          `${pid} d${d.n} e${i}: falta el aviso de que la foto usa otro implemento`);
+      } else if (cat.fotos === "solo-ficha") {
+        comprobar(!/parecida/.test(rotulos),
+          `${pid} d${d.n} e${i}: no hay fotos, asi que no puede hablar de fotos parecidas`);
+        comprobar(/Solo está la ficha/.test(texto()),
+          `${pid} d${d.n} e${i}: falta la explicacion de por que solo esta la ficha`);
       } else {
         comprobar(!/parecida/.test(rotulos),
           `${pid} d${d.n} e${i}: las fotos son exactas y el rotulo dice que son parecidas`);

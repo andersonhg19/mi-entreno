@@ -375,6 +375,24 @@ button:active, .ejercicio:active, .dia:active, .persona:active { transform: scal
 [data-tema="maximo"] .persona { border-left-color: var(--acento); }
 [data-tema="maximo"] .persona[data-tema-persona="fucsia"] { border-left-color: var(--acento); }
 
+/* ------------------------------------------------------------
+   Color de la persona en la barra de arriba
+
+   Idea de Samy: dentro de la rutina no había forma de saber de quién
+   era sin volver atrás. Ahora la barra lleva una franja del color de su
+   perfil mientras estás dentro.
+
+   Es un refuerzo, NUNCA la única señal: el nombre de la persona ya está
+   escrito en el título de la barra en cuanto entras. Y en el tema
+   Máximo se usa el acento, que es el único color que ese tema permite.
+   ------------------------------------------------------------ */
+.barra-superior { border-top: 4px solid transparent; }
+.barra-superior[data-persona="azul"]   { border-top-color: #7FC8FF; }
+.barra-superior[data-persona="fucsia"] { border-top-color: #F49AC8; }
+[data-tema="claro"] .barra-superior[data-persona="azul"]   { border-top-color: #12507F; }
+[data-tema="claro"] .barra-superior[data-persona="fucsia"] { border-top-color: #8C2164; }
+[data-tema="maximo"] .barra-superior[data-persona] { border-top-color: var(--acento); }
+
 /* ============================================================
    TARJETAS Y AVISOS
    ============================================================ */
@@ -460,6 +478,7 @@ button:active, .ejercicio:active, .dia:active, .persona:active { transform: scal
   margin: 0 0 var(--e3);
   font-size: var(--t-menor); color: var(--texto-suave);
 }
+.alternativas-nota-2 { margin-top: var(--e5); }
 .ejercicio-alterno { min-height: var(--toque); margin-bottom: var(--e2); }
 .ejercicio-alterno:last-child { margin-bottom: 0; }
 

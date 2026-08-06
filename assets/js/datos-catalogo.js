@@ -5,10 +5,15 @@
      nombre    : nombre en español, tal como se dice en el gimnasio
      grupo     : músculo principal
      equipo    : qué máquina o implemento se necesita
-     fotos     : imágenes (posición inicial y posición final)
-     fotosOk   : true  -> las fotos reales SI son ese mismo ejercicio
-                 false -> solo se muestra la ficha del gimnasio, porque
-                          las fotos disponibles eran de otro movimiento
+     fotos     : qué acompaña a la ficha del gimnasio en el carrusel
+                 "exactas"    -> las dos fotos SON este ejercicio
+                 "parecidas"  -> mismo movimiento, otro implemento; la app
+                                 lo rotula sin rodeos
+                 "solo-ficha" -> no hay foto honesta de esto y no se pone
+                                 ninguna. Pasa con TRX, BOSU y banda: no
+                                 existen en ninguna base con licencia libre,
+                                 y una foto que no es el ejercicio engaña
+                                 más de lo que ayuda
      donde     : cómo reconocer/ubicar la máquina en el gimnasio (baja visión)
      pasos     : instrucciones habladas, cortas, una acción por paso
      ojo       : advertencia de seguridad o adaptación personal
@@ -19,7 +24,7 @@ window.CATALOGO = {
 
   /* ---------- PIERNA ---------- */
   "sentadilla-mancuerna": {
-    nombre: "Sentadilla con mancuernas", grupo: "Pierna", equipo: "Dos mancuernas", fotosOk: true,
+    nombre: "Sentadilla con mancuernas", grupo: "Pierna", equipo: "Dos mancuernas", fotos: "exactas",
     donde: "No necesitas máquina. Solo un espacio libre y dos mancuernas del mismo peso.",
     pasos: [
       "Párate con los pies separados al ancho de los hombros.",
@@ -32,7 +37,7 @@ window.CATALOGO = {
     buscar: "sentadilla con mancuernas tecnica"
   },
   "prensa-atletica": {
-    nombre: "Prensa atlética (leg press)", grupo: "Pierna", equipo: "Máquina de prensa inclinada", fotosOk: true,
+    nombre: "Prensa atlética (leg press)", grupo: "Pierna", equipo: "Máquina de prensa inclinada", fotos: "exactas",
     donde: "Máquina grande e inclinada donde te sientas casi acostado y empujas una plataforma con los pies. Los discos van a los lados.",
     pasos: [
       "Siéntate en la máquina con la espalda bien apoyada en el espaldar.",
@@ -45,7 +50,7 @@ window.CATALOGO = {
     buscar: "prensa de piernas leg press tecnica"
   },
   "leg-extension": {
-    nombre: "Leg extension (extensión de cuádriceps)", grupo: "Pierna", equipo: "Máquina de extensión", fotosOk: true,
+    nombre: "Leg extension (extensión de cuádriceps)", grupo: "Pierna", equipo: "Máquina de extensión", fotos: "exactas",
     donde: "Silla con un rodillo acolchado al frente, a la altura de los tobillos.",
     pasos: [
       "Siéntate y acomoda el rodillo justo encima de los tobillos.",
@@ -58,7 +63,7 @@ window.CATALOGO = {
     buscar: "leg extension extension de cuadriceps"
   },
   "leg-curl": {
-    nombre: "Leg curl (femoral)", grupo: "Pierna", equipo: "Máquina de femoral", fotosOk: false,
+    nombre: "Leg curl (femoral)", grupo: "Pierna", equipo: "Máquina de femoral", fotos: "exactas",
     donde: "Máquina parecida a la de extensión, pero el rodillo va DETRÁS de las piernas, en la parte de atrás del tobillo.",
     pasos: [
       "Acomódate en la máquina con el rodillo detrás de los tobillos.",
@@ -71,7 +76,7 @@ window.CATALOGO = {
     buscar: "leg curl femoral maquina tecnica"
   },
   "tijeras-barra": {
-    nombre: "Tijeras (zancadas) con barra", grupo: "Pierna", equipo: "Barra", fotosOk: true,
+    nombre: "Tijeras (zancadas) con barra", grupo: "Pierna", equipo: "Barra", fotos: "exactas",
     donde: "Espacio libre. La barra va apoyada sobre los hombros, detrás del cuello.",
     pasos: [
       "Pon la barra sobre la parte alta de la espalda, no sobre el cuello.",
@@ -84,7 +89,7 @@ window.CATALOGO = {
     buscar: "zancadas con barra tecnica"
   },
   "abductor": {
-    nombre: "Abductor (abrir piernas)", grupo: "Pierna", equipo: "Máquina abductora", fotosOk: true,
+    nombre: "Abductor (abrir piernas)", grupo: "Pierna", equipo: "Máquina abductora", fotos: "exactas",
     donde: "Máquina donde te sientas y hay dos apoyos acolchados por FUERA de los muslos. Abres las piernas contra el peso.",
     pasos: [
       "Siéntate con la espalda pegada al espaldar.",
@@ -97,7 +102,7 @@ window.CATALOGO = {
     buscar: "maquina abductora gluteo medio"
   },
   "elevacion-talones-hack": {
-    nombre: "Elevación de talones en hack", grupo: "Pantorrilla", equipo: "Máquina hack o prensa", fotosOk: false,
+    nombre: "Elevación de talones en hack", grupo: "Pantorrilla", equipo: "Máquina hack o prensa", fotos: "parecidas",
     donde: "Misma máquina de prensa o la hack. Solo apoyas la punta de los pies en el borde de la plataforma.",
     pasos: [
       "Ponte en la máquina con la punta de los pies en el borde de la plataforma.",
@@ -110,7 +115,7 @@ window.CATALOGO = {
     buscar: "elevacion de talones en prensa pantorrilla"
   },
   "pantorrilla-sentado": {
-    nombre: "Pantorrilla sentado", grupo: "Pantorrilla", equipo: "Máquina de pantorrilla sentado", fotosOk: true,
+    nombre: "Pantorrilla sentado", grupo: "Pantorrilla", equipo: "Máquina de pantorrilla sentado", fotos: "exactas",
     donde: "Banco bajo con dos almohadillas que se apoyan sobre los muslos, cerca de las rodillas.",
     pasos: [
       "Siéntate y pon la punta de los pies en la plataforma baja.",
@@ -125,7 +130,7 @@ window.CATALOGO = {
 
   /* ---------- ESPALDA ---------- */
   "jalon-delante-abierto": {
-    nombre: "Jalón al pecho, agarre abierto", grupo: "Espalda", equipo: "Polea alta con barra larga", fotosOk: true,
+    nombre: "Jalón al pecho, agarre abierto", grupo: "Espalda", equipo: "Polea alta con barra larga", fotos: "exactas",
     donde: "Máquina con asiento, una almohadilla que aprieta los muslos y una barra larga colgando arriba.",
     pasos: [
       "Siéntate y ajusta la almohadilla sobre los muslos.",
@@ -138,7 +143,7 @@ window.CATALOGO = {
     buscar: "jalon al pecho agarre abierto polea"
   },
   "jalon-delante-cerrado": {
-    nombre: "Jalón al pecho, agarre cerrado", grupo: "Espalda", equipo: "Polea alta con triángulo o barra corta", fotosOk: true,
+    nombre: "Jalón al pecho, agarre cerrado", grupo: "Espalda", equipo: "Polea alta con triángulo o barra corta", fotos: "exactas",
     donde: "Misma máquina del jalón, pero con el agarre en triángulo o las manos juntas.",
     pasos: [
       "Siéntate y ajusta la almohadilla sobre los muslos.",
@@ -151,7 +156,7 @@ window.CATALOGO = {
     buscar: "jalon al pecho agarre cerrado"
   },
   "remo-sentado-polea": {
-    nombre: "Remo sentado en polea", grupo: "Espalda", equipo: "Polea baja con triángulo", fotosOk: true,
+    nombre: "Remo sentado en polea", grupo: "Espalda", equipo: "Polea baja con triángulo", fotos: "exactas",
     donde: "Estación baja con un asiento largo y dos apoyos para los pies al frente.",
     pasos: [
       "Siéntate y apoya los pies en las plataformas.",
@@ -164,7 +169,7 @@ window.CATALOGO = {
     buscar: "remo sentado en polea tecnica"
   },
   "remo-al-pecho": {
-    nombre: "Remo al pecho con barra", grupo: "Espalda", equipo: "Barra", fotosOk: true,
+    nombre: "Remo al pecho con barra", grupo: "Espalda", equipo: "Barra", fotos: "exactas",
     donde: "Espacio libre con una barra cargada en el piso.",
     pasos: [
       "Párate con los pies al ancho de la cadera y la barra al frente.",
@@ -177,7 +182,7 @@ window.CATALOGO = {
     buscar: "remo con barra tecnica espalda"
   },
   "dominadas": {
-    nombre: "Dominadas", grupo: "Espalda", equipo: "Barra fija o máquina asistida", fotosOk: true,
+    nombre: "Dominadas", grupo: "Espalda", equipo: "Barra fija o máquina asistida", fotos: "exactas",
     donde: "Barra fija arriba. Si hay máquina asistida, es la que tiene una rodillera o plataforma donde te apoyas.",
     pasos: [
       "Toma la barra con las manos un poco más abiertas que los hombros.",
@@ -190,7 +195,7 @@ window.CATALOGO = {
     buscar: "dominadas tecnica principiantes"
   },
   "hiperextensiones": {
-    nombre: "Hiperextensiones (lumbares)", grupo: "Lumbar", equipo: "Banco romano", fotosOk: true,
+    nombre: "Hiperextensiones (lumbares)", grupo: "Lumbar", equipo: "Banco romano", fotos: "exactas",
     donde: "Banco inclinado con dos rodillos para trabar los tobillos y una almohadilla para la cadera.",
     pasos: [
       "Acomódate boca abajo, con la cadera sobre la almohadilla y los pies trabados.",
@@ -205,7 +210,7 @@ window.CATALOGO = {
 
   /* ---------- PECHO ---------- */
   "peck-deck": {
-    nombre: "Peck deck (contractora)", grupo: "Pecho", equipo: "Máquina contractora", fotosOk: true,
+    nombre: "Peck deck (contractora)", grupo: "Pecho", equipo: "Máquina contractora", fotos: "exactas",
     donde: "Máquina con asiento y dos brazos con almohadillas verticales a los lados, que se juntan al frente.",
     pasos: [
       "Siéntate con la espalda pegada al espaldar.",
@@ -218,7 +223,7 @@ window.CATALOGO = {
     buscar: "peck deck contractora de pecho"
   },
   "press-banca": {
-    nombre: "Press banca con barra", grupo: "Pecho", equipo: "Banco plano y barra", fotosOk: true,
+    nombre: "Press banca con barra", grupo: "Pecho", equipo: "Banco plano y barra", fotos: "exactas",
     donde: "Banco plano con dos soportes en forma de gancho donde descansa la barra.",
     pasos: [
       "Acuéstate en el banco con los ojos debajo de la barra.",
@@ -231,7 +236,7 @@ window.CATALOGO = {
     buscar: "press de banca tecnica correcta"
   },
   "press-inclinado": {
-    nombre: "Press inclinado con barra", grupo: "Pecho", equipo: "Banco inclinado y barra", fotosOk: true,
+    nombre: "Press inclinado con barra", grupo: "Pecho", equipo: "Banco inclinado y barra", fotos: "exactas",
     donde: "Igual al press banca, pero el espaldar está levantado unos 30 a 45 grados.",
     pasos: [
       "Acuéstate en el banco inclinado.",
@@ -244,7 +249,7 @@ window.CATALOGO = {
     buscar: "press inclinado con barra tecnica"
   },
   "press-mancuerna": {
-    nombre: "Press de pecho con mancuernas", grupo: "Pecho", equipo: "Banco plano y mancuernas", fotosOk: true,
+    nombre: "Press de pecho con mancuernas", grupo: "Pecho", equipo: "Banco plano y mancuernas", fotos: "exactas",
     donde: "Banco plano y dos mancuernas iguales.",
     pasos: [
       "Siéntate en la punta del banco con una mancuerna sobre cada muslo.",
@@ -257,7 +262,7 @@ window.CATALOGO = {
     buscar: "press de pecho con mancuernas tecnica"
   },
   "press-inclinado-mancuerna": {
-    nombre: "Press inclinado con mancuernas", grupo: "Pecho", equipo: "Banco inclinado y mancuernas", fotosOk: true,
+    nombre: "Press inclinado con mancuernas", grupo: "Pecho", equipo: "Banco inclinado y mancuernas", fotos: "exactas",
     donde: "Banco con espaldar levantado 30 a 45 grados, con dos mancuernas.",
     pasos: [
       "Siéntate en el banco inclinado con una mancuerna en cada muslo.",
@@ -270,7 +275,7 @@ window.CATALOGO = {
     buscar: "press inclinado con mancuernas"
   },
   "fondo-de-pecho": {
-    nombre: "Fondos de pecho", grupo: "Pecho", equipo: "Barras paralelas", fotosOk: true,
+    nombre: "Fondos de pecho", grupo: "Pecho", equipo: "Barras paralelas", fotos: "exactas",
     donde: "Dos barras paralelas a la altura de la cadera, o la máquina asistida de fondos.",
     pasos: [
       "Súbete y sostente con los brazos estirados sobre las barras.",
@@ -285,7 +290,7 @@ window.CATALOGO = {
 
   /* ---------- TRÍCEPS ---------- */
   "triceps-copa": {
-    nombre: "Tríceps copa (extensión sobre la cabeza)", grupo: "Tríceps", equipo: "Una mancuerna", fotosOk: true,
+    nombre: "Tríceps copa (extensión sobre la cabeza)", grupo: "Tríceps", equipo: "Una mancuerna", fotos: "exactas",
     donde: "Una sola mancuerna, tomada por el disco con las dos manos, como una copa.",
     pasos: [
       "Toma la mancuerna con las dos manos, agarrando el disco de arriba.",
@@ -298,7 +303,7 @@ window.CATALOGO = {
     buscar: "extension de triceps sobre la cabeza mancuerna"
   },
   "push-down": {
-    nombre: "Push down en polea", grupo: "Tríceps", equipo: "Polea alta con barra o cuerda", fotosOk: true,
+    nombre: "Push down en polea", grupo: "Tríceps", equipo: "Polea alta con barra o cuerda", fotos: "exactas",
     donde: "Polea alta. Se le pone una barra corta recta o una cuerda.",
     pasos: [
       "Párate frente a la polea y toma la barra con las palmas hacia abajo.",
@@ -311,7 +316,7 @@ window.CATALOGO = {
     buscar: "push down triceps en polea"
   },
   "extension-mancuerna": {
-    nombre: "Extensión de tríceps con mancuerna", grupo: "Tríceps", equipo: "Una mancuerna y banco", fotosOk: false,
+    nombre: "Extensión de tríceps con mancuerna", grupo: "Tríceps", equipo: "Una mancuerna y banco", fotos: "exactas",
     donde: "Banco con espaldar. Una sola mancuerna.",
     pasos: [
       "Siéntate con la espalda apoyada en el espaldar.",
@@ -324,7 +329,7 @@ window.CATALOGO = {
     buscar: "extension de triceps sentado con mancuerna"
   },
   "press-frances": {
-    nombre: "Press francés", grupo: "Tríceps", equipo: "Barra Z y banco plano", fotosOk: true,
+    nombre: "Press francés", grupo: "Tríceps", equipo: "Barra Z y banco plano", fotos: "exactas",
     donde: "Banco plano y una barra en zigzag (barra Z).",
     pasos: [
       "Acuéstate en el banco con la barra Z sobre el pecho.",
@@ -337,7 +342,7 @@ window.CATALOGO = {
     buscar: "press frances triceps barra z"
   },
   "banco-triceps": {
-    nombre: "Fondos de tríceps en banco", grupo: "Tríceps", equipo: "Un banco", fotosOk: true,
+    nombre: "Fondos de tríceps en banco", grupo: "Tríceps", equipo: "Un banco", fotos: "exactas",
     donde: "Un banco plano cualquiera. Te sientas en el borde y te sostienes con las manos.",
     pasos: [
       "Siéntate en el borde del banco y apoya las manos a los lados de la cadera.",
@@ -352,7 +357,7 @@ window.CATALOGO = {
 
   /* ---------- HOMBROS ---------- */
   "press-militar-maquina": {
-    nombre: "Press militar en máquina", grupo: "Hombros", equipo: "Máquina de press de hombro", fotosOk: true,
+    nombre: "Press militar en máquina", grupo: "Hombros", equipo: "Máquina de press de hombro", fotos: "exactas",
     donde: "Asiento con espaldar vertical y dos manijas a la altura de los hombros que se empujan hacia arriba.",
     pasos: [
       "Siéntate con la espalda pegada al espaldar.",
@@ -365,7 +370,7 @@ window.CATALOGO = {
     buscar: "press militar en maquina hombro"
   },
   "laterales": {
-    nombre: "Elevaciones laterales", grupo: "Hombros", equipo: "Dos mancuernas livianas", fotosOk: true,
+    nombre: "Elevaciones laterales", grupo: "Hombros", equipo: "Dos mancuernas livianas", fotos: "exactas",
     donde: "Espacio libre y dos mancuernas livianas.",
     pasos: [
       "Párate con una mancuerna en cada mano, a los lados del cuerpo.",
@@ -378,7 +383,7 @@ window.CATALOGO = {
     buscar: "elevaciones laterales hombro tecnica"
   },
   "frontales": {
-    nombre: "Elevaciones frontales", grupo: "Hombros", equipo: "Dos mancuernas livianas", fotosOk: true,
+    nombre: "Elevaciones frontales", grupo: "Hombros", equipo: "Dos mancuernas livianas", fotos: "exactas",
     donde: "Espacio libre y dos mancuernas livianas.",
     pasos: [
       "Párate con las mancuernas al frente de los muslos, palmas hacia el cuerpo.",
@@ -391,7 +396,7 @@ window.CATALOGO = {
     buscar: "elevaciones frontales hombro mancuernas"
   },
   "press-militar-mancuerna": {
-    nombre: "Press militar con mancuernas", grupo: "Hombros", equipo: "Dos mancuernas y banco con espaldar", fotosOk: true,
+    nombre: "Press militar con mancuernas", grupo: "Hombros", equipo: "Dos mancuernas y banco con espaldar", fotos: "exactas",
     donde: "Banco con espaldar vertical y dos mancuernas.",
     pasos: [
       "Siéntate con la espalda apoyada y una mancuerna en cada mano.",
@@ -404,7 +409,7 @@ window.CATALOGO = {
     buscar: "press militar con mancuernas sentado"
   },
   "vuelo-trx": {
-    nombre: "Vuelo posterior en TRX", grupo: "Hombros", equipo: "TRX (cintas colgantes)", fotosOk: false,
+    nombre: "Vuelo posterior en TRX", grupo: "Hombros", equipo: "TRX (cintas colgantes)", fotos: "solo-ficha",
     donde: "Las cintas negras con manijas amarillas que cuelgan de un anclaje alto.",
     pasos: [
       "Toma una manija en cada mano y camina hacia atrás inclinando el cuerpo.",
@@ -417,7 +422,7 @@ window.CATALOGO = {
     buscar: "TRX reverse fly vuelo posterior"
   },
   "lazo-hombro": {
-    nombre: "Lazo (cuerdas de batalla)", grupo: "Hombros", equipo: "Cuerdas gruesas ancladas", fotosOk: true,
+    nombre: "Lazo (cuerdas de batalla)", grupo: "Hombros", equipo: "Cuerdas gruesas ancladas", fotos: "exactas",
     donde: "Dos cuerdas gruesas ancladas a una columna o argolla en el piso.",
     pasos: [
       "Toma una punta de la cuerda en cada mano.",
@@ -432,7 +437,7 @@ window.CATALOGO = {
 
   /* ---------- BÍCEPS ---------- */
   "curl-barra": {
-    nombre: "Curl de bíceps con barra", grupo: "Bíceps", equipo: "Barra recta o barra Z", fotosOk: true,
+    nombre: "Curl de bíceps con barra", grupo: "Bíceps", equipo: "Barra recta o barra Z", fotos: "exactas",
     donde: "Espacio libre con una barra cargada.",
     pasos: [
       "Párate con los pies al ancho de la cadera.",
@@ -445,7 +450,7 @@ window.CATALOGO = {
     buscar: "curl de biceps con barra tecnica"
   },
   "curl-polea": {
-    nombre: "Curl de bíceps en polea", grupo: "Bíceps", equipo: "Polea baja con barra", fotosOk: true,
+    nombre: "Curl de bíceps en polea", grupo: "Bíceps", equipo: "Polea baja con barra", fotos: "exactas",
     donde: "Polea baja, con una barra corta enganchada abajo.",
     pasos: [
       "Párate frente a la polea y toma la barra con las palmas hacia arriba.",
@@ -458,7 +463,7 @@ window.CATALOGO = {
     buscar: "curl de biceps en polea baja"
   },
   "curl-mancuerna-alternado": {
-    nombre: "Curl alternado con mancuernas", grupo: "Bíceps", equipo: "Dos mancuernas", fotosOk: true,
+    nombre: "Curl alternado con mancuernas", grupo: "Bíceps", equipo: "Dos mancuernas", fotos: "exactas",
     donde: "Espacio libre y dos mancuernas.",
     pasos: [
       "Párate con una mancuerna en cada mano, brazos estirados a los lados.",
@@ -471,7 +476,7 @@ window.CATALOGO = {
     buscar: "curl alternado con mancuernas"
   },
   "predicador-maquina": {
-    nombre: "Predicador en máquina (banco Scott)", grupo: "Bíceps", equipo: "Máquina o banco predicador", fotosOk: true,
+    nombre: "Predicador en máquina (banco Scott)", grupo: "Bíceps", equipo: "Máquina o banco predicador", fotos: "exactas",
     donde: "Banco con una tabla inclinada donde se apoyan los brazos por encima del codo.",
     pasos: [
       "Siéntate y apoya la parte de atrás de los brazos en la tabla inclinada.",
@@ -484,7 +489,7 @@ window.CATALOGO = {
     buscar: "curl predicador banco scott maquina"
   },
   "biceps-trx": {
-    nombre: "Curl de bíceps en TRX", grupo: "Bíceps", equipo: "TRX (cintas colgantes)", fotosOk: false,
+    nombre: "Curl de bíceps en TRX", grupo: "Bíceps", equipo: "TRX (cintas colgantes)", fotos: "solo-ficha",
     donde: "Las cintas colgantes con manijas.",
     pasos: [
       "Toma una manija en cada mano, palmas hacia arriba.",
@@ -499,7 +504,7 @@ window.CATALOGO = {
 
   /* ---------- ABDOMEN ---------- */
   "elevacion-tronco-maquina": {
-    nombre: "Elevación de tronco 90° en máquina", grupo: "Abdomen", equipo: "Máquina abdominal", fotosOk: true,
+    nombre: "Elevación de tronco 90° en máquina", grupo: "Abdomen", equipo: "Máquina abdominal", fotos: "exactas",
     donde: "Máquina con asiento y una almohadilla sobre el pecho o unas manijas arriba; el movimiento es doblar el tronco hacia adelante.",
     pasos: [
       "Siéntate y ajusta el respaldo y el peso.",
@@ -512,7 +517,7 @@ window.CATALOGO = {
     buscar: "maquina de abdominales crunch tecnica"
   },
   "levantamiento-pierna-piso": {
-    nombre: "Levantamiento de piernas en el piso", grupo: "Abdomen", equipo: "Colchoneta", fotosOk: false,
+    nombre: "Levantamiento de piernas en el piso", grupo: "Abdomen", equipo: "Colchoneta", fotos: "parecidas",
     donde: "Una colchoneta en el piso.",
     pasos: [
       "Acuéstate boca arriba con las manos debajo de los glúteos.",
@@ -525,7 +530,7 @@ window.CATALOGO = {
     buscar: "elevacion de piernas acostado abdominales"
   },
   "plancha-bosu": {
-    nombre: "Plancha sobre BOSU", grupo: "Abdomen", equipo: "BOSU (media pelota)", fotosOk: false,
+    nombre: "Plancha sobre BOSU", grupo: "Abdomen", equipo: "BOSU (media pelota)", fotos: "solo-ficha",
     donde: "La media pelota azul con base plana. Se usa con la parte redonda hacia arriba o hacia abajo.",
     pasos: [
       "Apoya los antebrazos sobre el BOSU.",
@@ -538,7 +543,7 @@ window.CATALOGO = {
     buscar: "plancha isometrica en bosu"
   },
   "twist-ruso": {
-    nombre: "Abdominales twist ruso", grupo: "Abdomen", equipo: "Balón medicinal o disco", fotosOk: true,
+    nombre: "Abdominales twist ruso", grupo: "Abdomen", equipo: "Balón medicinal o disco", fotos: "exactas",
     donde: "Colchoneta y un balón medicinal, disco liviano o mancuerna pequeña.",
     pasos: [
       "Siéntate en el piso con las rodillas dobladas y los talones apoyados.",
@@ -551,7 +556,7 @@ window.CATALOGO = {
     buscar: "russian twist abdominales tecnica"
   },
   "abdominales-suelo": {
-    nombre: "Abdominales en el suelo", grupo: "Abdomen", equipo: "Colchoneta", fotosOk: true,
+    nombre: "Abdominales en el suelo", grupo: "Abdomen", equipo: "Colchoneta", fotos: "exactas",
     donde: "Una colchoneta en el piso.",
     pasos: [
       "Acuéstate boca arriba con las rodillas dobladas y los pies apoyados.",
@@ -566,7 +571,7 @@ window.CATALOGO = {
 
   /* ---------- GLÚTEOS ---------- */
   "levantamiento-atras-polea": {
-    nombre: "Levantamiento de pierna atrás en polea", grupo: "Glúteos", equipo: "Polea baja con tobillera", fotosOk: false,
+    nombre: "Levantamiento de pierna atrás en polea", grupo: "Glúteos", equipo: "Polea baja con tobillera", fotos: "exactas",
     donde: "Polea baja con una tobillera (correa acolchada que se pone en el tobillo).",
     pasos: [
       "Ponte la tobillera en un tobillo y engánchala a la polea baja.",
@@ -579,7 +584,7 @@ window.CATALOGO = {
     buscar: "patada de gluteo en polea tecnica"
   },
   "gluteo-polea": {
-    nombre: "Glúteo con polea", grupo: "Glúteos", equipo: "Polea baja con tobillera", fotosOk: true,
+    nombre: "Glúteo con polea", grupo: "Glúteos", equipo: "Polea baja con tobillera", fotos: "exactas",
     donde: "Polea baja con tobillera. Misma estación del ejercicio anterior.",
     pasos: [
       "Ponte la tobillera y engánchala a la polea baja.",
@@ -592,7 +597,7 @@ window.CATALOGO = {
     buscar: "gluteo en polea baja kickback"
   },
   "gluteo-pesa-rusa": {
-    nombre: "Sentadilla con pesa rusa (kettlebell)", grupo: "Glúteos", equipo: "Pesa rusa (kettlebell)", fotosOk: true,
+    nombre: "Sentadilla con pesa rusa (kettlebell)", grupo: "Glúteos", equipo: "Pesa rusa (kettlebell)", fotos: "exactas",
     donde: "La pesa con forma de bola y manija arriba.",
     pasos: [
       "Toma la pesa rusa con las dos manos, a la altura del pecho.",
@@ -605,7 +610,7 @@ window.CATALOGO = {
     buscar: "goblet squat con kettlebell tecnica"
   },
   "sentadilla-patada-lateral": {
-    nombre: "Sentadilla con patada lateral", grupo: "Glúteos", equipo: "Banda elástica", fotosOk: false,
+    nombre: "Sentadilla con patada lateral", grupo: "Glúteos", equipo: "Banda elástica", fotos: "solo-ficha",
     donde: "Una banda elástica puesta alrededor de los muslos o los tobillos.",
     pasos: [
       "Ponte la banda alrededor de los muslos, arriba de las rodillas.",
@@ -620,7 +625,7 @@ window.CATALOGO = {
 
   /* ---------- FUNCIONALES ---------- */
   "trx-sentadilla-profunda": {
-    nombre: "TRX sentadilla profunda", grupo: "Pierna", equipo: "TRX (cintas colgantes)", fotosOk: false,
+    nombre: "TRX sentadilla profunda", grupo: "Pierna", equipo: "TRX (cintas colgantes)", fotos: "solo-ficha",
     donde: "Cintas colgantes con manijas ancladas arriba.",
     pasos: [
       "Toma una manija en cada mano y estira los brazos al frente.",
@@ -633,7 +638,7 @@ window.CATALOGO = {
     buscar: "TRX squat sentadilla profunda"
   },
   "trx-abductor": {
-    nombre: "TRX abductor", grupo: "Pierna", equipo: "TRX (cintas colgantes)", fotosOk: false,
+    nombre: "TRX abductor", grupo: "Pierna", equipo: "TRX (cintas colgantes)", fotos: "solo-ficha",
     donde: "Cintas colgantes con manijas.",
     pasos: [
       "Toma las manijas con las dos manos y estira los brazos al frente.",
@@ -646,7 +651,7 @@ window.CATALOGO = {
     buscar: "TRX lateral lunge abductor"
   },
   "sentadilla-iso": {
-    nombre: "Sentadilla isométrica (aguantada)", grupo: "Pierna", equipo: "BOSU o pared", fotosOk: false,
+    nombre: "Sentadilla isométrica (aguantada)", grupo: "Pierna", equipo: "BOSU o pared", fotos: "solo-ficha",
     donde: "El BOSU (media pelota) o simplemente una pared lisa.",
     pasos: [
       "Párate sobre el BOSU o con la espalda apoyada en la pared.",
@@ -659,7 +664,7 @@ window.CATALOGO = {
     buscar: "sentadilla isometrica pared wall sit"
   },
   "elevacion-rodilla": {
-    nombre: "Elevación de rodilla", grupo: "Pierna", equipo: "BOSU o step", fotosOk: false,
+    nombre: "Elevación de rodilla", grupo: "Pierna", equipo: "BOSU o step", fotos: "parecidas",
     donde: "El BOSU con la parte plana hacia arriba, o un escalón bajo.",
     pasos: [
       "Párate sobre el BOSU o el step con los dos pies.",
@@ -672,7 +677,7 @@ window.CATALOGO = {
     buscar: "elevacion de rodillas equilibrio bosu"
   },
   "aductor-banda": {
-    nombre: "Aductor con banda", grupo: "Pierna", equipo: "Banda elástica", fotosOk: false,
+    nombre: "Aductor con banda", grupo: "Pierna", equipo: "Banda elástica", fotos: "solo-ficha",
     donde: "Banda elástica anclada a un punto fijo bajo, o una colchoneta.",
     pasos: [
       "Acuéstate de lado o ponte de pie con la banda en el tobillo.",
@@ -685,7 +690,7 @@ window.CATALOGO = {
     buscar: "aductor con banda elastica ejercicio"
   },
   "sentadilla-dinamica": {
-    nombre: "Sentadilla dinámica", grupo: "Pierna", equipo: "Peso corporal", fotosOk: false,
+    nombre: "Sentadilla dinámica", grupo: "Pierna", equipo: "Peso corporal", fotos: "exactas",
     donde: "Espacio libre en el piso.",
     pasos: [
       "Párate con los pies al ancho de los hombros.",
@@ -698,7 +703,7 @@ window.CATALOGO = {
     buscar: "sentadilla dinamica sin salto"
   },
   "peso-muerto-saco": {
-    nombre: "Peso muerto con saco", grupo: "Pierna", equipo: "Saco búlgaro o pesa rusa", fotosOk: false,
+    nombre: "Peso muerto con saco", grupo: "Pierna", equipo: "Saco búlgaro o pesa rusa", fotos: "parecidas",
     donde: "Un saco de arena, pesa rusa o mancuerna.",
     pasos: [
       "Párate con los pies al ancho de la cadera y el peso al frente.",
@@ -711,7 +716,7 @@ window.CATALOGO = {
     buscar: "peso muerto tecnica espalda recta"
   },
   "salto-cajon": {
-    nombre: "Salto al cajón", grupo: "Pierna", equipo: "Cajón o step", fotosOk: true,
+    nombre: "Salto al cajón", grupo: "Pierna", equipo: "Cajón o step", fotos: "exactas",
     donde: "Un cajón de madera o un step de altura baja.",
     pasos: [
       "Párate frente al cajón, a un paso de distancia.",
@@ -724,7 +729,7 @@ window.CATALOGO = {
     buscar: "step up subir al cajon sin salto"
   },
   "trx-espalda": {
-    nombre: "TRX espalda (remo suspendido)", grupo: "Espalda", equipo: "TRX (cintas colgantes)", fotosOk: false,
+    nombre: "TRX espalda (remo suspendido)", grupo: "Espalda", equipo: "TRX (cintas colgantes)", fotos: "parecidas",
     donde: "Cintas colgantes con manijas ancladas arriba.",
     pasos: [
       "Toma una manija en cada mano, palmas enfrentadas.",
@@ -737,7 +742,7 @@ window.CATALOGO = {
     buscar: "TRX row remo suspendido tecnica"
   },
   "apertura-trx": {
-    nombre: "Apertura de pecho en TRX", grupo: "Pecho", equipo: "TRX (cintas colgantes)", fotosOk: false,
+    nombre: "Apertura de pecho en TRX", grupo: "Pecho", equipo: "TRX (cintas colgantes)", fotos: "solo-ficha",
     donde: "Cintas colgantes con manijas.",
     pasos: [
       "Toma una manija en cada mano y ponte de frente al anclaje.",
