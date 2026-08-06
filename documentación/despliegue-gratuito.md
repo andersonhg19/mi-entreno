@@ -196,3 +196,31 @@ GitHub Pages se reconstruye solo en un par de minutos.
 - [wger — alternativa de base de datos de ejercicios (CC-BY-SA)](https://github.com/wger-project/wger)
 - [WCAG — requisitos de contraste, guía en lenguaje claro](https://medium.com/design-bootcamp/a-plain-language-guide-to-wcag-contrast-requirements-6fe18569d5df)
 - [Guía de accesibilidad móvil WCAG 2.2 (2026)](https://corpowid.ai/blog/mobile-application-accessibility-practical-humancentered-guide-android-ios)
+
+---
+
+## Si la app no se actualiza: mira si GitHub Pages construyó
+
+Pasó una vez y cuesta descubrirlo, porque **no avisa de nada**: la
+construcción falla y el sitio sigue sirviendo la versión anterior como si
+todo estuviera bien. El `git push` sale correcto, la web abre, y lo que ves
+es la versión de antes.
+
+Para comprobarlo:
+
+```bash
+gh api repos/andersonhg19/mi-entreno/pages/builds --jq '.[0:3][] | "\(.status) \(.commit[0:8]) \(.created_at)"'
+```
+
+Tiene que decir `built`. Si dice `errored`, el push llegó pero la publicación
+no.
+
+### Por qué hay un archivo `.nojekyll`
+
+GitHub Pages pasa todo por **Jekyll** salvo que exista ese archivo. Aquí
+Jekyll no aporta nada —esto es HTML, CSS y JS puro, sin plantillas— y a
+cambio añade una forma más de que la publicación falle, ignora en silencio
+cualquier archivo o carpeta que empiece por `_` o por punto, y hace la
+construcción más lenta.
+
+Con `.nojekyll`, GitHub copia los archivos tal cual. Es lo que queremos.
