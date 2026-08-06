@@ -1,0 +1,67 @@
+# Publica la app en GitHub Pages.
+#
+# POR QUÉ EXISTE ESTE ARCHIVO
+# ---------------------------
+# Antes se usaba el constructor "legacy" de Pages, el que se activa solo al
+# hacer push. Dejó de funcionar: dos publicaciones seguidas agotaron su
+# límite de 10 minutos y fallaron. Y cuando falla no dice por qué —la API
+# solo devuelve "Page build failed"— así que no hay forma de arreglarlo.
+#
+# Peor aún: **el fallo es invisible desde fuera**. El push sale bien, la web
+# abre, y sigue sirviendo la versión anterior como si todo estuviera en orden.
+# Anderson estuvo buscando una función en una versión que nunca llegó a
+# publicarse.
+#
+# Este mecanismo es el que GitHub mantiene, deja logs de verdad cuando algo
+# falla, y publica los archivos tal cual: aquí no hay nada que construir,
+# es HTML, CSS y JS puro.
+name: Publicar en GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:        # para poder relanzarlo a mano si hace falta
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Si llegan dos pushes seguidos, que gane el último y no se pisen.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.despliegue.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Comprobar que la versión está subida en los dos sitios
+        # sw.js y datos-planes.js tienen que decir la misma versión, o los
+        # teléfonos se quedan con la copia vieja en caché. Lo comprueba
+        # `validar-datos.js`, pero si alguien sube sin pasar las pruebas,
+        # esto lo caza antes de publicar.
+        run: |
+          v_sw=$(grep -oP 'VERSION = "mi-entreno-v\K\d+' sw.js)
+          v_app=$(grep -oP 'VERSION_APP = "\K\d+' assets/js/datos-planes.js)
+          echo "sw.js=v$v_sw  datos-planes.js=v$v_app"
+          if [ "$v_sw" != "$v_app" ]; then
+            echo "::error::Las versiones no coinciden: sw.js dice v$v_sw y datos-planes.js dice v$v_app"
+            exit 1
+          fi
+
+      - uses: actions/configure-pages@v5
+
+      - name: Empaquetar el sitio
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: Publicar
+        id: despliegue
+        uses: actions/deploy-pages@v4
