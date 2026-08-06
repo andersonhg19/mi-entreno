@@ -1055,3 +1055,42 @@ arriba cuando la recarga automática no puede hacerse.
 **La lección:** las pruebas decían que las alternativas estaban, y era verdad.
 Ninguna comprobaba si se podía **llegar** a ellas. Una función que el usuario
 no encuentra es exactamente igual de útil que una que no existe.
+
+
+---
+
+### 2026-08-06 - Incidente: la v12 no se publicaba, y nadie lo decía
+
+Al subir la v12 la app seguía sirviendo la v11. El `git push` salía bien, la
+web abría, y todo parecía correcto.
+
+**El constructor antiguo de GitHub Pages estaba agotando su límite de 10
+minutos.** Dos publicaciones seguidas: de las 13:54:47 a las 14:05:17, y
+antes otra igual. La API solo devuelve `"Page build failed"`, sin logs, así
+que no hay nada que depurar.
+
+Lo grave no es el fallo, es que **es invisible**. El sitio sigue en pie con
+la versión anterior, así que desde fuera no se distingue de «todavía no ha
+llegado». Es el mismo patrón que el bug de la actualización silenciosa de
+esta misma versión: algo falla o queda pendiente y nadie se entera.
+
+**Arreglado:** se publica con **GitHub Actions**
+(`.github/workflows/publicar.yml`) en vez del constructor `legacy`, que
+además está descontinuado. Da logs de verdad, se puede relanzar a mano, y el
+flujo comprueba antes de publicar que `sw.js` y `datos-planes.js` declaren la
+misma versión — si no coinciden, los teléfonos se quedan con la copia vieja
+en caché.
+
+De paso se añadió `.nojekyll`: esto es HTML, CSS y JS puro, y pasar por
+Jekyll solo añadía formas de fallar.
+
+**Cómo comprobarlo la próxima vez** (queda en `despliegue-gratuito.md`):
+
+```bash
+gh run list --workflow=publicar.yml --limit 3
+```
+
+**Lección:** publicar no es empujar. Mientras no se compruebe que la versión
+que sirve el servidor es la que se subió, el despliegue no está hecho. El
+script de comprobación de producción ya lo hacía —espera a ver el número de
+versión nuevo— y es lo que destapó esto.
