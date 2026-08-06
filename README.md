@@ -76,7 +76,8 @@ npm run qa     # completo, abre Chromium de verdad
 | `prueba-completitud.js` | Compara la rutina ejercicio a ejercicio contra las planillas; valida imágenes, avisos y arranque |
 | `prueba-humo.js` | Renderiza las 145 pantallas de ambas rutinas (jsdom) |
 | `prueba-visual.js` | Navegador real: qué se ve, desbordes, carrusel, temporizador, filtros, temas, letra al máximo. Capturas en `pruebas/capturas/` |
-| `prueba-pwa.js` | Manifest, **modo sin conexión**, contraste medido (20 pares × 3 temas), accesibilidad, persistencia, y los 114 ejercicios comprobando que cada imagen es la suya |
+| `prueba-regresiones.js` | Un caso por cada bug que ya se coló alguna vez: `hidden`, casillas, carrusel, ids, persistencia, temporizador, foco, arranque, 320 px al 180 % |
+| `prueba-pwa.js` | Manifest, **modo sin conexión**, contraste **por barrido** (todo texto, 7 pantallas × 3 temas, AAA), accesibilidad, persistencia, y los 114 ejercicios comprobando que cada imagen es la suya |
 
 ---
 
@@ -115,6 +116,8 @@ Después de cambiar algo:
 
 - Rutinas: **Life Gym — Centro de Entrenamiento Físico**
 - Fichas de los ejercicios: recortadas de los tableros de **Life Gym**
-  (perspectiva corregida y ampliadas con EDSR; ver `documentación/imagenes-fichas.md`)
+  (perspectiva corregida y ampliadas con EDSR ×2; el modelo, el aumento y el
+  enfoque están **medidos** contra una verdad de referencia, no elegidos a ojo
+  — ver `documentación/imagenes-fichas.md` y `herramientas/banco/`)
 - Fotos complementarias: [free-exercise-db](https://github.com/yuhonas/free-exercise-db)
   (dominio público), solo las 35 que se verificó que corresponden

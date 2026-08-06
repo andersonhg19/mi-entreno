@@ -8,17 +8,18 @@
 window.Cronometro = (function () {
   var VUELTA = 282.7;                 /* 2·π·45, el perímetro del anillo */
 
-  var caja, numero, reloj, anillo, btnMas, btnParar;
+  var caja, numero, reloj, anillo, btnMas, btnParar, siguiente;
   var finEn = 0, total = 60, intervalo = null, ultimoAviso = -1;
   var alTerminar = null;
 
   function init() {
-    caja     = document.getElementById("temporizador");
-    numero   = document.getElementById("temporizadorNumero");
-    reloj    = document.getElementById("temporizadorReloj");
-    anillo   = document.getElementById("anilloProgreso");
-    btnMas   = document.getElementById("btnMasTiempo");
-    btnParar = document.getElementById("btnPararTiempo");
+    caja      = document.getElementById("temporizador");
+    numero    = document.getElementById("temporizadorNumero");
+    reloj     = document.getElementById("temporizadorReloj");
+    anillo    = document.getElementById("anilloProgreso");
+    btnMas    = document.getElementById("btnMasTiempo");
+    btnParar  = document.getElementById("btnPararTiempo");
+    siguiente = document.getElementById("temporizadorSiguiente");
 
     btnMas.addEventListener("click", function () {
       finEn += 30000; total += 30; pintar();
@@ -68,9 +69,15 @@ window.Cronometro = (function () {
     alTerminar = null;
   }
 
-  function iniciar(segundos, callback) {
+  function iniciar(segundos, callback, loQueViene) {
     if (!caja) init();
     alTerminar = callback || null;
+    /* Texto ya montado por quien llama: aquí no se sabe si lo que viene es
+       otro ejercicio o el final del día. */
+    if (siguiente) {
+      siguiente.textContent = loQueViene || "";
+      siguiente.hidden = !loQueViene;
+    }
     finEn = Date.now() + segundos * 1000;
     total = segundos;
     ultimoAviso = -1;

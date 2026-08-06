@@ -20,14 +20,20 @@ Y las **fotos originales de los tableros**, que no están en el repositorio
 
 | Script | Qué hace |
 |--------|----------|
-| `1-rectificar.py` | Detecta las 4 esquinas del panel en cada foto y corrige la perspectiva. Deja `A_warp.jpg` y `AF_warp.jpg`, los tableros como rectángulos perfectos. |
+| `1-rectificar.py` | Detecta las 4 esquinas del panel en las fotos de Anderson y corrige la perspectiva. Deja `A_warp.jpg` y `AF_warp.jpg`, los tableros como rectángulos perfectos. |
+| `2-alinear-sharid.py` | Empareja los tableros de Sharid con los de Anderson por SIFT y los deja **en el mismo lienzo**. De ahí salen las tarjetas que en el tablero de Anderson quemó el flash. |
 | `mapa-fichas.py` | La tabla `clave del ejercicio → (tablero, fila, columna)`. No se ejecuta solo; lo importa el siguiente. |
-| `2-generar-fichas.py` | Recorta cada tarjeta, la revela (blancos y niveles), la amplía con **EDSR ×3** y la guarda en `assets/img/ejercicios/<clave>-ficha.jpg`. **Tarda ~35 minutos** para las 55. |
+| `3-generar-fichas.py` | Recorta cada tarjeta del tablero que mejor la captó, la revela (blancos y niveles), la amplía con **EDSR ×2**, la enfoca y la guarda en `assets/img/ejercicios/<clave>-ficha.jpg`. **Tarda ~10 minutos** para las 55. |
 | `descargar-fotos.js` | Baja de free-exercise-db las dos fotos reales de cada ejercicio. |
-| `comparar-superresolucion.py` | Descarga cuatro modelos de superresolución y los compara sobre una misma ficha. Es lo que se usó para elegir EDSR. |
+| `comparar-superresolucion.py` | Descarga los modelos de superresolución y los compara sobre una misma ficha. |
 
-El modelo EDSR (37 MB) lo descarga `comparar-superresolucion.py` a
-`modelos/edsr_x3.pb`. No está en el repositorio por tamaño.
+Los modelos EDSR (~38 MB cada uno) los descarga `comparar-superresolucion.py`
+a `modelos/`. No están en el repositorio por tamaño.
+
+**El porqué de EDSR ×2, del enfoque 1,4 · 55 % y de por qué encadenar modelos
+no sirve está medido** en `../documentación/imagenes-fichas.md`. Son
+decisiones con número detrás, no preferencias: no las cambies sin volver a
+pasar el banco.
 
 ## Después de regenerar
 

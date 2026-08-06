@@ -4,6 +4,14 @@ Documento de diseño. **No modifica código**: propone el reemplazo del bloque
 `.fotos` (dos imágenes a media pantalla) por un carrusel accesible, y un orden
 nuevo para la pantalla completa.
 
+> **Al día de hoy, dos cosas de aquí ya no son así.** El carrusel implantado
+> **no lleva los puntos numerados** (Anderson los pidió fuera en la v7: con las
+> flechas y el contador «Imagen 2 de 3» sobran), y las flechas usan
+> `aria-disabled`, nunca `disabled` — deshabilitar el botón que tiene el foco
+> mueve el foco y **cancela el desplazamiento suave en curso**, que fue
+> justo el bug que dejó el carrusel clavado. Lo que manda es
+> `assets/js/carrusel.js`; esto queda como registro del razonamiento.
+
 Contexto: PWA sin librerías, HTML + CSS + JS puro, funciona sin internet.
 Usuario principal con **baja visión**. Reglas que no se negocian: contraste
 ≥ 7:1, base 17 px (no agrandar), áreas tocables ≥ 44 px (el proyecto usa 48),

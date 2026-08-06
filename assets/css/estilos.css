@@ -22,6 +22,10 @@
   --escala: 1;
   --base: calc(17px * var(--escala));
   --toque: 48px;
+  /* El botón principal de cada pantalla («Serie hecha», «Empezar») se toca
+     de pie, con las manos ocupadas y sin mirar fino. Ese merece más área
+     que el mínimo de 48; los secundarios no, o la pantalla se llena. */
+  --toque-principal: 58px;
 
   --radio-1: 8px;  --radio-2: 14px;  --radio-3: 20px;  --radio-full: 999px;
   --e0: 2px; --e1: 4px; --e2: 8px;  --e3: 12px;
@@ -318,6 +322,7 @@ button:active, .ejercicio:active, .dia:active, .persona:active { transform: scal
   cursor: pointer; text-decoration: none;
 }
 .btn-principal {
+  min-height: var(--toque-principal);
   background: var(--acento); color: var(--acento-texto);
   border-color: var(--acento); font-weight: 800;
   justify-content: center;
@@ -653,6 +658,11 @@ button:active, .ejercicio:active, .dia:active, .persona:active { transform: scal
   width: auto; flex: 1 1 4em; min-width: 0; justify-content: center;
   font-size: var(--t-seccion); margin-bottom: 0; padding: var(--e3) var(--e2);
 }
+.nota-peso {
+  margin: var(--e2) 0 0;
+  font-size: var(--t-etiqueta); color: var(--texto-suave);
+  text-align: left;
+}
 .campo-peso {
   width: 100%; min-height: var(--toque);
   font-family: inherit; font-size: var(--t-cuerpo);
@@ -707,6 +717,13 @@ button:active, .ejercicio:active, .dia:active, .persona:active { transform: scal
   font-family: var(--fuente-num);
   font-size: var(--t-display); font-weight: 800; line-height: 1;
   color: var(--texto); font-variant-numeric: tabular-nums;
+}
+.temporizador-siguiente {
+  margin: var(--e3) 0 0;
+  max-width: 22em;
+  font-size: var(--t-menor); font-weight: 600;
+  color: var(--texto-suave); text-align: center;
+  text-wrap: balance;
 }
 .temporizador-acciones { display: flex; gap: var(--e2); }
 .temporizador-acciones .btn-grande { justify-content: center; margin-bottom: 0; }

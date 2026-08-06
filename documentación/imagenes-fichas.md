@@ -76,19 +76,44 @@ trabaja mucho mejor sobre una imagen con contraste real.
 
 ### 4 · Ampliar con superresolución neuronal
 
-Se usa **EDSR ×3** (`cv2.dnn_superres`, modelo de 37 MB). Se probaron cuatro
-modelos sobre la misma ficha:
+Se usa **EDSR ×2**. La primera vez el modelo se eligió a ojo; ahora está
+medido, y la medida cambió dos decisiones.
 
-| Modelo | Tiempo | Resultado sobre el título impreso |
-|--------|--------|-----------------------------------|
-| LANCZOS (sin red) | instantáneo | bordes blandos, gris difuso |
-| FSRCNN ×3 | 0,2 s | apenas mejor que LANCZOS |
-| ESPCN ×3 | 0,2 s | apenas mejor que LANCZOS |
-| **EDSR ×3** | **33 s** | **bordes limpios, sin halos — el mejor** |
-| LapSRN ×4 | 3,6 s | bueno, pero con halo alrededor de las letras |
+**Cómo se mide.** El tablero funcional tiene 629 px reales por tarjeta y el
+de gimnasio 457. Así que las tarjetas del funcional sirven de **verdad**: se
+reducen 2,14 veces —el mismo aumento que hace la app al llevar una tarjeta
+de gimnasio al lienzo final—, se vuelven a ampliar con cada tubería y se
+compara el resultado con la verdad que sí tenemos. Nadie opina: sale un
+número.
 
-EDSR es 150 veces más lento que los demás, pero son 55 fichas y se generan
-una sola vez. Sobre dibujo de línea y tipografía la diferencia se ve.
+| Tubería | PSNR | SSIM | Nitidez vs. verdad |
+|---------|------|------|--------------------|
+| LANCZOS (sin red) | 30,70 | 0,9605 | 0,90 |
+| FSRCNN ×3 | 29,45 | 0,9445 | 0,84 |
+| ESPCN ×3 | 29,32 | 0,9479 | 0,83 |
+| LapSRN ×4 | 29,89 | 0,9483 | 0,83 |
+| **EDSR ×2** | 31,56 | **0,9650** | 0,87 |
+| EDSR ×3 | **31,97** | 0,9632 | 0,88 |
+| EDSR ×2 → EDSR ×2 | 31,25 | 0,9637 | 0,86 |
+| EDSR ×3 → EDSR ×2 | 31,79 | 0,9626 | 0,87 |
+| EDSR ×2 → LapSRN ×2 | 31,34 | 0,9629 | 0,86 |
+| EDSR ×3 → LapSRN ×2 | 31,82 | 0,9620 | 0,87 |
+| LapSRN ×2 → EDSR ×2 | 29,81 | 0,9533 | 0,85 |
+| ESPCN ×2 → EDSR ×2 | 30,16 | 0,9578 | 0,85 |
+
+Tres conclusiones:
+
+- **Encadenar modelos no funciona.** Era la idea más prometedora sobre el
+  papel: pasar un modelo sobre el resultado de otro. Se probaron seis
+  cadenas y **ninguna gana a su propio primer paso**. Lo que hace la
+  segunda pasada es amplificar lo que la primera se inventó. Y si delante
+  va un modelo flojo, el resultado se arruina aunque detrás vaya EDSR
+  (0,9533 frente a 0,9650).
+- **×2 va mejor que ×3**, medido sobre 47 tarjetas. Tiene sentido: el
+  aumento que hace falta es 2,14, así que ×3 se pasa y luego hay que bajar
+  un 30 %, tirando lo que la red acababa de reconstruir.
+- Ninguna tubería llega a la nitidez del cartón real (todas por debajo de
+  1,00). Por eso el enfoque final del paso 5 no es un capricho.
 
 ### 5 · Encajar y guardar
 
@@ -97,8 +122,18 @@ una sola vez. Sobre dibujo de línea y tipografía la diferencia se ve.
 - Lienzo **1000 × 750 (4:3) idéntico para todas**, con la tarjeta centrada y
   el resto relleno con el color del papel. Así todas las fichas salen del
   mismo tamaño y ninguna aparece recortada.
-- Enfoque suave (radio 1,1 · 55 %), mucho menor que sin red: EDSR ya define
-  los bordes y pasarse genera halos.
+- Enfoque de **radio 1,4 al 55 %**, también medido contra la verdad y no a
+  ojo. Con el 1,1 que se usaba antes el resultado se quedaba en 0,95 de la
+  nitidez del cartón real; con 1,4 llega a 0,99 y el SSIM sube de 0,9715 a
+  0,9762. Por encima de ahí el SSIM se desploma: son halos.
+
+  | Radio · % | SSIM | Nitidez vs. verdad |
+  |-----------|------|--------------------|
+  | sin enfoque | 0,9679 | 0,88 |
+  | 1,1 · 55 % (antes) | 0,9754 | 0,95 |
+  | **1,4 · 55 %** | **0,9762** | **0,99** |
+  | 1,4 · 80 % | 0,9739 | 1,04 |
+  | 1,8 · 110 % | 0,9568 | 1,15 |
 - JPEG calidad 88 **sin submuestreo de color** (`subsampling=0`). En texto e
   imagen de línea el submuestreo se nota más que la calidad.
 
@@ -106,12 +141,68 @@ Resultado: ~115 KB por ficha, 6,3 MB las 55.
 
 ---
 
-## Las dos fichas que vienen del otro tablero
+## Los dos tableros son la misma baraja
 
-En el tablero de Anderson el flash quemó una zona, y dos tarjetas quedaron
-ilegibles: **Sentadilla con mancuernas** y **Pantorrilla sentado**. Se sacan
-del tablero de Sharid, donde el reflejo cae en otro sitio. El dibujo y el
-título son idénticos en los dos.
+Esto resultó ser lo más útil de todo el proceso, y no era evidente: el
+tablero de Anderson y el de Sharid llevan **las mismas tarjetas**. Mismos
+dibujos, mismos títulos, misma cuadrícula. Lo único que cambia es el color
+de las franjas de músculo —azul marino en uno, granate en el otro— y las
+marcas de cada quien.
+
+Es decir: de cada tarjeta hay **dos fotos independientes**. Y, sobre todo,
+**el reflejo del flash cae en sitios distintos**. La columna que en un
+tablero salió quemada, en el otro está impecable.
+
+`herramientas/2-alinear-sharid.py` empareja los dos tableros con SIFT
+(~2.200 correspondencias, 2,6 px de error medio sobre un panel de 4.600 px)
+y deja el de Sharid **en el mismo lienzo** que el de Anderson, así que la
+geometría de recorte ya medida sirve para los dos.
+
+Con los dos tableros alineados se puede comparar tarjeta a tarjeta. La
+medida que decide es el **contraste** (p98 − p2 de la luminancia):
+
+- El *porcentaje de píxeles reventados* engaña: *Leg extension* sale
+  perfecta con un 8 % de blanco reventado, porque lo que está quemado es el
+  papel, no el dibujo.
+- La *medida de detalle* engaña más todavía: el borde del propio reflejo
+  cuenta como detalle, así que una tarjeta ilegible puntúa **más alto** que
+  la buena.
+- El contraste separa limpio: las tarjetas destrozadas dan 71 y 100, y
+  todas las sanas pasan de 150.
+
+Resultado: **tres** tarjetas se toman del tablero de Sharid.
+
+| Tarjeta | Contraste en Anderson | En Sharid |
+|---------|----------------------|-----------|
+| Pantorrilla sentado | 71 (ilegible) | 184 |
+| Sentadilla con mancuernas | 100 (ilegible) | 173 |
+| Prensa atlética | 183 | 196 |
+
+Las otras 52 se quedan con el tablero de Anderson, que es la foto más
+nítida de las dos y donde las marcas son las suyas. Y **no** se cambian a
+la ligera: cada candidata se miró en pantalla al lado de su pareja antes de
+decidir.
+
+### Combinar las dos fotos: probado y descartado
+
+La idea siguiente era obvia: si hay dos fotos de la misma tarjeta,
+promediarlas debería recuperar detalle (superresolución multi-imagen).
+
+Se midió con una prueba limpia —dos capturas simuladas de una misma verdad,
+cada una con su desplazamiento de subpíxel, su desenfoque y su ruido, para
+que ningún método jugara en casa—: combinar da **+0,0045 de SSIM y −0,22 dB
+de PSNR**. Está al borde de lo que se puede medir.
+
+Y eso en el caso ideal. Con las fotos reales sería menos, porque los dos
+tableros son ediciones distintas y cualquier error de alineación
+**fantasmea el texto**, que se ve bastante peor que un texto blando. No
+compensa.
+
+(El primer intento de medirlo estaba mal planteado: comparaba
+«Anderson solo» contra «Anderson + Sharid» usando como verdad la propia
+foto de Anderson, con lo que todo lo que aportara la otra foto contaba como
+error por definición. Decía que combinar empeora, pero medido así no decía
+nada.)
 
 ## Lo que NO se hace
 

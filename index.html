@@ -101,6 +101,11 @@
       <p class="temporizador-numero" id="temporizadorNumero">60</p>
     </div>
 
+    <!-- Qué toca después. La app no lo dicta con su voz —el descanso ya habla
+         bastante—, pero al vivir dentro de la región aria-live del
+         temporizador, un lector de pantalla sí lo anuncia. -->
+    <p class="temporizador-siguiente" id="temporizadorSiguiente" hidden></p>
+
     <div class="temporizador-acciones">
       <button class="btn-grande btn-secundario" id="btnMasTiempo">+30 s</button>
       <button class="btn-grande btn-peligro" id="btnPararTiempo">Terminar</button>

@@ -179,72 +179,104 @@ function aRgb(css) {
   info.push(`Sin internet: la app abre, lista los ejercicios y muestra las imagenes ("${detalleOffline.nombre}")`);
   await ctx.setOffline(false);
 
-  /* ========== 3. CONTRASTE REAL EN LOS TRES TEMAS ========== */
+  /* ========== 3. CONTRASTE REAL EN LOS TRES TEMAS ==========
+
+     Antes se medían veinte selectores escritos a mano en una sola
+     pantalla. Eso solo demuestra lo que a uno se le ocurrió listar: un
+     texto nuevo con mal contraste pasaba sin que nadie se enterara.
+     Ahora se BARRE: todo elemento que pinte texto, en todas las
+     pantallas y en los tres temas. */
+  const RUTAS_CONTRASTE = [
+    "#/", "#/p/anderson", "#/p/anderson/lista", "#/p/anderson/d/2",
+    "#/p/anderson/d/2/e/0", "#/p/anderson/x/sentadilla", "#/tabata"
+  ];
   await page.goto(base, { waitUntil: "networkidle" });
-  await page.evaluate(() => { window.location.hash = "#/p/anderson/d/2/e/0"; });
-  await page.waitForTimeout(500);
+
   for (const tema of ["oscuro", "claro", "maximo"]) {
-    await page.evaluate(t => {
-      document.documentElement.setAttribute("data-tema", t);
-    }, tema);
-    /* Los botones tienen transición de color: si se mide antes de que
-       termine, se lee un color intermedio y el contraste sale falseado. */
-    await page.waitForTimeout(600);
-    const pares = await page.evaluate(() => {
-      const fondoDe = el => {
-        let n = el;
-        while (n && n !== document.documentElement) {
-          const c = getComputedStyle(n).backgroundColor;
-          if (c && c !== "rgba(0, 0, 0, 0)" && c !== "transparent") return c;
-          n = n.parentElement;
+    await page.evaluate(t => document.documentElement.setAttribute("data-tema", t), tema);
+    const vistos = new Map();
+    let medidos = 0;
+
+    for (const ruta of RUTAS_CONTRASTE) {
+      await page.evaluate(h => { window.location.hash = h; }, ruta);
+      /* Los botones tienen transición de color: si se mide antes de que
+         termine, se lee un color intermedio y el contraste sale falseado. */
+      await page.waitForTimeout(600);
+
+      const pares = await page.evaluate(() => {
+        const fondoDe = el => {
+          let n = el;
+          while (n && n !== document.documentElement) {
+            const c = getComputedStyle(n).backgroundColor;
+            if (c && c !== "rgba(0, 0, 0, 0)" && c !== "transparent") return c;
+            n = n.parentElement;
+          }
+          return getComputedStyle(document.body).backgroundColor;
+        };
+        const salida = [];
+        for (const el of document.querySelectorAll("body *")) {
+          if (el.offsetParent === null && getComputedStyle(el).position !== "fixed") continue;
+          if (el.getAttribute("aria-hidden") === "true") continue;
+          if (el.closest(".salto-contenido")) continue;   /* vive fuera de pantalla */
+          /* Solo elementos que pintan texto ELLOS, no contenedores: si no,
+             se mide el color heredado de un div vacío y no significa nada. */
+          const propio = [...el.childNodes]
+            .filter(n => n.nodeType === 3 && n.textContent.trim())
+            .map(n => n.textContent.trim()).join(" ");
+          if (!propio) continue;
+          const r = el.getBoundingClientRect();
+          if (r.width < 4 || r.height < 4) continue;
+          const cs = getComputedStyle(el);
+          const px = parseFloat(cs.fontSize);
+          const negrita = parseInt(cs.fontWeight, 10) >= 700;
+          salida.push({
+            etiqueta: `${el.tagName.toLowerCase()}.${(el.className || "").toString().split(" ")[0] || "?"}`,
+            muestra: propio.slice(0, 28),
+            color: cs.color, fondo: fondoDe(el),
+            /* WCAG: «texto grande» es >=24px, o >=18.66px si va en negrita */
+            grande: px >= 24 || (negrita && px >= 18.66)
+          });
         }
-        return getComputedStyle(document.body).backgroundColor;
-      };
-      const medir = (sel, etiqueta) => {
-        const el = document.querySelector(sel);
-        if (!el) return null;
-        return { etiqueta, color: getComputedStyle(el).color, fondo: fondoDe(el) };
-      };
-      return [
-        medir(".detalle-nombre", "titulo del ejercicio"),
-        medir(".detalle-equipo", "texto secundario"),
-        medir(".pildora-grupo", "pildora de grupo muscular"),
-        medir(".pasos li span", "texto de los pasos"),
-        medir("#btnSerieHecha", "boton principal"),
-        medir("#btnLeer", "boton secundario"),
-        medir(".foto-pie", "rotulo de la imagen"),
-        medir(".aviso", "aviso de seguridad"),
-        medir(".tarjeta h3", "titulo de tarjeta"),
-        medir(".receta-valor", "cifra de la prescripcion"),
-        medir(".receta-etiqueta", "etiqueta de la prescripcion"),
-        medir(".carrusel-posicion", "contador del carrusel"),
-        medir(".carrusel-flecha", "flecha del carrusel (deshabilitada)"),
-        medir(".carrusel-punto", "punto del carrusel"),
-        medir('.carrusel-punto[aria-current="true"]', "punto activo del carrusel"),
-        medir("#btnAnterior", "boton deshabilitado"),
-        medir("#campoPeso", "campo de peso"),
-        medir(".series-numero", "cifra de series"),
-        medir(".series-etiqueta", "etiqueta de series"),
-        medir(".titulo-barra", "titulo de la barra")
-      ].filter(Boolean);
-    });
-    /* El listón de este proyecto es AAA (7:1), no el AA de 4.5:1.
-       El usuario principal tiene baja visión: aquí no se negocia. */
-    const MINIMO = 7;
-    const medidos = pares.map(p => ({ ...p, r: contraste(aRgb(p.color), aRgb(p.fondo)) }))
-                         .sort((a, b) => a.r - b.r);
-    for (const p of medidos) {
-      if (p.r < MINIMO) {
-        fallo(`contraste tema ${tema}: "${p.etiqueta}" = ${p.r.toFixed(2)}:1 ` +
-              `(minimo ${MINIMO}) · texto ${p.color} sobre ${p.fondo}`);
+        return salida;
+      });
+
+      /* Se agrupa por combinación de colores: el mismo par repetido en
+         cincuenta sitios es un solo hallazgo, no cincuenta. */
+      medidos += pares.length;
+      for (const p of pares) {
+        const llave = `${p.color}|${p.fondo}|${p.grande}`;
+        if (!vistos.has(llave)) vistos.set(llave, { ...p, rutas: new Set() });
+        vistos.get(llave).rutas.add(ruta);
       }
     }
-    info.push(`Contraste tema ${tema}: ${medidos.length} pares medidos, ` +
-              `el peor "${medidos[0].etiqueta}" = ${medidos[0].r.toFixed(2)}:1`);
+
+    /* El listón de este proyecto es AAA: 7:1 para texto normal y 4.5:1
+       para texto grande. El usuario principal tiene baja visión: aquí no
+       se baja a AA. */
+    const combinaciones = [...vistos.values()]
+      .map(p => ({ ...p, r: contraste(aRgb(p.color), aRgb(p.fondo)), minimo: p.grande ? 4.5 : 7 }))
+      .sort((a, b) => (a.r - a.minimo) - (b.r - b.minimo));
+
+    for (const p of combinaciones) {
+      if (p.r < p.minimo) {
+        fallo(`contraste tema ${tema}: ${p.etiqueta} ("${p.muestra}") = ${p.r.toFixed(2)}:1, ` +
+              `minimo ${p.minimo} · texto ${p.color} sobre ${p.fondo} · en ${[...p.rutas][0]}`);
+      }
+    }
+    const peor = combinaciones[0];
+    info.push(`Contraste tema ${tema}: ${medidos} textos medidos en ${RUTAS_CONTRASTE.length} ` +
+              `pantallas (${combinaciones.length} combinaciones distintas de color); ` +
+              `la mas justa ${peor.etiqueta} "${peor.muestra}" = ${peor.r.toFixed(2)}:1 ` +
+              `(minimo ${peor.minimo})`);
   }
   await page.evaluate(() => document.documentElement.setAttribute("data-tema", "oscuro"));
 
-  /* ========== 4. ACCESIBILIDAD ========== */
+  /* ========== 4. ACCESIBILIDAD ==========
+     Se vuelve a una pantalla de ejercicio: es donde viven #numSeries y los
+     demas elementos que se auditan. El barrido de contraste acaba en el
+     Tabata, y alli no existen. */
+  await page.evaluate(() => { window.location.hash = "#/p/anderson/d/2/e/0"; });
+  await page.waitForTimeout(500);
   const a11y = await page.evaluate(() => {
     const problemas = [];
     if (document.documentElement.lang !== "es") problemas.push('falta lang="es" en <html>');

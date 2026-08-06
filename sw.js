@@ -7,7 +7,7 @@
    teléfonos se actualicen.
    ============================================================ */
 
-var VERSION = "mi-entreno-v7";
+var VERSION = "mi-entreno-v8";
 
 var ARCHIVOS = [
   "./",

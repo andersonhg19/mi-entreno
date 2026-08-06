@@ -11,8 +11,9 @@
     "humo": "node pruebas/prueba-humo.js",
     "visual": "node pruebas/prueba-visual.js",
     "pwa": "node pruebas/prueba-pwa.js",
+    "regresiones": "node pruebas/prueba-regresiones.js",
     "test": "node pruebas/validar-datos.js && node pruebas/prueba-completitud.js && node pruebas/prueba-humo.js",
-    "qa": "node pruebas/validar-datos.js && node pruebas/prueba-completitud.js && node pruebas/prueba-humo.js && node pruebas/prueba-visual.js && node pruebas/prueba-pwa.js"
+    "qa": "node pruebas/validar-datos.js && node pruebas/prueba-completitud.js && node pruebas/prueba-humo.js && node pruebas/prueba-visual.js && node pruebas/prueba-regresiones.js && node pruebas/prueba-pwa.js"
   },
   "devDependencies": {
     "jsdom": "^26.0.0",

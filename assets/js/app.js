@@ -569,6 +569,11 @@
           '<input type="text" id="campoPeso" class="campo-peso" inputmode="decimal" ' +
           'placeholder="por ejemplo: 20 kg" value="' + esc(pesoGuardado) + '">' +
         '</label>' +
+        /* El campo viene relleno con lo de la última vez, que es lo cómodo,
+           pero visto sin más parece que ya se anotó lo de hoy. Se dice. */
+        (pesoGuardado
+          ? '<p class="nota-peso">Es lo que pusiste la última vez. Cámbialo si hoy fue otro.</p>'
+          : '') +
       '</div>' +
 
       '<button class="btn-grande btn-secundario" id="btnLeer">Léemelo en voz alta</button>' +
@@ -604,13 +609,19 @@
       seriesHechas = Math.max(0, seriesHechas - 1); refrescarSeries();
     });
 
+    /* Lo que toca después de este ejercicio, para poder ir mirando la
+       máquina mientras se descansa. */
+    var claveSig = d.ejercicios[indice + 1];
+    var eSig = claveSig && ejercicioDe(claveSig);
+    var loQueViene = eSig ? "Luego: " + eSig.nombre : "Este es el último del día.";
+
     document.getElementById("btnSerieHecha").addEventListener("click", function () {
       seriesHechas++; refrescarSeries();
       Voz.decir("Serie " + seriesHechas + " hecha. Descansa " + window.PARAMETROS.descanso + " segundos.");
       Cronometro.iniciar(window.PARAMETROS.descanso, function () {
         var b = document.getElementById("btnSerieHecha");
         if (b) b.focus();
-      });
+      }, loQueViene);
     });
 
     document.getElementById("campoPeso").addEventListener("change", function (ev) {

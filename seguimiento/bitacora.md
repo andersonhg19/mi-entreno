@@ -1,7 +1,7 @@
 ﻿# Mi Entreno — Bitácora de Desarrollo
 
-## Estado Actual: v2 publicada en GitHub Pages
-## Última actualización: 2026-08-04
+## Estado Actual: v8 publicada en GitHub Pages
+## Última actualización: 2026-08-05
 
 ---
 
@@ -601,3 +601,129 @@ Funcionalidad nueva, accesible desde el inicio (`#/tabata`).
 
 **Resultado:** `npm run qa` en verde, con 146 pantallas y el recorrido completo
 del carrusel y del Tabata.
+
+---
+
+### 2026-08-05 (noche) - v8: medir en vez de opinar, y las dos fotos de cada tarjeta
+
+Anderson planteó dos cosas: que los dos tableros «según él eran lo mismo», así
+que habría muchas fotos repetidas aprovechables para la calidad; y que si hacía
+falta se probara a encadenar varios modelos, **pero midiéndolo**.
+
+Las dos tenían razón en el planteamiento. La respuesta a las dos salió de un
+banco de pruebas, no de mirar las fichas y decidir.
+
+#### El banco: por fin hay una verdad contra la que medir
+
+El truco estaba delante todo el tiempo: el tablero funcional tiene **629 px
+reales** por tarjeta y el de gimnasio **457**. Así que las tarjetas del
+funcional sirven de verdad. Se reducen 2,14 veces (el mismo aumento que hace
+la app), se reconstruyen con cada método y se compara. Sale un número.
+
+Los cuatro bancos quedan en `herramientas/banco/` para poder repetirlo.
+
+#### 1. Encadenar modelos: probado y NO sirve
+
+Seis cadenas probadas (×3 → ×2, ×2 → ×2, EDSR → LapSRN, LapSRN → EDSR…).
+**Ninguna gana a su propio primer paso.** La segunda pasada no añade
+información: amplifica lo que la primera se inventó. Y con un modelo flojo
+delante el resultado se arruina aunque detrás vaya EDSR (0,9533 frente a
+0,9650 de SSIM).
+
+Era la idea más prometedora sobre el papel y había que probarla. Ahora está
+medida y documentada, para no volver a intentarlo dentro de tres meses.
+
+#### 2. Dos cosas que sí mejoran, y estaban elegidas a ojo
+
+- **EDSR ×2 en vez de ×3.** El aumento que hace falta es 2,14: ×3 se pasa y
+  luego hay que bajar un 30 %, tirando lo que la red acababa de reconstruir.
+- **Enfoque de radio 1,4 en vez de 1,1.** El banco enseñó que *todas* las
+  tuberías devuelven menos energía de borde que el cartón real. Con 1,1 el
+  resultado se quedaba en 0,95 de la nitidez del original; con 1,4 llega a
+  0,99. SSIM de 0,9715 a 0,9762.
+
+Se ve al comparar los títulos al 200 %: los bordes de las letras son más
+limpios y no aparecen halos.
+
+#### 3. Los dos tableros son la misma baraja — y el flash cae en sitios distintos
+
+Confirmado: mismos dibujos, mismos títulos, misma cuadrícula. Solo cambian el
+color de las franjas (azul marino / granate) y las marcas de cada quien.
+
+Lo valioso no fue tener dos copias para promediar, sino que **el reflejo del
+flash cae en sitios distintos**: la columna que en un tablero salió quemada,
+en el otro está impecable.
+
+`herramientas/2-alinear-sharid.py` empareja los dos tableros con SIFT (~2.200
+correspondencias, 2,6 px de error medio sobre 4.600 px de panel) y deja el de
+Sharid en el mismo lienzo, así que la geometría de recorte ya medida vale para
+los dos. De paso, las tarjetas que venían del tablero de Sharid ya no salen de
+un archivo suelto en una carpeta temporal de otra sesión, que podía
+desaparecer en cualquier momento.
+
+**Tres tarjetas** pasan a tomarse del tablero de Sharid (antes dos):
+*Pantorrilla sentado* (contraste 71 → 184), *Sentadilla con mancuernas*
+(100 → 173) y *Prensa atlética* (183 → 196).
+
+Aquí hubo un error propio que conviene recordar: la primera medida señalaba
+**21** tarjetas «dañadas» por porcentaje de blanco reventado. Al mirarlas una a
+una en pantalla, la mayoría estaban perfectamente bien —lo quemado era el papel,
+no el dibujo— y varias candidatas de Sharid tenían marcas de rotulador encima
+del dibujo. La medida que de verdad separa es el **contraste**; el «detalle»
+engaña porque el borde del propio reflejo cuenta como detalle y una tarjeta
+ilegible puntúa más alto que la buena.
+
+#### 4. Combinar las dos fotos: probado y descartado
+
+La idea siguiente era promediar las dos capturas de cada tarjeta
+(superresolución multi-imagen). Medido con una prueba limpia —dos capturas
+simuladas de una misma verdad, para que ningún método jugara en casa—: **+0,0045
+de SSIM y −0,22 dB de PSNR**. Al borde de lo medible, y eso en el caso ideal.
+Con las fotos reales sería menos, y cualquier error de alineación fantasmea el
+texto, que se ve peor que un texto blando. No compensa.
+
+El primer intento de medirlo estaba **mal planteado**: comparaba «Anderson
+solo» contra «Anderson + Sharid» usando como verdad la propia foto de Anderson,
+con lo que todo lo que aportara la otra contaba como error por definición.
+Decía que combinar empeora, pero medido así no decía nada. Se rehízo.
+
+#### 5. Mejoras de uso
+
+- **Botón principal más grande** (`--toque-principal: 58px`). Se toca de pie,
+  con las manos ocupadas y sin mirar fino; los secundarios se quedan en 48.
+- **El descanso dice lo que viene después**: «Luego: Press banca», o «es el
+  último del día». Escrito, no hablado: el descanso ya habla bastante y saber
+  lo que toca sirve para ir mirando la máquina.
+- **El campo de peso avisa de que viene de la última vez.** Venía relleno con
+  el peso guardado —que es lo cómodo—, pero visto sin más parece que ya se
+  anotó lo de hoy. Ahora lo dice: *«Es lo que pusiste la última vez. Cámbialo
+  si hoy fue otro.»*
+
+#### 6. Pruebas nuevas
+
+`pruebas/prueba-regresiones.js` — **13 casos**, uno por cada bug que ya se coló
+alguna vez más los sitios donde la app se ha demostrado frágil: `hidden` manda
+sobre el CSS, las casillas se dibujan, las flechas del carrusel nunca usan
+`disabled`, recorrido completo de ida y vuelta, ids únicos, lo anotado persiste,
+el contador no baja de cero, el temporizador se cierra del todo, el botón
+principal llega a su tamaño, cada imagen se describe o es decorativa con texto
+al lado, el foco se ve, arrancar en cualquier ruta lleva al inicio, y nada se
+sale a 320 px con la letra al 180 % y el espaciado de la WCAG 1.4.12.
+
+**Auditoría de contraste rehecha.** Antes medía 20 selectores escritos a mano
+en una sola pantalla, que solo demuestra lo que a uno se le ocurrió listar.
+Ahora **barre todo elemento que pinte texto** en 7 pantallas × 3 temas, con el
+umbral AAA correcto (7:1 normal, 4,5:1 texto grande): **428 textos por tema**,
+que se agrupan en 12 / 11 / 3 combinaciones distintas de color. El peor caso
+sigue siendo 7,68:1, por encima del listón.
+
+#### Dos fallos que encontraron las pruebas nuevas
+
+1. La regla fácil «toda imagen necesita `alt` con texto» es **falsa y hace
+   daño**: las miniaturas van dentro de un botón que ya dice el nombre del
+   ejercicio, así que su `alt` debe ir vacío o el lector lo repite. La prueba
+   ahora comprueba lo correcto: que el atributo exista, y que si va vacío haya
+   texto al lado que haga su papel.
+2. La prueba de arranque fallaba sin que hubiera nada roto: navegar a una URL
+   que solo cambia en el `#` **no recarga la página**, así que el arranque de
+   la app no llegaba a ejecutarse. Hay que recargar de verdad.

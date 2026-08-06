@@ -112,6 +112,27 @@ esconderlas, es **etiquetarlas sin rodeos**.
 dos ejercicios: ese fue el error que hacía que «TRX abductor» enseñara la
 máquina abductora.
 
+### De qué tablero sale cada ficha
+
+Los tableros de Anderson y de Sharid son **la misma baraja de tarjetas** en dos
+ediciones (franjas azules y granates). Lo importante: el reflejo del flash cae
+en sitios distintos, así que la tarjeta quemada en uno está sana en el otro.
+`herramientas/2-alinear-sharid.py` los deja en el mismo lienzo y **tres** fichas
+se toman del de Sharid (`DESDE_SHARID` en `3-generar-fichas.py`).
+
+**Cómo se decide, si algún día hay que rehacerlo:** por **contraste**
+(p98 − p2 de la luminancia), no por porcentaje de blanco reventado ni por
+medidas de «detalle». Una tarjeta puede tener un 8 % de píxeles reventados y
+verse perfecta —lo quemado es el papel— y el borde de un reflejo cuenta como
+detalle, así que una tarjeta ilegible puntúa más alto que la buena. La primera
+lista automática señalaba 21 tarjetas dañadas; mirándolas una a una eran 3.
+**Después de medir, hay que mirar.**
+
+El modelo (EDSR ×2), el aumento y el enfoque (1,4 · 55 %) están **medidos**
+contra una verdad de referencia en `herramientas/banco/`. Encadenar modelos se
+probó y **no funciona**: ninguna de las seis cadenas gana a su propio primer
+paso. No lo vuelvas a intentar sin pasar el banco antes.
+
 ## Al agregar un ejercicio
 
 1. Añadirlo a `datos-catalogo.js` con los 7 campos obligatorios:
@@ -176,12 +197,17 @@ npm run qa  # completo: además abre Chromium de verdad
 | `validar-datos.js` | Sin dependencias. Sintaxis, campos obligatorios, grupos válidos, imágenes que faltan **y que sobran**, huérfanas, claves rotas, precarga del service worker (que no falte ni sobre nada), y la guardia del `[hidden]`. |
 | `prueba-completitud.js` | **La garantía del plan.** Compara la rutina, ejercicio a ejercicio y en orden, contra una segunda copia escrita a mano desde las planillas. Valida también longitud de pasos, avisos manuscritos del entrenador, tamaño y unicidad de cada imagen (MD5) y que la app arranque en el selector. |
 | `prueba-humo.js` | jsdom. Recorre las 145 pantallas y ejercita series, temporizador, marcar hecho, filtros, modo consulta, carrusel, ajustes y rutas inválidas. |
-| `prueba-visual.js` | Chromium real. Lo que jsdom **no** ve: qué tapa qué, desbordes, imágenes rotas, áreas tocables, arranque desde 5 direcciones distintas, carrusel (flechas, puntos, teclado), temporizador (cuenta, anillo, +30 s, cerrar), filtros, día completo, tres temas, letra al 180 %, y enlaces. Deja capturas en `pruebas/capturas/`. |
-| `prueba-pwa.js` | Manifest e iconos, **modo sin conexión de verdad**, contraste medido en 20 pares × 3 temas, accesibilidad, persistencia al recargar, el día HOY, y los 114 ejercicios uno a uno comprobando que **cada imagen es la suya**. |
+| `prueba-visual.js` | Chromium real. Lo que jsdom **no** ve: qué tapa qué, desbordes, imágenes rotas, áreas tocables, arranque desde 5 direcciones distintas, carrusel (flechas y teclado), temporizador (cuenta, anillo, +30 s, cerrar), filtros, día completo, tres temas, letra al 180 %, y enlaces. Deja capturas en `pruebas/capturas/`. |
+| `prueba-regresiones.js` | Chromium real. **Un caso por cada bug que ya se coló alguna vez**, para que no vuelva: `hidden` gana al CSS, las casillas se dibujan, las flechas del carrusel nunca usan `disabled` y el recorrido de ida y vuelta acaba donde debe, ids únicos, lo anotado persiste, el contador no baja de cero, el temporizador se cierra del todo, el botón principal llega a su tamaño, `alt` correcto, el foco se ve, arrancar en cualquier ruta lleva al inicio, y nada se sale a 320 px con la letra al 180 % y el espaciado de la WCAG 1.4.12. |
+| `prueba-pwa.js` | Manifest e iconos, **modo sin conexión de verdad**, contraste **por barrido** (todo elemento que pinte texto, 7 pantallas × 3 temas, AAA: 7:1 normal y 4,5:1 grande), accesibilidad, persistencia al recargar, el día HOY, y los 114 ejercicios uno a uno comprobando que **cada imagen es la suya**. |
 
 **Lección aprendida:** jsdom no calcula estilos. Un fallo puramente visual
 (el temporizador tapando la app) pasó sus pruebas. Cualquier cambio de CSS
 o de maquetación exige `npm run qa`, no `npm test`.
+
+**Segunda lección:** una prueba con una lista escrita a mano solo comprueba lo
+que a alguien se le ocurrió listar. Donde se pueda, que **barra** (todo el
+texto, todas las rutas) en vez de mirar veinte selectores elegidos.
 
 La primera vez: `npm install && npx playwright install chromium`.
 

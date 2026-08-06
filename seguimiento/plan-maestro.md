@@ -241,3 +241,38 @@ verdad, y anadir el temporizador por intervalos.
    tarjeta): servir mas grande no aportaba nada; revelar y ampliar con red, si.
 3. **Las listas escritas a mano en las pruebas se desincronizan.** La de
    scripts ahora se lee del propio `index.html`.
+
+---
+
+## FASE 12: v8 - medir en vez de opinar
+
+**Objetivo:** responder con numeros a dos preguntas de Anderson —si encadenar
+modelos de superresolucion mejora, y si las dos fotos de cada tarjeta se pueden
+aprovechar— en vez de decidir a ojo. Y cerrar los bugs con pruebas propias.
+
+### Entregables
+- [x] `herramientas/banco/` — cuatro bancos de prueba con verdad de referencia
+- [x] Encadenar modelos: seis cadenas medidas, **ninguna gana a su primer paso**
+- [x] EDSR **x2** en vez de x3 (SSIM 0,9650 frente a 0,9632)
+- [x] Enfoque final **1,4 · 55 %** en vez de 1,1 (nitidez 0,95 -> 0,99 del real)
+- [x] `2-alinear-sharid.py` — los dos tableros en el mismo lienzo por SIFT
+- [x] Tres fichas del tablero de Sharid, elegidas por contraste y verificadas a ojo
+- [x] Combinar las dos fotos: medido (+0,0045 SSIM) y **descartado** con motivo
+- [x] Boton principal a 58 px; el descanso dice lo que viene despues
+- [x] `pruebas/prueba-regresiones.js` — 13 casos, uno por bug ya visto
+- [x] Auditoria de contraste por barrido: todo texto, 7 pantallas x 3 temas
+
+### Lecciones
+1. **Una medida mal planteada es peor que ninguna.** Comparar «foto A sola»
+   contra «A + B» usando A como verdad da siempre ganador a A, por definicion.
+   Antes de creerse un numero, hay que preguntarse quien juega en casa.
+2. **Las metricas de nitidez mienten donde hay reflejos.** El borde del propio
+   reflejo cuenta como detalle: una tarjeta ilegible puntuaba mas alto que la
+   buena. La primera lista señalaba 21 tarjetas dañadas; mirandolas una a una
+   eran 3. **Mirar sigue haciendo falta.**
+3. **Encadenar modelos no añade informacion, amplifica la invencion.** Sonaba
+   bien y habia que probarlo; ahora esta medido y documentado para no volver
+   a intentarlo.
+4. **La regla «toda imagen necesita alt con texto» es falsa.** Una miniatura
+   dentro de un boton que ya dice el nombre debe llevar `alt=""`, o el lector
+   de pantalla lo repite. Una prueba con la regla facil marca fallos que no lo son.

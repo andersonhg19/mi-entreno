@@ -144,6 +144,67 @@ for (const m of cron.matchAll(/getElementById\("([^"]+)"\)/g)) {
   if (!idsHtml.has(m[1])) errores.push(`cronometro.js busca #${m[1]} y no existe en el HTML`);
 }
 
+/* --- 7b. La cuenta del Tabata tiene que cuadrar ---
+   El Tabata anuncia la duración total ANTES de empezar y luego recorre una
+   lista de tramos. Si las dos cuentas no coinciden, el resumen miente y a
+   mitad de serie se nota. Se comprueba la lista contra el total en varias
+   configuraciones, incluidos los bordes (sin preparación, sin descanso). */
+{
+  /* tabata.js se engancha a visibilitychange al cargarse, así que hace falta
+     un `document` de mentira. Solo se prueba la aritmética de la secuencia;
+     el comportamiento en pantalla lo cubre prueba-visual con un Tabata real. */
+  const ctxT = {
+    window: {},
+    document: { addEventListener() {}, getElementById: () => null, hidden: false },
+    navigator: {},
+    setInterval() {}, clearInterval() {}, setTimeout() {}, clearTimeout() {}
+  };
+  ctxT.window = ctxT;
+  vm.createContext(ctxT);
+  vm.runInContext(fs.readFileSync(path.join(ROOT, "assets/js/tabata.js"), "utf8"), ctxT);
+  const T = ctxT.Tabata;
+  if (!T || !T._construir || !T._total) {
+    errores.push("tabata.js no expone _construir/_total; la prueba de la cuenta no puede correr");
+  } else {
+    const CASOS = [
+      { preparacion: 10, trabajo: 20, descanso: 10, rondas: 8, ciclos: 1, descansoCiclo: 60 },
+      { preparacion: 0,  trabajo: 30, descanso: 0,  rondas: 5, ciclos: 1, descansoCiclo: 0  },
+      { preparacion: 15, trabajo: 45, descanso: 15, rondas: 4, ciclos: 3, descansoCiclo: 90 },
+      { preparacion: 5,  trabajo: 5,  descanso: 5,  rondas: 1, ciclos: 1, descansoCiclo: 30 }
+    ];
+    for (const c of CASOS) {
+      const tramos = T._construir(c);
+      const etiq = `${c.trabajo}/${c.descanso} x${c.rondas} x${c.ciclos} ciclo(s)`;
+
+      /* La cuenta esperada se calcula aquí a mano, sin usar el código que se
+         está probando: preparación + (trabajos y descansos de cada ciclo) +
+         los descansos entre ciclos. Ni al final de la sesión ni al final de
+         cada ciclo hay descanso de ronda. */
+      const porCiclo = c.rondas * c.trabajo + (c.rondas - 1) * c.descanso;
+      const esperado = c.preparacion + c.ciclos * porCiclo +
+                       (c.ciclos - 1) * c.descansoCiclo;
+      const total = T._total(tramos);
+      if (total !== esperado) {
+        errores.push(`Tabata ${etiq}: la secuencia dura ${total} s y deberia durar ${esperado} s`);
+      }
+
+      /* No puede sobrar un descanso al final: se acaba trabajando, no parado */
+      const ultimo = tramos[tramos.length - 1];
+      if (!ultimo || ultimo.fase !== "trabajo") {
+        errores.push(`Tabata ${etiq}: la sesion termina en "${ultimo && ultimo.fase}"; deberia acabar trabajando`);
+      }
+      const trabajos = tramos.filter(t => t.fase === "trabajo").length;
+      if (trabajos !== c.rondas * c.ciclos) {
+        errores.push(`Tabata ${etiq}: hay ${trabajos} tramos de trabajo y deberian ser ${c.rondas * c.ciclos}`);
+      }
+      /* Ningún tramo de duración cero: se vería como un salto raro */
+      if (tramos.some(t => !(t.seg > 0))) {
+        errores.push(`Tabata ${etiq}: hay tramos de 0 segundos en la secuencia`);
+      }
+    }
+  }
+}
+
 /* --- 8. Resumen --- */
 console.log(`Ejercicios en catalogo : ${Object.keys(CAT).length}`);
 console.log(`Ejercicios usados      : ${usados.size}`);

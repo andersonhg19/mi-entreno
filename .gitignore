@@ -10,3 +10,4 @@ pruebas/capturas/
 # Contiene las fotos originales de las planillas (nombre completo, documento,
 # teléfono) y el archivo con peso, IMC y % de grasa de los dos.
 recursos/
+__pycache__/

@@ -91,28 +91,45 @@ Con **4 fotos por cara** en vez de 1 —una por cuadrante del tablero, acercánd
 a cada una— cada tarjeta pasaría a tener **unos 900-1000 px reales**. Eso es el
 doble de detalle de verdad, no reconstruido.
 
+**Lo demás ya está agotado.** Se midió (ver `imagenes-fichas.md`):
+
+- Encadenar modelos de superresolución: seis cadenas, ninguna mejora.
+- Combinar las dos fotos de cada tarjeta: +0,0045 de SSIM, al borde de lo
+  medible, y con riesgo de fantasmear el texto.
+- El modelo, el aumento y el enfoque ya están en su óptimo medido.
+
+Volver a fotografiar es lo único que queda con recorrido de verdad.
+
 Cómo hacerlo bien:
 - Luz difusa, sin flash directo (el flash es lo que quemó dos tarjetas).
 - Lo más de frente posible; la corrección de perspectiva se encarga del resto.
 - Que cada foto solape un poco con la siguiente.
 - Las 8 fotos (4 por cara × 2 caras) por persona, o solo de un tablero: los
-  dibujos son idénticos en los dos.
+  dibujos son idénticos en los dos (confirmado; ver `imagenes-fichas.md`).
+- **Si solo se rehace un tablero, que sea con luz difusa y sin flash.** La
+  ventaja de tener dos tableros hoy es justamente que el reflejo cae en sitios
+  distintos y uno tapa lo que el otro quemó. Con una sola tanda de fotos esa
+  red de seguridad desaparece.
 
 Después, `herramientas/1-rectificar.py` y `2-generar-fichas.py` habría que
 adaptarlos para trabajar por cuadrante, pero el resto del proceso es el mismo.
 
 ---
 
-## 5. Fotos exactas para los 14 ejercicios aproximados
+## 5. Fotos exactas para los 20 ejercicios aproximados
 
-14 de los 55 usan una foto de un movimiento parecido, no idéntico. Son casi
+20 de los 55 usan una foto de un movimiento parecido, no idéntico. Son casi
 todos de TRX, BOSU y banda elástica, que la base de dominio público no cubre:
 
-`trx-sentadilla-profunda`, `trx-abductor`, `sentadilla-iso`, `elevacion-rodilla`,
-`sentadilla-dinamica`, `peso-muerto-saco`, `salto-cajon`, `vuelo-trx`,
-`biceps-trx`, `plancha-bosu`, `sentadilla-patada-lateral`,
-`levantamiento-atras-polea`, `levantamiento-pierna-piso`,
-`elevacion-talones-hack`.
+`sentadilla-mancuerna`, `leg-curl`, `elevacion-talones-hack`,
+`extension-mancuerna`, `vuelo-trx`, `predicador-maquina`, `biceps-trx`,
+`levantamiento-pierna-piso`, `plancha-bosu`, `levantamiento-atras-polea`,
+`sentadilla-patada-lateral`, `trx-sentadilla-profunda`, `trx-abductor`,
+`sentadilla-iso`, `elevacion-rodilla`, `aductor-banda`, `sentadilla-dinamica`,
+`peso-muerto-saco`, `trx-espalda`, `apertura-trx`.
+
+(La lista sale de `fotosOk: false` en `datos-catalogo.js`; si cambia, esta
+lista hay que rehacerla.)
 
 La app los marca en pantalla, así que no engaña. Pero una foto propia tomada en
 el gimnasio sería mejor. Basta con reemplazar
