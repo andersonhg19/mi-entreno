@@ -748,6 +748,20 @@ button:active, .ejercicio:active, .dia:active, .persona:active { transform: scal
   font-size: var(--t-etiqueta); color: var(--texto-suave);
   text-align: left;
 }
+/* Aviso de que toca subir el peso. Lleva texto explícito además del color,
+   como todo estado en esta app. */
+.nota-peso-sube {
+  padding: var(--e2) var(--e3);
+  background: var(--acento-suave); color: var(--texto);
+  border-left: 3px solid var(--acento); border-radius: var(--radio-1);
+  font-size: var(--t-menor);
+}
+.historial-peso {
+  margin: var(--e2) 0 0;
+  font-size: var(--t-etiqueta); color: var(--texto-suave);
+  text-align: left;
+}
+.historial-fecha { opacity: 1; color: var(--texto-inactivo); }
 .campo-peso {
   width: 100%; min-height: var(--toque);
   font-family: inherit; font-size: var(--t-cuerpo);

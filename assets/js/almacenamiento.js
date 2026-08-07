@@ -115,16 +115,60 @@ window.Guardado = (function () {
       escribirTodo(d);
     },
 
-    /* -------- peso usado por ejercicio (se recuerda entre semanas) -------- */
+    /* -------- peso usado por ejercicio, CON HISTORIAL --------
+
+       Antes esto guardaba un solo valor y lo sobrescribía. Cómodo para
+       rellenar el campo la semana siguiente, pero **el dato anterior se
+       perdía para siempre**, y con él la única forma de saber si estás
+       progresando.
+
+       Importa porque el método que anotó el entrenador es literalmente
+       «subir el peso de 10 % a 20 % cuando las 15 repeticiones salgan
+       fáciles». Sin historial no hay manera de saber cuándo toca.
+
+       Ahora se guarda una entrada por día: { f: fecha, v: lo que escribiste }.
+       Se conserva el texto tal cual, no un número, porque a veces lo que
+       se apunta es «placa 7» o «la roja» y eso también vale.             */
     peso: function (persona, ejercicio) {
-      var d = leerTodo();
-      return ((d.pesos || {})[persona] || {})[ejercicio] || "";
+      var h = this.historialPeso(persona, ejercicio);
+      return h.length ? h[h.length - 1].v : "";
     },
+
+    historialPeso: function (persona, ejercicio) {
+      var d = leerTodo();
+      var guardado = ((d.pesos || {})[persona] || {})[ejercicio];
+      if (!guardado) return [];
+      /* Formato viejo: una cadena suelta. Se conserva como primera
+         entrada, sin fecha conocida, para no perder lo ya anotado. */
+      if (typeof guardado === "string") return [{ f: "", v: guardado }];
+      return guardado.slice();
+    },
+
     guardarPeso: function (persona, ejercicio, valor) {
       var d = leerTodo();
       d.pesos = d.pesos || {};
       d.pesos[persona] = d.pesos[persona] || {};
-      d.pesos[persona][ejercicio] = valor;
+
+      var previo = d.pesos[persona][ejercicio];
+      var lista = typeof previo === "string" ? [{ f: "", v: previo }]
+                : Array.isArray(previo) ? previo : [];
+
+      valor = String(valor == null ? "" : valor).trim();
+      if (!valor) {
+        /* Borrar el campo borra lo de hoy, no el historial entero */
+        lista = lista.filter(function (x) { return x.f !== hoy(); });
+      } else {
+        var deHoy = lista.filter(function (x) { return x.f === hoy(); })[0];
+        if (deHoy) deHoy.v = valor;
+        else lista.push({ f: hoy(), v: valor });
+      }
+
+      /* Tope por ejercicio: con 3 meses de rutina no se llega ni de lejos,
+         pero localStorage es pequeño y más vale no confiarse. */
+      if (lista.length > 40) lista = lista.slice(lista.length - 40);
+
+      if (lista.length) d.pesos[persona][ejercicio] = lista;
+      else delete d.pesos[persona][ejercicio];
       escribirTodo(d);
     },
 

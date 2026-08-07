@@ -64,7 +64,9 @@ Imprime una dirección para el computador y otra para el celular en la misma WiF
 - Botón **«Léemelo en voz alta»** que dicta todo el ejercicio.
 - Contador de series con **descanso** que se canta y vibra al acabar (1 minuto por
   defecto, ajustable).
-- Guarda el peso que usaste y lo recuerda la semana siguiente.
+- Guarda el peso que usaste **con historial**: ves las últimas veces con su
+  fecha, y cuando llevas tres sesiones con el mismo peso te recuerda la regla
+  del entrenador (*subir 10–20 % cuando las 15 repeticiones salgan fáciles*).
 - Tamaños de texto **estándar**; **A− / A+** (90 %–180 %) y tres niveles de
   contraste para quien los quiera. La lupa del iPhone funciona encima.
 

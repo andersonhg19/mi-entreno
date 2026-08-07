@@ -927,6 +927,98 @@ async function casoAvisoVersionNueva(page) {
   await page.evaluate(() => { document.getElementById("avisoNueva").hidden = true; });
 }
 
+/* ------------------------------------------------------------------
+   22. El peso guarda HISTORIAL, no solo el último valor.
+
+   Antes se sobrescribía: cómodo para rellenar el campo la semana
+   siguiente, pero el dato anterior se perdía para siempre. Y el método
+   que anotó el entrenador es «subir el peso de 10 % a 20 % cuando las 15
+   repeticiones salgan fáciles»: sin historial no hay forma de saber
+   cuándo toca.
+   ------------------------------------------------------------------ */
+async function casoHistorialPeso(page) {
+  await page.evaluate(() => localStorage.clear());
+
+  /* Se simulan tres sesiones separadas en el tiempo, escribiendo
+     directamente en el almacén: el campo solo guarda una entrada por día. */
+  const sembrado = await page.evaluate(() => {
+    const d = { pesos: { anderson: { "press-banca": [
+      { f: "2026-07-21", v: "20 kg" },
+      { f: "2026-07-28", v: "20 kg" },
+      { f: "2026-08-04", v: "20 kg" }
+    ] } } };
+    localStorage.setItem("mi-entreno-v1", JSON.stringify(d));
+    return true;
+  });
+  if (!sembrado) { fallo("historial de peso", "no se pudo preparar el caso"); return; }
+
+  await ir(page, "#/p/anderson/d/2/e/1", 700);   /* martes: press banca */
+  const r = await page.evaluate(() => {
+    const p = document.getElementById("panelPeso");
+    return {
+      hayPanel: !!p,
+      campo: (document.getElementById("campoPeso") || {}).value,
+      sube: !!document.querySelector(".nota-peso-sube"),
+      texto: p ? p.textContent.replace(/\s+/g, " ").trim() : ""
+    };
+  });
+  if (!r.hayPanel) { fallo("historial de peso", "no aparece el panel del peso"); return; }
+  if (r.campo !== "20 kg") {
+    fallo("historial de peso", `el campo se rellena con "${r.campo}" y deberia ser "20 kg"`);
+    return;
+  }
+  if (!r.sube) {
+    fallo("historial de peso", `con 3 sesiones iguales deberia avisar de subir: "${r.texto}"`);
+    return;
+  }
+  /* 20 kg +10-20 % = 22 a 24 */
+  if (!/22 kg/.test(r.texto) || !/24 kg/.test(r.texto)) {
+    fallo("historial de peso", `el rango sugerido no es 22-24: "${r.texto}"`);
+    return;
+  }
+  if (!/15 repeticiones/.test(r.texto)) {
+    fallo("historial de peso", "el aviso no recuerda la condicion del entrenador (15 repes faciles)");
+    return;
+  }
+  if (!/21 jul|28 jul/.test(r.texto)) {
+    fallo("historial de peso", `no se ven las veces anteriores: "${r.texto}"`);
+    return;
+  }
+
+  /* Anotar hoy un peso nuevo: se AÑADE, no sustituye al historial */
+  await page.evaluate(() => {
+    const c = document.getElementById("campoPeso");
+    c.value = "24 kg";
+    c.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+  await page.waitForTimeout(300);
+  const tras = await page.evaluate(() => {
+    const d = JSON.parse(localStorage.getItem("mi-entreno-v1"));
+    const h = d.pesos.anderson["press-banca"];
+    return {
+      entradas: h.length,
+      valores: h.map(x => x.v),
+      sigueAvisando: !!document.querySelector(".nota-peso-sube"),
+      texto: (document.getElementById("panelPeso") || {}).textContent || ""
+    };
+  });
+  if (tras.entradas !== 4) {
+    fallo("historial de peso", `tras anotar hay ${tras.entradas} entradas y deberia haber 4 ` +
+                               `(${tras.valores.join(", ")}) — se esta sobrescribiendo`);
+    return;
+  }
+  if (tras.sigueAvisando) {
+    fallo("historial de peso", "sigue diciendo que subas despues de haber subido");
+    return;
+  }
+  if (!/20 kg/.test(tras.texto)) {
+    fallo("historial de peso", "tras subir el peso ya no se ve lo anterior");
+    return;
+  }
+  pasa("el peso guarda historial, avisa de cuando subir y deja de avisar al subir");
+  await page.evaluate(() => localStorage.clear());
+}
+
 /* ------------------------------------------------------------------ */
 async function main() {
   const servidor = await arrancarServidor();
@@ -959,6 +1051,7 @@ async function main() {
     await casoColorDePersona(page);
     await casoAtajoAlternativas(page);
     await casoAvisoVersionNueva(page);
+    await casoHistorialPeso(page);
     await casoArranque(page, base);
     await casoEstrecho(page, base);
   } finally {

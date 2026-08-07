@@ -104,6 +104,88 @@
   }
 
   /* ---------------------------------------------------------
+     Peso: historial y cuándo toca subir
+     --------------------------------------------------------- */
+  var MESES = ["ene", "feb", "mar", "abr", "may", "jun",
+               "jul", "ago", "sep", "oct", "nov", "dic"];
+
+  function fechaCorta(f) {
+    var p = String(f || "").split("-");
+    if (p.length !== 3) return "";
+    return Number(p[2]) + " " + MESES[Number(p[1]) - 1];
+  }
+
+  /* Del texto libre a un número, cuando se puede.
+
+     El campo es libre a propósito: a veces lo que se apunta es «placa 7» o
+     «la roja», y eso también es información útil. Si no sale número, se
+     enseña el historial igual y no se da consejo. */
+  function pesoNumero(texto) {
+    var m = String(texto || "").replace(",", ".").match(/\d+(\.\d+)?/);
+    return m ? parseFloat(m[0]) : null;
+  }
+
+  /* Regla del entrenador, escrita a mano en la planilla:
+     «Subir el peso de 10 % a 20 % cuando las 15 repeticiones salgan fáciles».
+
+     La app NO puede saber si te salen fáciles, así que no manda: solo avisa
+     de que llevas varias sesiones igual y recuerda la regla. Hacen falta
+     tres sesiones con el mismo peso para no dar la lata por dos seguidas. */
+  function consejoPeso(historial) {
+    var conNumero = historial.filter(function (x) { return pesoNumero(x.v) !== null; });
+    if (conNumero.length < 3) return null;
+    var ultimos = conNumero.slice(-3);
+    var v = pesoNumero(ultimos[0].v);
+    for (var i = 1; i < ultimos.length; i++) {
+      if (pesoNumero(ultimos[i].v) !== v) return null;
+    }
+    var redondear = function (n) { return String(Math.round(n * 2) / 2).replace(".", ","); };
+    /* La unidad se saca del propio texto («20 kg» -> «kg») para no inventar
+       una: si él escribe «placa 7», el consejo dice «placa 7», no «7 kg». */
+    var unidad = String(ultimos[ultimos.length - 1].v)
+      .replace(/[\d.,]+/g, " ").replace(/\s+/g, " ").trim();
+    var con = function (n) { return n + (unidad ? " " + unidad : ""); };
+    return {
+      sesiones: conNumero.filter(function (x) { return pesoNumero(x.v) === v; }).length,
+      actual: ultimos[ultimos.length - 1].v,
+      rango: con(redondear(v * 1.1)) + " – " + con(redondear(v * 1.2))
+    };
+  }
+
+  function bloquePeso(idPersona, clave) {
+    return '<div id="panelPeso">' + contenidoPeso(idPersona, clave) + '</div>';
+  }
+
+  function contenidoPeso(idPersona, clave) {
+    var historial = Guardado.historialPeso(idPersona, clave);
+    if (!historial.length) return "";
+
+    var c = consejoPeso(historial);
+    var html = "";
+    if (c) {
+      html += '<p class="nota-peso nota-peso-sube">' +
+                '<strong>Llevas ' + c.sesiones + ' sesiones con ' + esc(c.actual) + '.</strong> ' +
+                'Si las 15 repeticiones ya te salen fáciles, toca subir a ' +
+                esc(c.rango) + '.' +
+              '</p>';
+    } else {
+      html += '<p class="nota-peso">Es lo que pusiste la última vez. ' +
+              'Cámbialo si hoy fue otro.</p>';
+    }
+
+    /* Las últimas veces, para ver de un vistazo si estás subiendo */
+    var previas = historial.slice(-4, -1).reverse();
+    if (previas.length) {
+      html += '<p class="historial-peso">Antes: ' +
+        previas.map(function (x) {
+          var f = fechaCorta(x.f);
+          return esc(x.v) + (f ? ' <span class="historial-fecha">(' + esc(f) + ')</span>' : '');
+        }).join(" · ") + '</p>';
+    }
+    return html;
+  }
+
+  /* ---------------------------------------------------------
      Preferencias de visualización
      --------------------------------------------------------- */
   function aplicarPrefs() {
@@ -742,10 +824,10 @@
           'placeholder="por ejemplo: 20 kg" value="' + esc(pesoGuardado) + '">' +
         '</label>' +
         /* El campo viene relleno con lo de la última vez, que es lo cómodo,
-           pero visto sin más parece que ya se anotó lo de hoy. Se dice. */
-        (pesoGuardado
-          ? '<p class="nota-peso">Es lo que pusiste la última vez. Cámbialo si hoy fue otro.</p>'
-          : '') +
+           pero visto sin más parece que ya se anotó lo de hoy. Se dice.
+           Y debajo, lo que pusiste las veces anteriores y, si llevas
+           varias sesiones con el mismo peso, el recordatorio del entrenador. */
+        bloquePeso(idPersona, clave) +
       '</div>' +
 
       '<button class="btn-grande btn-secundario" id="btnLeer">Léemelo en voz alta</button>' +
@@ -802,6 +884,11 @@
 
     document.getElementById("campoPeso").addEventListener("change", function (ev) {
       Guardado.guardarPeso(idPersona, clave, ev.target.value.trim());
+      /* Solo se repinta este panel. Repintar la vista entera perdería el
+         foco y te devolvería al principio de la pantalla justo cuando
+         acabas de anotar el peso a mitad de la serie. */
+      var panel = document.getElementById("panelPeso");
+      if (panel) panel.innerHTML = contenidoPeso(idPersona, clave);
     });
 
     document.getElementById("btnHecho").addEventListener("click", function () {

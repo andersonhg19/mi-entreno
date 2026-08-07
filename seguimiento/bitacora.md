@@ -1,6 +1,6 @@
 ﻿# Mi Entreno — Bitácora de Desarrollo
 
-## Estado Actual: v12 publicada en GitHub Pages
+## Estado Actual: v13 publicada en GitHub Pages
 ## Última actualización: 2026-08-06
 
 ---
@@ -1094,3 +1094,52 @@ gh run list --workflow=publicar.yml --limit 3
 que sirve el servidor es la que se subió, el despliegue no está hecho. El
 script de comprobación de producción ya lo hacía —espera a ver el número de
 versión nuevo— y es lo que destapó esto.
+
+
+---
+
+### 2026-08-06 - v13: el peso guarda historial
+
+El peso se guardaba **sobrescribiendo**: solo quedaba el último valor. Cómodo
+para rellenar el campo la semana siguiente, y desastroso para todo lo demás,
+porque **el dato anterior se perdía para siempre**.
+
+Importa porque el método que anotó el entrenador a mano en la planilla es
+literalmente *«subir el peso de 10 % a 20 % cuando las 15 repeticiones salgan
+fáciles»*. Sin historial no hay forma de saber cuándo toca. Y con la rutina
+vigente hasta el 4 de noviembre, cada semana que pasaba se perdía un dato
+irrecuperable: por eso esto se hizo antes que nada de la lista de mejoras.
+
+#### Qué se guarda
+
+Una entrada por día: `{ f: fecha, v: lo que escribiste }`. Se conserva **el
+texto tal cual**, no un número, porque a veces lo que se apunta es «placa 7» o
+«la roja» y eso también es información. Lo ya guardado en el formato viejo se
+conserva como primera entrada, sin fecha.
+
+#### Qué se ve
+
+Debajo del campo, las últimas tres veces con su fecha. Y si llevas **tres
+sesiones con el mismo peso**, el recordatorio:
+
+> **Llevas 3 sesiones con 20 kg.** Si las 15 repeticiones ya te salen fáciles,
+> toca subir a 22 kg – 24 kg.
+
+Tres detalles que importan:
+
+- **No manda, recuerda.** La app no puede saber si las repeticiones te salen
+  fáciles: eso solo lo sabes tú. Así que enuncia la condición del entrenador
+  en vez de dar una orden.
+- **Tres sesiones, no dos.** Con dos daría la lata en cuanto repitieras peso
+  una semana seguida.
+- **La unidad sale del propio texto.** Si escribes «placa 7», el consejo habla
+  de placas, no se inventa kilos.
+
+El panel se repinta solo a sí mismo al anotar: repintar la vista entera
+perdería el foco y te devolvería al principio de la pantalla justo cuando
+acabas de apuntar el peso a mitad de la serie.
+
+**Pruebas:** 25 casos (eran 24). El nuevo siembra tres sesiones separadas en
+el tiempo, comprueba que aparece el aviso con el rango correcto, anota un peso
+nuevo y verifica que **se añade** en vez de sustituir, y que el aviso
+desaparece al haber subido.

@@ -1,6 +1,6 @@
 # Mi Entreno — Plan Maestro de Desarrollo
 
-## Estado General: Completado (v12, publicada)
+## Estado General: Completado (v13, publicada)
 ## Fecha inicio: 2026-08-04
 ## Fecha verificación: 2026-08-04
 ## Tecnologías: HTML5, CSS3, JavaScript ES5+, PWA (Service Worker, Web App Manifest), Web Speech API
@@ -403,3 +403,25 @@ funcionando, y Anderson no los veia en ningun ejercicio.
    queda pendiente de una accion del usuario, hay que pedirsela.
 3. **En movil la app no se cierra, se queda en segundo plano.** Comprobar la
    version solo al arrancar no basta.
+
+
+---
+
+## FASE 17: v13 - el peso guarda historial
+
+**Objetivo:** dejar de perder el dato. El peso se sobrescribia cada semana y
+sin historial no hay forma de aplicar la regla del entrenador.
+
+### Entregables
+- [x] `historialPeso()` — una entrada por dia, {fecha, texto}
+- [x] Migracion del formato viejo sin perder lo anotado
+- [x] Las ultimas tres veces con su fecha, bajo el campo
+- [x] Aviso de «toca subir» tras tres sesiones con el mismo peso
+- [x] La unidad sale del propio texto: «placa 7» no se convierte en kilos
+- [x] El panel se repinta solo, sin perder el foco ni la posicion
+- [x] 25 casos de regresion (eran 24)
+
+### Leccion
+**Un dato que no se guarda no se recupera.** Esta era la unica mejora de la
+lista que empeoraba con cada dia que pasaba: las demas se pueden hacer en
+noviembre igual de bien. Por eso fue la primera.
